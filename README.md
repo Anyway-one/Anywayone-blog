@@ -4,14 +4,16 @@ Anywayone Blog 是一个面向个人长期维护的内容系统，同一仓库�
 
 - `web/`：面向读者的展示端，Next.js App Router + TypeScript。
 - `admin/`：内容管理端，React + Vite + Ant Design，当前开发中。
-- `backend/`：内容与媒体 API，规划使用 Python 3.11+ + FastAPI，暂未开发。
+- `backend/`：内容与媒体 API，Python 3.11+ + FastAPI，当前开发中。
 
-当前开发阶段推进 `web/` 与 `admin/`，`backend/` 留待下一阶段。产品、架构和 UI 决策见 [doc/README.md](./doc/README.md)。
+当前三个应用均已进入开发阶段。产品、架构和 UI 决策见 [doc/README.md](./doc/README.md)。
 
 ## 环境要求
 
 - Node.js 24 LTS（见 `.nvmrc`）
 - pnpm 10.34+
+- Python 3.11+（Backend 固定使用 Python 3.12）
+- uv 0.11+
 
 ## 开始开发
 
@@ -19,9 +21,11 @@ Anywayone Blog 是一个面向个人长期维护的内容系统，同一仓库�
 pnpm install
 pnpm dev:web
 pnpm dev:admin
+cd backend && uv sync
+uv run uvicorn app.main:app --reload --port 8000
 ```
 
-展示端打开 [http://localhost:3000](http://localhost:3000)，管理端打开 [http://localhost:5173](http://localhost:5173)。
+展示端打开 [http://localhost:3000](http://localhost:3000)，管理端打开 [http://localhost:5173](http://localhost:5173)，API 文档打开 [http://localhost:8000/docs](http://localhost:8000/docs)。
 
 常用检查：
 
@@ -41,12 +45,22 @@ pnpm build:admin
 复制 `web/.env.example` 为 `web/.env.local`，按本地环境填写：
 
 - `NEXT_PUBLIC_SITE_URL`：展示端公开地址。
-- `NEXT_PUBLIC_API_BASE_URL`：FastAPI 地址；后端未开发期间可以留空。
+- `NEXT_PUBLIC_API_BASE_URL`：FastAPI 地址；未配置时展示端使用空数据状态。
 
 Admin 可将 `admin/.env.example` 复制为 `admin/.env.local`：
 
 - `VITE_API_BASE_URL`：管理端使用的 FastAPI API 地址。
 - `VITE_WEB_URL`：从管理端跳转到公开展示端时使用的地址。
+
+Backend 使用 `backend/.env`，字段模板见 `backend/.env.example`。首次启动前执行：
+
+```bash
+cd backend
+uv run alembic upgrade head
+uv run python -m app.cli create-admin
+```
+
+PostgreSQL 数据库本身需要预先创建，表、索引和约束统一由 Alembic 创建和升级。完整的首次安装、迁移状态检查及生产升级说明见 [Backend 安装与数据库迁移文档](./backend/README.md)。项目不单独维护可能与迁移记录不一致的手写 `schema.sql`。
 
 任何 `.env*` 本地文件都不得提交，只有 `.env.example` 可以进入版本库。
 
@@ -56,7 +70,7 @@ Admin 可将 `admin/.env.example` 复制为 `admin/.env.local`：
 Anywayone-blog/
 ├── web/          # 面向读者的展示端
 ├── admin/        # 当前开发中的内容管理端
-├── backend/      # 预留，暂不开发
+├── backend/      # 当前开发中的 FastAPI 后端
 ├── doc/          # 产品、架构和 UI 文档
 └── Taskfile.yml  # 可选的跨端命令入口
 ```
@@ -80,6 +94,14 @@ Anywayone-blog/
 - 文章编辑器与摄影集编辑器的本地交互界面。
 
 后端 API 可用前，Admin 不展示虚构统计或内容；保存、发布和上传动作只提供界面状态，不会持久化数据。
+
+## 当前 Backend 范围
+
+- FastAPI 应用、异步 PostgreSQL 连接和存活/就绪检查。
+- Alembic 初始迁移、管理员安全初始化和结构化请求日志。
+- 管理员登录、刷新令牌轮换、退出和当前用户接口。
+- 文章草稿、保存、发布、撤回、公开列表与详情 API。
+- Markdown 安全渲染、文章版本、乐观锁、审计日志和 Outbox。
 
 ## Git 约定
 

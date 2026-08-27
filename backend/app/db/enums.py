@@ -1,0 +1,27 @@
+from enum import StrEnum
+
+
+class UserStatus(StrEnum):
+    ACTIVE = "ACTIVE"
+    LOCKED = "LOCKED"
+    DISABLED = "DISABLED"
+
+
+class PostStatus(StrEnum):
+    DRAFT = "DRAFT"
+    SCHEDULED = "SCHEDULED"
+    PUBLISHED = "PUBLISHED"
+    WITHDRAWN = "WITHDRAWN"
+    ARCHIVED = "ARCHIVED"
+
+
+class Visibility(StrEnum):
+    PUBLIC = "PUBLIC"
+    UNLISTED = "UNLISTED"
+
+
+class PostVersionChangeType(StrEnum):
+    AUTO_SAVE = "AUTO_SAVE"
+    MANUAL_SAVE = "MANUAL_SAVE"
+    PUBLISH = "PUBLISH"
+    RESTORE = "RESTORE"

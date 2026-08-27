@@ -1,6 +1,38 @@
 version: "3"
 
 tasks:
+  backend:sync:
+    desc: Install Backend dependencies
+    dir: backend
+    cmds:
+      - uv sync
+
+  backend:dev:
+    desc: Start the Backend API
+    dir: backend
+    cmds:
+      - uv run uvicorn app.main:app --reload --port 8000
+
+  backend:check:
+    desc: Run Backend lint and type checks
+    dir: backend
+    cmds:
+      - uv run ruff check .
+      - uv run ruff format --check .
+      - uv run pyright
+
+  backend:test:
+    desc: Run Backend tests
+    dir: backend
+    cmds:
+      - uv run pytest
+
+  backend:migrate:
+    desc: Apply Backend database migrations
+    dir: backend
+    cmds:
+      - uv run alembic upgrade head
+
   admin:dev:
     desc: Start the Admin application
     cmds:
