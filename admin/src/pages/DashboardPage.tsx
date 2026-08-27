@@ -1,6 +1,7 @@
 import { Button, Card } from 'antd'
 import { ArrowRight, FileText, Image, Plus, Radio, Server } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../auth/AuthContext'
 import EmptyPanel from '../components/EmptyPanel'
 import PageHeader from '../components/PageHeader'
 
@@ -13,12 +14,13 @@ const metrics = [
 
 export default function DashboardPage() {
   const navigate = useNavigate()
+  const { user } = useAuth()
 
   return (
     <div className="page-stack">
       <PageHeader
         eyebrow="OVERVIEW"
-        title="早上好，Anywayone"
+        title={`你好，${user?.displayName || 'Anywayone'}`}
         description="在这里整理文章、摄影作品与个人站点内容。"
         actions={
           <Button type="primary" icon={<Plus size={17} />} onClick={() => navigate('/posts/new')}>

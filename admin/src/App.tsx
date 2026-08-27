@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
+import { RequireAnonymous, RequireAuth } from './auth/AuthRoutes'
 import AdminLayout from './layouts/AdminLayout'
 
 const DashboardPage = lazy(() => import('./pages/DashboardPage'))
@@ -15,22 +16,26 @@ export default function App() {
   return (
     <Suspense fallback={<div className="route-loading" role="status">正在加载…</div>}>
       <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route element={<AdminLayout />}>
-          <Route index element={<Navigate to="/dashboard" replace />} />
-          <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/posts" element={<PostsPage />} />
-          <Route path="/posts/new" element={<PostEditorPage />} />
-          <Route path="/posts/:postId/edit" element={<PostEditorPage />} />
-          <Route path="/taxonomy" element={<PlaceholderPage type="taxonomy" />} />
-          <Route path="/photography" element={<PhotographyPage />} />
-          <Route path="/photography/new" element={<PhotographyEditorPage />} />
-          <Route path="/photography/:albumId/edit" element={<PhotographyEditorPage />} />
-          <Route path="/media" element={<PlaceholderPage type="media" />} />
-          <Route path="/profile" element={<SettingsPage section="profile" />} />
-          <Route path="/contact" element={<SettingsPage section="contact" />} />
-          <Route path="/settings" element={<SettingsPage section="site" />} />
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        <Route element={<RequireAnonymous />}>
+          <Route path="/login" element={<LoginPage />} />
+        </Route>
+        <Route element={<RequireAuth />}>
+          <Route element={<AdminLayout />}>
+            <Route index element={<Navigate to="/dashboard" replace />} />
+            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/posts" element={<PostsPage />} />
+            <Route path="/posts/new" element={<PostEditorPage />} />
+            <Route path="/posts/:postId/edit" element={<PostEditorPage />} />
+            <Route path="/taxonomy" element={<PlaceholderPage type="taxonomy" />} />
+            <Route path="/photography" element={<PhotographyPage />} />
+            <Route path="/photography/new" element={<PhotographyEditorPage />} />
+            <Route path="/photography/:albumId/edit" element={<PhotographyEditorPage />} />
+            <Route path="/media" element={<PlaceholderPage type="media" />} />
+            <Route path="/profile" element={<SettingsPage section="profile" />} />
+            <Route path="/contact" element={<SettingsPage section="contact" />} />
+            <Route path="/settings" element={<SettingsPage section="site" />} />
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Route>
         </Route>
       </Routes>
     </Suspense>

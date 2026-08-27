@@ -3,6 +3,7 @@ import { Avatar, Breadcrumb, Button, Drawer, Dropdown, Menu, Tooltip } from 'ant
 import type { MenuProps } from 'antd'
 import { Bell, ExternalLink, LogOut, Menu as MenuIcon, MoreHorizontal, Search } from 'lucide-react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { useAuth } from '../auth/AuthContext'
 import BrandMark from '../components/BrandMark'
 import {
   getRouteMeta,
@@ -27,11 +28,23 @@ const webUrl = import.meta.env.VITE_WEB_URL || 'http://localhost:3000'
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const location = useLocation()
   const navigate = useNavigate()
+  const { user, logout } = useAuth()
+  const [loggingOut, setLoggingOut] = useState(false)
 
   const handleMenuClick: MenuProps['onClick'] = ({ key }) => {
     if (key.startsWith('/')) {
       navigate(key)
       onNavigate?.()
+    }
+  }
+
+  const handleLogout = async () => {
+    setLoggingOut(true)
+    try {
+      await logout()
+      onNavigate?.()
+    } finally {
+      setLoggingOut(false)
     }
   }
 
@@ -56,8 +69,8 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
       <div className="sidebar-account">
         <Avatar size={36} src="/brand/anywayone-mark.svg" />
         <div className="sidebar-account__copy">
-          <strong>Anywayone</strong>
-          <span>站点管理员</span>
+          <strong>{user?.displayName || 'Anywayone'}</strong>
+          <span title={user?.email}>{user?.email || '站点管理员'}</span>
         </div>
         <Dropdown
           trigger={['click']}
@@ -65,11 +78,17 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
             items: [
               { key: 'site', label: '查看展示端', icon: <ExternalLink size={16} /> },
               { type: 'divider' },
-              { key: 'logout', label: '退出登录', icon: <LogOut size={16} />, danger: true },
+              {
+                key: 'logout',
+                label: loggingOut ? '正在退出…' : '退出登录',
+                icon: <LogOut size={16} />,
+                danger: true,
+                disabled: loggingOut,
+              },
             ],
             onClick: ({ key }) => {
               if (key === 'site') window.open(webUrl, '_blank', 'noopener,noreferrer')
-              if (key === 'logout') navigate('/login')
+              if (key === 'logout') void handleLogout()
             },
           }}
         >
@@ -88,6 +107,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 export default function AdminLayout() {
   const location = useLocation()
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [drawerOpen, setDrawerOpen] = useState(false)
   const meta = useMemo(() => getRouteMeta(location.pathname), [location.pathname])
 
@@ -138,7 +158,9 @@ export default function AdminLayout() {
             <Tooltip title="暂无通知">
               <Button type="text" icon={<Bell size={19} />} aria-label="通知" />
             </Tooltip>
-            <Avatar className="admin-topbar__avatar" size={34} src="/brand/anywayone-mark.svg" />
+            <Tooltip title={user?.displayName || '站点管理员'}>
+              <Avatar className="admin-topbar__avatar" size={34} src="/brand/anywayone-mark.svg" />
+            </Tooltip>
           </div>
         </header>
 
