@@ -8,6 +8,11 @@
     "pnpm": ">=10.34.0"
   },
   "scripts": {
+    "dev:admin": "pnpm --filter @anywayone/admin dev",
+    "lint:admin": "pnpm --filter @anywayone/admin lint",
+    "typecheck:admin": "pnpm --filter @anywayone/admin typecheck",
+    "build:admin": "pnpm --filter @anywayone/admin build",
+    "check:admin": "pnpm lint:admin && pnpm typecheck:admin",
     "dev:web": "pnpm --filter @anywayone/web dev",
     "lint:web": "pnpm --filter @anywayone/web lint",
     "typecheck:web": "pnpm --filter @anywayone/web typecheck",

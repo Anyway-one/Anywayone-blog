@@ -1,6 +1,21 @@
 version: "3"
 
 tasks:
+  admin:dev:
+    desc: Start the Admin application
+    cmds:
+      - pnpm dev:admin
+
+  admin:check:
+    desc: Run Admin lint and TypeScript checks
+    cmds:
+      - pnpm check:admin
+
+  admin:build:
+    desc: Build the Admin application
+    cmds:
+      - pnpm build:admin
+
   web:dev:
     desc: Start the public Web application
     cmds:

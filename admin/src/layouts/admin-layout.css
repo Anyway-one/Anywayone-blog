@@ -1,0 +1,261 @@
+.admin-shell {
+  min-height: 100svh;
+  background: var(--color-canvas);
+}
+
+.admin-sidebar {
+  position: fixed;
+  z-index: 30;
+  top: 16px;
+  bottom: 16px;
+  left: 16px;
+  width: 248px;
+  overflow: hidden;
+  border: 1px solid #2f302d;
+  border-radius: 8px;
+  background: var(--color-ink);
+  box-shadow: 0 14px 34px rgb(20 20 18 / 12%);
+}
+
+.sidebar-content {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  flex-direction: column;
+  background: var(--color-ink);
+}
+
+.sidebar-content__brand {
+  flex: 0 0 auto;
+  padding: 20px 18px 14px;
+}
+
+.brand-mark {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 11px;
+  color: var(--color-paper);
+}
+
+.brand-mark img {
+  flex: 0 0 auto;
+  width: 38px;
+  height: 38px;
+  border: 1px solid #3c3d39;
+  border-radius: 6px;
+}
+
+.brand-mark__text {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.brand-mark__text strong {
+  overflow: hidden;
+  font-size: 15px;
+  line-height: 20px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.brand-mark__text span {
+  color: #81827d;
+  font-size: 10px;
+  line-height: 14px;
+}
+
+.sidebar-menu {
+  flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  border-inline-end: 0 !important;
+  padding: 4px 10px 12px;
+}
+
+.sidebar-menu.ant-menu-dark .ant-menu-item,
+.sidebar-menu.ant-menu-dark .ant-menu-submenu-title {
+  min-width: 0;
+  width: calc(100% - 4px);
+  height: 42px;
+  margin: 4px 2px;
+  border-radius: 6px;
+  line-height: 42px;
+}
+
+.sidebar-menu.ant-menu-dark .ant-menu-sub {
+  margin: 4px 2px 8px;
+  border: 1px solid #272824;
+  border-radius: 6px;
+  padding: 4px;
+}
+
+.sidebar-menu.ant-menu-dark .ant-menu-sub .ant-menu-item {
+  width: 100%;
+  height: 38px;
+  margin: 2px 0;
+  line-height: 38px;
+}
+
+.sidebar-menu.ant-menu-dark .ant-menu-item-selected {
+  position: relative;
+  font-weight: 600;
+}
+
+.sidebar-menu.ant-menu-dark .ant-menu-item-selected::before {
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  left: 0;
+  width: 3px;
+  border-radius: 0 2px 2px 0;
+  background: var(--color-accent);
+  content: '';
+}
+
+.sidebar-menu .ant-menu-title-content {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-account {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 10px;
+  margin: 10px;
+  border: 1px solid #343531;
+  border-radius: 8px;
+  padding: 10px;
+  background: #222320;
+}
+
+.sidebar-account__copy {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+}
+
+.sidebar-account__copy strong {
+  overflow: hidden;
+  color: #f2f0e9;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebar-account__copy span {
+  color: #81827d;
+  font-size: 11px;
+}
+
+.sidebar-account__more.ant-btn {
+  color: #9d9e98;
+}
+
+.sidebar-account__more.ant-btn:hover {
+  color: #ffffff !important;
+  background: #30312d !important;
+}
+
+.admin-workspace {
+  min-width: 0;
+  margin-left: 280px;
+  padding: 0 16px 20px 0;
+}
+
+.admin-topbar {
+  display: flex;
+  height: 72px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.admin-topbar__start,
+.admin-topbar__actions {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+}
+
+.admin-topbar__actions {
+  gap: 4px;
+}
+
+.admin-topbar__actions .ant-btn {
+  width: 38px;
+  height: 38px;
+  color: #595a57;
+}
+
+.admin-topbar__menu {
+  display: none;
+}
+
+.admin-topbar__avatar {
+  margin-left: 6px;
+  border: 1px solid #d4d3ce;
+}
+
+.admin-topbar .ant-breadcrumb-link[role='button'],
+.admin-topbar .ant-breadcrumb-link:has(+ span) {
+  cursor: pointer;
+}
+
+.admin-main {
+  width: 100%;
+  max-width: 1520px;
+  margin: 0 auto;
+}
+
+.admin-mobile-drawer .ant-drawer-body {
+  padding: 0;
+  background: var(--color-ink);
+}
+
+.admin-mobile-drawer .ant-drawer-content-wrapper {
+  width: min(320px, calc(100vw - 40px)) !important;
+}
+
+@media (max-width: 900px) {
+  .admin-sidebar {
+    display: none;
+  }
+
+  .admin-workspace {
+    margin-left: 0;
+    padding: 0 16px 20px;
+  }
+
+  .admin-topbar {
+    height: 64px;
+  }
+
+  .admin-topbar__menu {
+    display: inline-flex;
+    margin-right: 4px;
+  }
+
+  .admin-topbar__actions .ant-btn:first-child {
+    display: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .admin-workspace {
+    padding-inline: 12px;
+  }
+
+  .admin-topbar .ant-breadcrumb > ol > li:not(:last-child) {
+    display: none;
+  }
+
+  .admin-topbar__avatar {
+    display: none;
+  }
+}
