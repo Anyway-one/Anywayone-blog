@@ -322,6 +322,86 @@ a {
   font-weight: 600;
 }
 
+.list-feedback {
+  padding: 18px;
+}
+
+.list-loading,
+.editor-loading {
+  display: flex;
+  min-height: 300px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 12px;
+  color: #777874;
+  font-size: 13px;
+}
+
+.post-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.post-list-row {
+  display: grid;
+  min-width: 0;
+  align-items: center;
+  grid-template-columns: minmax(240px, 1fr) 120px 180px 90px;
+  gap: 16px;
+  border-bottom: 1px solid #ecece7;
+  padding: 13px 18px;
+}
+
+.post-list-row:hover {
+  background: #faf9f6;
+}
+
+.post-list-row__title {
+  display: flex;
+  min-width: 0;
+  align-items: flex-start;
+  flex-direction: column;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.post-list-row__title strong,
+.post-list-row__title span {
+  overflow: hidden;
+  width: 100%;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.post-list-row__title strong {
+  font-size: 14px;
+  line-height: 21px;
+}
+
+.post-list-row__title span,
+.post-list-row time {
+  color: #858681;
+  font-size: 11px;
+}
+
+.list-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 18px;
+}
+
+.list-pagination > span {
+  color: #858681;
+  font-size: 12px;
+}
+
 .placeholder-watermark {
   position: absolute;
   right: 32px;
@@ -388,6 +468,23 @@ a {
 .editor-commandbar__start span {
   color: #8a8b87;
   font-size: 11px;
+}
+
+.editor-commandbar__start .editor-save-status--error {
+  color: #b54735;
+}
+
+.editor-load-error {
+  display: flex;
+  min-height: 420px;
+  justify-content: center;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.editor-load-error > div:last-child {
+  display: flex;
+  gap: 8px;
 }
 
 .editor-layout {
@@ -462,6 +559,99 @@ a {
   line-height: 24px;
   box-shadow: none;
   resize: none;
+}
+
+.editor-content--split {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.editor-content--split .markdown-editor.ant-input {
+  padding-right: 20px;
+}
+
+.markdown-preview {
+  min-width: 0;
+  min-height: 520px;
+  overflow-wrap: anywhere;
+  padding: 22px 0 0;
+  color: #252622;
+  font-size: 15px;
+  line-height: 1.8;
+}
+
+.editor-content--split .markdown-preview {
+  border-left: 1px solid #e7e7e2;
+  padding-left: 20px;
+}
+
+.markdown-preview h1,
+.markdown-preview h2,
+.markdown-preview h3,
+.markdown-preview h4 {
+  margin: 1.5em 0 0.6em;
+  line-height: 1.35;
+  letter-spacing: 0;
+}
+
+.markdown-preview h1:first-child,
+.markdown-preview h2:first-child,
+.markdown-preview h3:first-child,
+.markdown-preview p:first-child {
+  margin-top: 0;
+}
+
+.markdown-preview pre {
+  overflow-x: auto;
+  border-radius: 6px;
+  padding: 14px;
+  background: #f3f2ed;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.markdown-preview code {
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+}
+
+.markdown-preview blockquote {
+  margin-inline: 0;
+  border-left: 3px solid var(--color-accent);
+  padding-left: 16px;
+  color: #6c6d69;
+}
+
+.markdown-preview img {
+  max-width: 100%;
+  height: auto;
+}
+
+.markdown-preview table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+}
+
+.markdown-preview th,
+.markdown-preview td {
+  border: 1px solid #deded8;
+  padding: 7px 10px;
+}
+
+.markdown-preview__empty {
+  display: flex;
+  min-height: 320px;
+  align-items: center;
+  justify-content: center;
+  color: #969792;
+  font-size: 13px;
+}
+
+.publication-issues {
+  margin: 12px 0 0;
+  padding-left: 20px;
 }
 
 .editor-settings {
@@ -723,6 +913,22 @@ a {
     position: static;
   }
 
+  .editor-content--split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .editor-content--split .markdown-editor.ant-input {
+    min-height: 360px;
+    padding-right: 0;
+  }
+
+  .editor-content--split .markdown-preview {
+    min-height: 360px;
+    border-top: 1px solid #e7e7e2;
+    border-left: 0;
+    padding-left: 0;
+  }
+
   .login-page {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -780,6 +986,30 @@ a {
 
   .table-header {
     display: none;
+  }
+
+  .post-list-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px 12px;
+    padding: 14px 16px;
+  }
+
+  .post-list-row > div {
+    justify-self: end;
+  }
+
+  .post-list-row time {
+    grid-column: 1;
+  }
+
+  .post-list-row > .ant-btn {
+    grid-row: 1 / span 2;
+    grid-column: 2;
+  }
+
+  .list-pagination {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .editor-commandbar {
