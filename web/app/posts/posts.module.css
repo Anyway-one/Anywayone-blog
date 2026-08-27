@@ -16,8 +16,8 @@
   align-items: flex-end;
   justify-content: space-between;
   gap: 24px;
-  padding-bottom: 34px;
   border-bottom: 1px solid var(--color-ink);
+  padding-bottom: 34px;
 }
 
 .heading p,
@@ -30,8 +30,8 @@
 .heading h1 {
   margin: 0;
   font-size: 44px;
-  line-height: 1.18;
   font-weight: 500;
+  line-height: 1.18;
 }
 
 .heading h1 span {
@@ -45,8 +45,8 @@
 }
 
 .rssLink {
-  min-height: 44px;
   display: inline-flex;
+  min-height: 44px;
   align-items: center;
   gap: 8px;
   color: var(--color-secondary-text);
@@ -58,9 +58,129 @@
   height: 17px;
 }
 
-.empty {
-  padding: 72px 0;
+.postList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.postRow {
+  display: grid;
+  min-width: 0;
+  align-items: start;
+  grid-template-columns: 72px minmax(0, 1fr) 52px;
+  gap: 28px;
   border-bottom: 1px solid var(--color-line);
+  padding: 46px 0;
+}
+
+.postIndex {
+  margin: 3px 0 0;
+  color: var(--color-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.postMeta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  color: var(--color-secondary-text);
+  font-size: 12px;
+}
+
+.postMeta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.postMeta svg {
+  width: 14px;
+  height: 14px;
+}
+
+.postRow h2 {
+  max-width: 820px;
+  margin: 13px 0 0;
+  font-size: 30px;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.postRow h2 a {
+  transition: color 160ms ease;
+}
+
+.postRow h2 a:hover {
+  color: #8a691f;
+}
+
+.excerpt {
+  max-width: 760px;
+  margin: 14px 0 0;
+  color: var(--color-secondary-text);
+  line-height: 1.8;
+}
+
+.readLink {
+  display: inline-flex;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 24px;
+  border: 1px solid var(--color-line);
+  color: var(--color-secondary-text);
+  transition: border-color 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+.readLink:hover {
+  border-color: var(--color-ink);
+  color: var(--color-ink);
+  transform: translateX(3px);
+}
+
+.readLink svg {
+  width: 18px;
+  height: 18px;
+}
+
+.pagination {
+  display: grid;
+  align-items: center;
+  grid-template-columns: minmax(120px, 1fr) auto minmax(120px, 1fr);
+  gap: 24px;
+  padding: 32px 0;
+}
+
+.pagination p {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.pagination a {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.pagination a:last-child {
+  justify-self: end;
+}
+
+.pagination svg {
+  width: 16px;
+  height: 16px;
+}
+
+.empty {
+  border-bottom: 1px solid var(--color-line);
+  padding: 72px 0;
 }
 
 .empty > svg {
@@ -84,8 +204,8 @@
 }
 
 .empty a {
-  min-height: 44px;
   display: inline-flex;
+  min-height: 44px;
   align-items: center;
   gap: 9px;
   margin-top: 30px;
@@ -95,6 +215,56 @@
 .empty a svg {
   width: 18px;
   height: 18px;
+}
+
+.loadingList {
+  display: flex;
+  flex-direction: column;
+}
+
+.loadingRow {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 28px;
+  border-bottom: 1px solid var(--color-line);
+  padding: 46px 0;
+}
+
+.loadingRow > span,
+.loadingRow div span,
+.loadingRow strong {
+  display: block;
+  border-radius: 3px;
+  background: #dedbd2;
+  animation: loadingPulse 1.5s ease-in-out infinite;
+}
+
+.loadingRow > span {
+  width: 22px;
+  height: 10px;
+}
+
+.loadingRow div span:first-child {
+  width: 150px;
+  height: 10px;
+}
+
+.loadingRow strong {
+  width: min(80%, 620px);
+  height: 32px;
+  margin-top: 18px;
+}
+
+.loadingRow div span:last-child {
+  width: min(64%, 480px);
+  height: 16px;
+  margin-top: 18px;
+}
+
+@keyframes loadingPulse {
+  0%,
+  100% { opacity: 0.42; }
+  50% { opacity: 0.9; }
 }
 
 @media (max-width: 767px) {
@@ -108,7 +278,50 @@
     font-size: 32px;
   }
 
+  .postRow {
+    grid-template-columns: 32px minmax(0, 1fr);
+    gap: 14px;
+    padding: 34px 0;
+  }
+
+  .loadingRow {
+    grid-template-columns: 32px minmax(0, 1fr);
+    gap: 14px;
+    padding: 34px 0;
+  }
+
+  .postRow h2 {
+    font-size: 23px;
+  }
+
+  .postMeta {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .readLink {
+    display: none;
+  }
+
+  .pagination {
+    grid-template-columns: minmax(72px, 1fr) auto minmax(72px, 1fr);
+    gap: 10px;
+  }
+
+  .pagination a {
+    font-size: 12px;
+  }
+
   .empty {
     padding: 56px 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loadingRow > span,
+  .loadingRow div span,
+  .loadingRow strong {
+    animation: none;
   }
 }

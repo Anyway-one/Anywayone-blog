@@ -1,0 +1,143 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { ArrowLeft, Clock3, RefreshCw } from "lucide-react";
+import { ArticleBody } from "@/components/article-body";
+import { SiteFooter } from "@/components/site-footer";
+import { getPublicPost, type PublicPost } from "@/lib/public-posts";
+import styles from "./post.module.css";
+
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+
+const dateFormatter = new Intl.DateTimeFormat("zh-CN", {
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+  timeZone: "Asia/Shanghai",
+});
+
+type PostPageProps = {
+  params: Promise<{ slug: string }>;
+};
+
+function descriptionFor(post: PublicPost) {
+  return post.seoDescription ?? post.excerpt ?? "Anywayone 的文章。";
+}
+
+export async function generateMetadata({ params }: PostPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const result = await getPublicPost(slug);
+  if (result.status !== "ready") {
+    return {
+      title: result.status === "not-found" ? "文章未找到" : "文章暂时无法加载",
+      robots: { index: false, follow: false },
+    };
+  }
+
+  const post = result.data;
+  const title = post.seoTitle ?? post.title;
+  const description = descriptionFor(post);
+  const canonical = post.canonicalUrl ?? `/posts/${post.slug}`;
+  return {
+    title,
+    description,
+    alternates: { canonical },
+    openGraph: {
+      type: "article",
+      url: canonical,
+      title,
+      description,
+      publishedTime: post.publishedAt,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+    },
+  };
+}
+
+function UnavailableArticle() {
+  return (
+    <main className={styles.page}>
+      <section className={styles.unavailable}>
+        <RefreshCw aria-hidden="true" />
+        <p>SERVICE / RETRY</p>
+        <h1>文章暂时无法显示<span>。</span></h1>
+        <div>内容服务当前没有响应，请稍后重新加载。</div>
+        <Link href="/posts"><ArrowLeft aria-hidden="true" />返回文章列表</Link>
+      </section>
+      <SiteFooter />
+    </main>
+  );
+}
+
+export default async function PostPage({ params }: PostPageProps) {
+  const { slug } = await params;
+  const result = await getPublicPost(slug);
+  if (result.status === "not-found") notFound();
+  if (result.status !== "ready") return <UnavailableArticle />;
+
+  const post = result.data;
+  const canonicalUrl = new URL(post.canonicalUrl ?? `/posts/${post.slug}`, siteUrl).toString();
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: post.title,
+    description: descriptionFor(post),
+    datePublished: post.publishedAt,
+    mainEntityOfPage: canonicalUrl,
+    url: canonicalUrl,
+    author: { "@type": "Person", name: "Anywayone" },
+    publisher: { "@type": "Person", name: "Anywayone" },
+  };
+
+  return (
+    <main className={styles.page}>
+      <article className={styles.article}>
+        <Link className={styles.backLink} href="/posts">
+          <ArrowLeft aria-hidden="true" />文章列表
+        </Link>
+
+        <header className={styles.articleHeader}>
+          <p>WRITING / ARTICLE</p>
+          <h1>{post.title}<span>。</span></h1>
+          {post.excerpt && <div className={styles.lead}>{post.excerpt}</div>}
+          <div className={styles.meta}>
+            <time dateTime={post.publishedAt}>{dateFormatter.format(new Date(post.publishedAt))}</time>
+            <span><Clock3 aria-hidden="true" />{post.readingTimeMinutes} 分钟阅读</span>
+          </div>
+        </header>
+
+        <div className={styles.articleLayout}>
+          <div className={styles.articleMain}>
+            <ArticleBody html={post.renderedHtml} />
+            <footer className={styles.articleEnd}>
+              <span aria-hidden="true" />
+              <p>END / 感谢阅读</p>
+              <Link href="/posts"><ArrowLeft aria-hidden="true" />返回全部文章</Link>
+            </footer>
+          </div>
+
+          {post.toc.length > 1 && (
+            <aside className={styles.toc} aria-label="文章目录">
+              <p>CONTENTS / 目录</p>
+              <ol>
+                {post.toc.map((item) => (
+                  <li key={item.id} style={{ paddingLeft: `${Math.max(0, item.level - 2) * 12}px` }}>
+                    <a href={`#${item.id}`}>{item.title}</a>
+                  </li>
+                ))}
+              </ol>
+            </aside>
+          )}
+        </div>
+      </article>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
+      />
+      <SiteFooter />
+    </main>
+  );
+}

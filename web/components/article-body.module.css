@@ -1,0 +1,161 @@
+.body {
+  min-width: 0;
+  color: #292a27;
+  font-family: Georgia, "Noto Serif SC", "Songti SC", serif;
+  font-size: 17px;
+  line-height: 1.95;
+  overflow-wrap: anywhere;
+}
+
+.body :global(p),
+.body :global(ul),
+.body :global(ol),
+.body :global(blockquote),
+.body :global(pre),
+.body :global(table) {
+  margin: 0 0 1.5em;
+}
+
+.body :global(h1),
+.body :global(h2),
+.body :global(h3),
+.body :global(h4),
+.body :global(h5),
+.body :global(h6) {
+  scroll-margin-top: calc(var(--header-height) + 28px);
+  margin: 2em 0 0.7em;
+  color: var(--color-ink);
+  font-family: Inter, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: 0;
+}
+
+.body :global(h1) {
+  font-size: 32px;
+}
+
+.body :global(h2) {
+  font-size: 27px;
+}
+
+.body :global(h3) {
+  font-size: 22px;
+}
+
+.body :global(a) {
+  border-bottom: 1px solid rgba(138, 105, 31, 0.42);
+  color: #7b5c19;
+}
+
+.body :global(blockquote) {
+  border-left: 3px solid var(--color-brand);
+  padding: 2px 0 2px 20px;
+  color: var(--color-secondary-text);
+}
+
+.body :global(code) {
+  border-radius: 3px;
+  padding: 0.12em 0.32em;
+  background: #e5e2d9;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 0.86em;
+}
+
+.body :global(pre) {
+  position: relative;
+  max-width: 100%;
+  overflow-x: auto;
+  border: 1px solid #d5d2c8;
+  border-radius: 6px;
+  padding: 22px;
+  background: #252622;
+  color: #f5f2ea;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+.body :global(pre code) {
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  font-size: inherit;
+}
+
+.copyButton {
+  position: sticky;
+  left: 100%;
+  display: block;
+  min-width: 54px;
+  min-height: 32px;
+  margin: -10px -10px 8px auto;
+  border: 1px solid rgba(245, 242, 234, 0.28);
+  border-radius: 4px;
+  padding: 0 9px;
+  color: #e7e3d9;
+  background: #353630;
+  font-family: Inter, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.body :global(img) {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 2em auto;
+}
+
+.body :global(hr) {
+  margin: 3em 0;
+  border: 0;
+  border-top: 1px solid var(--color-line);
+}
+
+.body :global(table) {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-family: Inter, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.body :global(th),
+.body :global(td) {
+  min-width: 120px;
+  border: 1px solid var(--color-line);
+  padding: 9px 12px;
+  text-align: left;
+}
+
+.body :global(th) {
+  background: #e8e5dd;
+}
+
+@media (max-width: 767px) {
+  .body {
+    font-size: 16px;
+    line-height: 1.9;
+  }
+
+  .body :global(h1) {
+    font-size: 27px;
+  }
+
+  .body :global(h2) {
+    font-size: 24px;
+  }
+
+  .body :global(h3) {
+    font-size: 20px;
+  }
+
+  .body :global(pre) {
+    margin-inline: -6px;
+    padding: 18px;
+    font-size: 13px;
+  }
+}
