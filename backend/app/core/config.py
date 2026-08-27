@@ -1,8 +1,8 @@
 from functools import lru_cache
-from typing import Literal
+from typing import Annotated, Literal
 
 from pydantic import Field, SecretStr, computed_field, field_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 from sqlalchemy import URL
 
 DEVELOPMENT_SECRET_KEY = "development-only-change-this-secret-key"  # noqa: S105
@@ -34,7 +34,10 @@ class Settings(BaseSettings):
     secret_key: SecretStr = SecretStr(DEVELOPMENT_SECRET_KEY)
     access_token_expire_minutes: int = Field(default=15, ge=5, le=1440)
     refresh_token_expire_days: int = Field(default=30, ge=1, le=365)
-    cors_origins: list[str] = ["http://localhost:3000", "http://localhost:5173"]
+    cors_origins: Annotated[list[str], NoDecode] = [
+        "http://localhost:3000",
+        "http://localhost:5173",
+    ]
     cookie_secure: bool = False
 
     @field_validator("cors_origins", mode="before")
