@@ -106,11 +106,11 @@ Admin 登录和文章管理已使用真实后端接口；统计、摄影、分�
 - 文章草稿、保存、发布、撤回、公开列表与详情 API。
 - Markdown 安全渲染、文章版本、乐观锁、审计日志和 Outbox。
 
-## 生产部署
+## 自托管部署
 
-生产环境使用 GitHub Actions 构建 ARM64 Docker 镜像，并将 Web、Admin 和 Backend 自动部署到 Oracle Cloud。Caddy 负责 HTTPS 与反向代理，PostgreSQL 运行在同一台宿主机。
+仓库提供 GitHub Actions、ARM64 Docker 镜像、Docker Compose、Caddy 和宿主机 PostgreSQL 的单机部署参考实现。该实现包含 Anywayone 项目的默认仓库名、镜像名、域名和健康检查地址，Fork 后不能直接当作一键部署模板使用。
 
-服务器首次初始化、GitHub Secrets、数据库私网连接、Cloudflare 和回退操作见 [部署与运维文档](./doc/07-部署与运维.md)。仓库中的 `deploy/*.env.example` 仅为字段模板，生产密钥只保存在服务器 `/opt/anywayone/`。
+Fork 定制项、服务器初始化、GitHub Environment、数据库私网连接、HTTPS、首次管理员和回退操作见 [开源自托管部署指南](./doc/07-开源部署指南.md)。`deploy/*.env.example` 仅为字段模板，真实环境文件、个人服务器清单和运维记录不得提交到开源仓库。
 
 ## Git 约定
 

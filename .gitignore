@@ -45,3 +45,6 @@ Thumbs.db
 # Local tooling
 .task/
 *.tsbuildinfo
+
+# Local private operations records
+/doc/private/
