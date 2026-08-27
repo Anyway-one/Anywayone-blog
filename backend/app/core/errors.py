@@ -37,11 +37,16 @@ def error_body(
     return {"error": error, "meta": {"requestId": get_request_id(request)}}
 
 
+def error_headers(request: Request) -> dict[str, str]:
+    return {"X-Request-Id": get_request_id(request)}
+
+
 def register_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(AppError)
     async def _handle_app_error(request: Request, exc: AppError) -> JSONResponse:
         return JSONResponse(
             status_code=exc.status_code,
+            headers=error_headers(request),
             content=error_body(
                 request,
                 code=exc.code,
@@ -65,6 +70,7 @@ def register_exception_handlers(app: FastAPI) -> None:
         ]
         return JSONResponse(
             status_code=422,
+            headers=error_headers(request),
             content=error_body(
                 request,
                 code="VALIDATION_FAILED",
@@ -83,6 +89,7 @@ def register_exception_handlers(app: FastAPI) -> None:
         )
         return JSONResponse(
             status_code=500,
+            headers=error_headers(request),
             content=error_body(
                 request,
                 code="INTERNAL_ERROR",

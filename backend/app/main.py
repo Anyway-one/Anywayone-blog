@@ -9,10 +9,12 @@ from app.core.config import get_settings
 from app.core.errors import register_exception_handlers
 from app.core.logging import RequestLoggingMiddleware, configure_logging
 from app.core.request_id import RequestIdMiddleware
+from app.db import models as db_models
 from app.db.session import close_database
 
 settings = get_settings()
 configure_logging()
+db_models.register_models()
 
 
 @asynccontextmanager
@@ -21,7 +23,7 @@ async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
     await close_database()
 
 
-app = FastAPI(
+api = FastAPI(
     title=settings.app_name,
     version="0.1.0",
     docs_url="/docs" if settings.app_env != "production" else None,
@@ -29,14 +31,17 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-app.add_middleware(
-    CORSMiddleware,
+api.add_middleware(RequestLoggingMiddleware)
+api.add_middleware(RequestIdMiddleware)
+register_exception_handlers(api)
+api.include_router(api_router)
+
+# Keep CORS outside FastAPI's error middleware so unexpected 500 responses are
+# still readable by the Admin application on its separate origin.
+app = CORSMiddleware(
+    app=api,
     allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type", "Idempotency-Key", "X-Request-Id"],
 )
-app.add_middleware(RequestLoggingMiddleware)
-app.add_middleware(RequestIdMiddleware)
-register_exception_handlers(app)
-app.include_router(api_router)

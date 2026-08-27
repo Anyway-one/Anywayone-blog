@@ -16,3 +16,7 @@ __all__ = [
     "User",
     "post_tags",
 ]
+
+
+def register_models() -> None:
+    """Load every mapped table into the shared SQLAlchemy metadata."""

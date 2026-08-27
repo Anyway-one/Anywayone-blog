@@ -1,6 +1,8 @@
+from fastapi import Request
+from fastapi.responses import JSONResponse
 from httpx import ASGITransport, AsyncClient
 
-from app.main import app
+from app.main import api, app
 
 
 async def test_admin_endpoint_requires_authentication() -> None:
@@ -29,3 +31,23 @@ async def test_validation_errors_use_api_envelope() -> None:
     assert response.status_code == 422
     assert body["error"]["code"] == "VALIDATION_FAILED"
     assert len(body["error"]["details"]) == 2
+
+
+async def test_unexpected_errors_keep_global_cors_headers() -> None:
+    async def fail(_: Request) -> JSONResponse:
+        raise RuntimeError("test failure")
+
+    api.add_api_route("/_test/unexpected-error", fail, methods=["GET"])
+    async with AsyncClient(
+        transport=ASGITransport(app=app, raise_app_exceptions=False),
+        base_url="http://test",
+    ) as client:
+        response = await client.get(
+            "/_test/unexpected-error",
+            headers={"Origin": "http://localhost:5173"},
+        )
+
+    assert response.status_code == 500
+    assert response.headers["Access-Control-Allow-Origin"] == "http://localhost:5173"
+    assert response.headers["X-Request-Id"].startswith("req_")
+    assert response.json()["error"]["code"] == "INTERNAL_ERROR"
