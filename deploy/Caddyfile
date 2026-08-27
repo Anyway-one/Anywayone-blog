@@ -1,36 +1,37 @@
 {
-    email {$ACME_EMAIL}
+	email {$ACME_EMAIL}
+	acme_ca https://acme-v02.api.letsencrypt.org/directory
 }
 
 (security_headers) {
-    header {
-        Strict-Transport-Security "max-age=31536000; includeSubDomains"
-        X-Content-Type-Options "nosniff"
-        X-Frame-Options "SAMEORIGIN"
-        Referrer-Policy "strict-origin-when-cross-origin"
-        Permissions-Policy "camera=(), microphone=(), geolocation=()"
-        -Server
-    }
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "SAMEORIGIN"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		-Server
+	}
 }
 
 anywayone.com {
-    redir https://www.anywayone.com{uri} permanent
+	redir https://www.anywayone.com{uri} permanent
 }
 
 www.anywayone.com {
-    import security_headers
-    encode zstd gzip
-    reverse_proxy web:3000
+	import security_headers
+	encode zstd gzip
+	reverse_proxy web:3000
 }
 
 admin.anywayone.com {
-    import security_headers
-    encode zstd gzip
-    reverse_proxy admin:8080
+	import security_headers
+	encode zstd gzip
+	reverse_proxy admin:8080
 }
 
 api.anywayone.com {
-    import security_headers
-    encode zstd gzip
-    reverse_proxy backend:8000
+	import security_headers
+	encode zstd gzip
+	reverse_proxy backend:8000
 }
