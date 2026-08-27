@@ -1,0 +1,1 @@
+"""Uploaded media assets."""

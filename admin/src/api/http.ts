@@ -95,7 +95,7 @@ async function sendRequest<T>(path: string, options: RequestOptions): Promise<T>
   const { authenticated = true, retryOnUnauthorized = true, headers, ...requestInit } = options
   const requestHeaders = new Headers(headers)
 
-  if (requestInit.body && !requestHeaders.has('Content-Type')) {
+  if (requestInit.body && !(requestInit.body instanceof FormData) && !requestHeaders.has('Content-Type')) {
     requestHeaders.set('Content-Type', 'application/json')
   }
   if (authenticated && accessToken) {

@@ -1,4 +1,5 @@
 from functools import lru_cache
+from pathlib import Path
 from typing import Annotated, Literal
 
 from pydantic import Field, SecretStr, computed_field, field_validator
@@ -39,6 +40,9 @@ class Settings(BaseSettings):
         "http://localhost:5173",
     ]
     cookie_secure: bool = False
+    media_storage_path: Path = Path("data/media")
+    media_public_url: str = "http://localhost:8000/media"
+    media_max_upload_bytes: int = Field(default=10 * 1024 * 1024, ge=1024, le=50 * 1024 * 1024)
 
     @field_validator("cors_origins", mode="before")
     @classmethod

@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import (
     Boolean,
@@ -17,10 +17,14 @@ from sqlalchemy import (
     text,
 )
 from sqlalchemy.dialects.postgresql import JSONB, UUID
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, TimestampMixin, UuidPrimaryKeyMixin
 from app.db.enums import PostStatus, PostVersionChangeType, Visibility
+
+if TYPE_CHECKING:
+    from app.modules.media.models import Media
+    from app.modules.taxonomy.models import Category, Tag
 
 post_tags = Table(
     "post_tags",
@@ -64,6 +68,12 @@ class Post(UuidPrimaryKeyMixin, TimestampMixin, Base):
         ForeignKey("categories.id", ondelete="SET NULL"),
         index=True,
     )
+    cover_media_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("media.id", ondelete="SET NULL"),
+        index=True,
+    )
+    cover_alt: Mapped[str | None] = mapped_column(String(320))
     title: Mapped[str] = mapped_column(String(200), nullable=False)
     slug: Mapped[str] = mapped_column(String(200), nullable=False)
     excerpt: Mapped[str | None] = mapped_column(Text)
@@ -91,6 +101,9 @@ class Post(UuidPrimaryKeyMixin, TimestampMixin, Base):
     scheduled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     published_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), index=True)
+    category: Mapped["Category | None"] = relationship(lazy="selectin")
+    tags: Mapped[list["Tag"]] = relationship(secondary=post_tags, lazy="selectin")
+    cover_media: Mapped["Media | None"] = relationship(lazy="selectin")
 
 
 class PostVersion(UuidPrimaryKeyMixin, Base):

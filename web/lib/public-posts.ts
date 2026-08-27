@@ -2,14 +2,38 @@ import { cache } from "react";
 
 const configuredApiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/$/, "");
 
+export interface TaxonomySummary {
+  id: string;
+  name: string;
+  slug: string;
+}
+
+export interface CoverMediaSummary {
+  id: string;
+  publicUrl: string;
+  width: number;
+  height: number;
+}
+
 export interface PublicPostListItem {
   id: string;
   title: string;
   slug: string;
   excerpt: string | null;
+  category: TaxonomySummary | null;
+  tags: TaxonomySummary[];
+  coverMedia: CoverMediaSummary | null;
+  coverAlt: string | null;
   readingTimeMinutes: number;
   publishedAt: string;
 }
+
+export interface PublicTaxonomy extends TaxonomySummary {
+  description: string | null;
+  postCount: number;
+}
+
+export type TaxonomyKind = "category" | "tag";
 
 export interface TableOfContentsItem {
   id: string;
@@ -72,6 +96,42 @@ export async function listPublicPosts(
   return request<PaginatedResponse<PublicPostListItem>>(
     `/public/posts?${search.toString()}`,
     ["public-posts"],
+  );
+}
+
+export async function listPublicTaxonomies(
+  kind: TaxonomyKind,
+): Promise<PublicApiResult<PublicTaxonomy[]>> {
+  const segment = kind === "category" ? "categories" : "tags";
+  const response = await request<DataResponse<PublicTaxonomy[]>>(
+    `/public/${segment}`,
+    ["public-posts", `public-${segment}`],
+  );
+  if (response.status !== "ready") return response;
+  return { status: "ready", data: response.data.data };
+}
+
+export const getPublicTaxonomy = cache(async (
+  kind: TaxonomyKind,
+  slug: string,
+): Promise<PublicApiResult<PublicTaxonomy>> => {
+  const response = await listPublicTaxonomies(kind);
+  if (response.status !== "ready") return response;
+  const item = response.data.find((candidate) => candidate.slug === slug);
+  return item ? { status: "ready", data: item } : { status: "not-found" };
+});
+
+export async function listPublicTaxonomyPosts(
+  kind: TaxonomyKind,
+  slug: string,
+  page = 1,
+  pageSize = 20,
+): Promise<PublicApiResult<PaginatedResponse<PublicPostListItem>>> {
+  const segment = kind === "category" ? "categories" : "tags";
+  const search = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+  return request<PaginatedResponse<PublicPostListItem>>(
+    `/public/${segment}/${encodeURIComponent(slug)}/posts?${search.toString()}`,
+    ["public-posts", `public-${segment}`, `public-${kind}:${slug}`],
   );
 }
 

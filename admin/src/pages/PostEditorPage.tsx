@@ -30,6 +30,7 @@ import {
   RefreshCw,
   Save,
   Undo2,
+  X,
 } from 'lucide-react'
 import { useBeforeUnload, useNavigate, useParams } from 'react-router-dom'
 import {
@@ -44,6 +45,8 @@ import {
   type PostVisibility,
 } from '../api/posts'
 import { ApiError } from '../api/http'
+import { listMedia, uploadMedia, type MediaItem } from '../api/media'
+import { listCategories, listTags, type CategoryItem, type TaxonomyItem } from '../api/taxonomy'
 
 interface EditorDraft {
   title: string
@@ -52,6 +55,10 @@ interface EditorDraft {
   markdown: string
   visibility: PostVisibility
   isPinned: boolean
+  categoryId: string | null
+  tagIds: string[]
+  coverMediaId: string | null
+  coverAlt: string
 }
 
 type EditorMode = '写作' | '分栏' | '预览'
@@ -64,6 +71,10 @@ const emptyDraft: EditorDraft = {
   markdown: '',
   visibility: 'PUBLIC',
   isPinned: false,
+  categoryId: null,
+  tagIds: [],
+  coverMediaId: null,
+  coverAlt: '',
 }
 
 const statusLabels: Record<PostStatus, string> = {
@@ -95,6 +106,10 @@ function draftFromPost(post: PostRead): EditorDraft {
     markdown: post.markdown,
     visibility: post.visibility,
     isPinned: post.isPinned,
+    categoryId: post.categoryId,
+    tagIds: post.tags.map((tag) => tag.id),
+    coverMediaId: post.coverMediaId,
+    coverAlt: post.coverAlt ?? '',
   }
 }
 
@@ -124,6 +139,7 @@ export default function PostEditorPage() {
   const navigate = useNavigate()
   const { postId } = useParams()
   const markdownRef = useRef<TextAreaRef>(null)
+  const coverInputRef = useRef<HTMLInputElement>(null)
   const savingRef = useRef(false)
   const draftRef = useRef<EditorDraft>(emptyDraft)
   const loadedPostIdRef = useRef<string | null>(null)
@@ -139,6 +155,10 @@ export default function PostEditorPage() {
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null)
   const [slugTouched, setSlugTouched] = useState(Boolean(postId))
   const [reloadKey, setReloadKey] = useState(0)
+  const [categories, setCategories] = useState<CategoryItem[]>([])
+  const [tags, setTags] = useState<TaxonomyItem[]>([])
+  const [media, setMedia] = useState<MediaItem[]>([])
+  const [coverUploading, setCoverUploading] = useState(false)
   const [messageApi, messageContextHolder] = message.useMessage()
   const [modal, modalContextHolder] = Modal.useModal()
   const dirty = draftSnapshot(draft) !== savedSnapshot
@@ -146,6 +166,18 @@ export default function PostEditorPage() {
   useEffect(() => {
     draftRef.current = draft
   }, [draft])
+
+  useEffect(() => {
+    void Promise.all([listCategories(), listTags(), listMedia(1, 100)])
+      .then(([nextCategories, nextTags, mediaResponse]) => {
+        setCategories(nextCategories)
+        setTags(nextTags)
+        setMedia(mediaResponse.data)
+      })
+      .catch((requestError: unknown) => {
+        void messageApi.error(requestError instanceof Error ? requestError.message : '文章设置加载失败。')
+      })
+  }, [messageApi])
 
   useEffect(() => {
     if (!postId || loadedPostIdRef.current === postId) return
@@ -216,6 +248,10 @@ export default function PostEditorPage() {
         slug: draftAtStart.slug.trim(),
         excerpt: draftAtStart.excerpt.trim() || null,
         markdown: draftAtStart.markdown,
+        categoryId: draftAtStart.categoryId,
+        tagIds: draftAtStart.tagIds,
+        coverMediaId: draftAtStart.coverMediaId,
+        coverAlt: draftAtStart.coverAlt.trim() || null,
       }
       let savedPost: PostRead
 
@@ -430,6 +466,22 @@ export default function PostEditorPage() {
       return
     }
     void persistDraft()
+  }
+
+  const handleCoverUpload = async (file: File) => {
+    setCoverUploading(true)
+    try {
+      const uploaded = await uploadMedia(file)
+      setMedia((current) => [uploaded, ...current.filter((item) => item.id !== uploaded.id)])
+      setDraft((current) => ({ ...current, coverMediaId: uploaded.id }))
+      setSaveError(null)
+      void messageApi.success('封面已上传')
+    } catch (requestError) {
+      void messageApi.error(requestError instanceof Error ? requestError.message : '封面上传失败。')
+    } finally {
+      setCoverUploading(false)
+      if (coverInputRef.current) coverInputRef.current.value = ''
+    }
   }
 
   const insertMarkdown = (before: string, after = '', placeholder = '') => {
@@ -648,17 +700,58 @@ export default function PostEditorPage() {
             <span className="settings-section__label">组织</span>
             <label>
               <span>分类</span>
-              <Select placeholder="暂无可用分类" disabled options={[]} />
+              <Select
+                allowClear
+                placeholder="未分类"
+                value={draft.categoryId ?? undefined}
+                onChange={(value?: string) => setDraftField('categoryId', value ?? null)}
+                options={categories.map((item) => ({ value: item.id, label: item.name }))}
+              />
             </label>
             <label>
               <span>标签</span>
-              <Select mode="multiple" placeholder="暂无可用标签" disabled options={[]} />
+              <Select
+                mode="multiple"
+                maxCount={20}
+                placeholder="选择标签"
+                value={draft.tagIds}
+                onChange={(value: string[]) => setDraftField('tagIds', value)}
+                options={tags.map((item) => ({ value: item.id, label: item.name }))}
+              />
             </label>
           </div>
           <Divider />
           <div className="settings-section">
             <span className="settings-section__label">展示</span>
-            <Button block icon={<ImagePlus size={16} />} disabled>选择封面</Button>
+            <input
+              ref={coverInputRef}
+              className="sr-only"
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+              onChange={(event) => { const file = event.target.files?.[0]; if (file) void handleCoverUpload(file) }}
+            />
+            {draft.coverMediaId && media.find((item) => item.id === draft.coverMediaId) && (
+              <div className="editor-cover-preview">
+                <img src={media.find((item) => item.id === draft.coverMediaId)?.publicUrl} alt="" />
+                <Button type="text" icon={<X size={15} />} aria-label="移除封面" onClick={() => { setDraftField('coverMediaId', null); setDraftField('coverAlt', '') }} />
+              </div>
+            )}
+            <Select
+              allowClear
+              showSearch
+              optionFilterProp="label"
+              placeholder="从媒体库选择"
+              value={draft.coverMediaId ?? undefined}
+              onChange={(value?: string) => setDraftField('coverMediaId', value ?? null)}
+              options={media.map((item) => ({ value: item.id, label: item.originalName }))}
+            />
+            <Button block icon={<ImagePlus size={16} />} loading={coverUploading} onClick={() => coverInputRef.current?.click()}>上传新封面</Button>
+            {draft.coverMediaId && (
+              <label>
+                <span>封面替代文本</span>
+                <Input maxLength={320} placeholder="描述图片内容" value={draft.coverAlt} onChange={(event) => setDraftField('coverAlt', event.target.value)} />
+              </label>
+            )}
             <Checkbox checked={draft.isPinned} onChange={(event) => setDraftField('isPinned', event.target.checked)}>设为精选文章</Checkbox>
           </div>
           <Divider />

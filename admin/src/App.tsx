@@ -9,7 +9,8 @@ const PostsPage = lazy(() => import('./pages/PostsPage'))
 const PhotographyEditorPage = lazy(() => import('./pages/PhotographyEditorPage'))
 const PhotographyPage = lazy(() => import('./pages/PhotographyPage'))
 const SettingsPage = lazy(() => import('./pages/SettingsPage'))
-const PlaceholderPage = lazy(() => import('./pages/PlaceholderPage'))
+const TaxonomyPage = lazy(() => import('./pages/TaxonomyPage'))
+const MediaPage = lazy(() => import('./pages/MediaPage'))
 const LoginPage = lazy(() => import('./pages/LoginPage'))
 
 export default function App() {
@@ -26,11 +27,11 @@ export default function App() {
             <Route path="/posts" element={<PostsPage />} />
             <Route path="/posts/new" element={<PostEditorPage />} />
             <Route path="/posts/:postId/edit" element={<PostEditorPage />} />
-            <Route path="/taxonomy" element={<PlaceholderPage type="taxonomy" />} />
+            <Route path="/taxonomy" element={<TaxonomyPage />} />
             <Route path="/photography" element={<PhotographyPage />} />
             <Route path="/photography/new" element={<PhotographyEditorPage />} />
             <Route path="/photography/:albumId/edit" element={<PhotographyEditorPage />} />
-            <Route path="/media" element={<PlaceholderPage type="media" />} />
+            <Route path="/media" element={<MediaPage />} />
             <Route path="/profile" element={<SettingsPage section="profile" />} />
             <Route path="/contact" element={<SettingsPage section="contact" />} />
             <Route path="/settings" element={<SettingsPage section="site" />} />

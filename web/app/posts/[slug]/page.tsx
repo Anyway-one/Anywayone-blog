@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Clock3, RefreshCw } from "lucide-react";
@@ -38,6 +39,12 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
   const title = post.seoTitle ?? post.title;
   const description = descriptionFor(post);
   const canonical = post.canonicalUrl ?? `/posts/${post.slug}`;
+  const socialImage = post.coverMedia ? [{
+    url: post.coverMedia.publicUrl,
+    width: post.coverMedia.width,
+    height: post.coverMedia.height,
+    alt: post.coverAlt ?? post.title,
+  }] : undefined;
   return {
     title,
     description,
@@ -48,11 +55,13 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
       title,
       description,
       publishedTime: post.publishedAt,
+      images: socialImage,
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
+      images: socialImage?.map((image) => image.url),
     },
   };
 }
@@ -90,6 +99,9 @@ export default async function PostPage({ params }: PostPageProps) {
     url: canonicalUrl,
     author: { "@type": "Person", name: "Anywayone" },
     publisher: { "@type": "Person", name: "Anywayone" },
+    ...(post.coverMedia ? { image: post.coverMedia.publicUrl } : {}),
+    ...(post.category ? { articleSection: post.category.name } : {}),
+    ...(post.tags.length ? { keywords: post.tags.map((tag) => tag.name) } : {}),
   };
 
   return (
@@ -100,7 +112,14 @@ export default async function PostPage({ params }: PostPageProps) {
         </Link>
 
         <header className={styles.articleHeader}>
-          <p>WRITING / ARTICLE</p>
+          <div className={styles.articleTaxonomy}>
+            {post.category ? (
+              <Link href={`/categories/${post.category.slug}`}>{post.category.name}</Link>
+            ) : <span>WRITING / ARTICLE</span>}
+            {post.tags.map((tag) => (
+              <Link key={tag.id} href={`/tags/${tag.slug}`}>#{tag.name}</Link>
+            ))}
+          </div>
           <h1>{post.title}<span>。</span></h1>
           {post.excerpt && <div className={styles.lead}>{post.excerpt}</div>}
           <div className={styles.meta}>
@@ -108,6 +127,19 @@ export default async function PostPage({ params }: PostPageProps) {
             <span><Clock3 aria-hidden="true" />{post.readingTimeMinutes} 分钟阅读</span>
           </div>
         </header>
+
+        {post.coverMedia && (
+          <figure className={styles.cover}>
+            <Image
+              src={post.coverMedia.publicUrl}
+              alt={post.coverAlt ?? post.title}
+              width={post.coverMedia.width}
+              height={post.coverMedia.height}
+              sizes="(max-width: 767px) calc(100vw - 40px), 1200px"
+              priority
+            />
+          </figure>
+        )}
 
         <div className={styles.articleLayout}>
           <div className={styles.articleMain}>

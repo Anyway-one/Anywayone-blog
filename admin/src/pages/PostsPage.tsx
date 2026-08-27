@@ -177,6 +177,12 @@ export default function PostsPage() {
                   <button className="post-list-row__title" onClick={() => navigate(`/posts/${post.id}/edit`)}>
                     <strong>{post.title}</strong>
                     <span>/posts/{post.slug}</span>
+                    {(post.category || post.tags.length > 0) && (
+                      <span className="post-list-row__taxonomy">
+                        {post.category?.name ?? '未分类'}
+                        {post.tags.length > 0 && ` · ${post.tags.map((tag) => tag.name).join(' / ')}`}
+                      </span>
+                    )}
                   </button>
                   <div><Tag color={statusColors[post.status]}>{statusLabels[post.status]}</Tag></div>
                   <time dateTime={post.updatedAt}>{dateTimeFormatter.format(new Date(post.updatedAt))}</time>

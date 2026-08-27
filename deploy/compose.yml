@@ -51,8 +51,13 @@ services:
     init: true
     env_file:
       - ./backend.env
+    environment:
+      MEDIA_STORAGE_PATH: /data/media
+      MEDIA_PUBLIC_URL: https://api.anywayone.com/media
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    volumes:
+      - media_data:/data/media
     networks:
       - app
     logging: *default-logging
@@ -67,3 +72,4 @@ networks:
 volumes:
   caddy_data:
   caddy_config:
+  media_data:

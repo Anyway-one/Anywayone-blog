@@ -33,6 +33,8 @@ RUN groupadd --system --gid 1001 anywayone \
 
 COPY --from=builder --chown=anywayone:anywayone /app /app
 
+RUN install -d -o anywayone -g anywayone /data/media
+
 USER anywayone
 
 EXPOSE 8000

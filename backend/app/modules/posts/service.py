@@ -1,17 +1,19 @@
 import math
 import uuid
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, cast
 
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 from sqlalchemy.sql.elements import ColumnElement
 
 from app.core.errors import AppError
 from app.db.enums import PostStatus, PostVersionChangeType, Visibility
 from app.modules.audit.models import AuditLog, OutboxEvent
 from app.modules.auth.models import User
+from app.modules.media.models import Media
 from app.modules.posts.models import Post, PostVersion
 from app.modules.posts.renderer import render_markdown
 from app.modules.posts.schemas import (
@@ -20,6 +22,9 @@ from app.modules.posts.schemas import (
     PublicationIssue,
     PublicationValidation,
 )
+from app.modules.taxonomy.models import Category, Tag
+
+UNSET = object()
 
 
 async def create_post(
@@ -31,6 +36,9 @@ async def create_post(
 ) -> Post:
     await _ensure_slug_available(db, payload.slug)
     rendered = render_markdown(payload.markdown)
+    category = await _resolve_category(db, payload.category_id)
+    tags = await _resolve_tags(db, payload.tag_ids)
+    cover_media = await _resolve_cover_media(db, payload.cover_media_id)
     post = Post(
         author_id=author.id,
         title=payload.title,
@@ -40,6 +48,12 @@ async def create_post(
         rendered_html=rendered.html,
         toc=rendered.toc,
         reading_time_minutes=rendered.reading_time_minutes,
+        category_id=category.id if category else None,
+        cover_media_id=cover_media.id if cover_media else None,
+        category=category,
+        tags=tags,
+        cover_media=cover_media,
+        cover_alt=payload.cover_alt,
     )
     db.add(post)
     try:
@@ -84,10 +98,30 @@ async def update_post(
     changes = payload.model_dump(exclude_unset=True)
     changes.pop("revision", None)
     seo = changes.pop("seo", None)
+    category_id = changes.pop("category_id", UNSET)
+    tag_ids = changes.pop("tag_ids", UNSET)
+    cover_media_id = changes.pop("cover_media_id", UNSET)
     if "slug" in changes and changes["slug"] != post.slug:
         await _ensure_slug_available(db, str(changes["slug"]), exclude_id=post.id)
     for field, value in changes.items():
         setattr(post, field, value)
+    if category_id is not UNSET:
+        category = await _resolve_category(
+            db,
+            category_id if isinstance(category_id, uuid.UUID) else None,
+        )
+        post.category = category
+        post.category_id = category.id if category else None
+    if tag_ids is not UNSET:
+        resolved_tag_ids = cast("list[uuid.UUID]", tag_ids) if isinstance(tag_ids, list) else []
+        post.tags = await _resolve_tags(db, resolved_tag_ids)
+    if cover_media_id is not UNSET:
+        cover_media = await _resolve_cover_media(
+            db,
+            cover_media_id if isinstance(cover_media_id, uuid.UUID) else None,
+        )
+        post.cover_media = cover_media
+        post.cover_media_id = cover_media.id if cover_media else None
     if seo is not None:
         post.seo_title = seo.get("title")
         post.seo_description = seo.get("description")
@@ -232,6 +266,8 @@ def validate_publication(post: Post) -> PublicationValidation:
         issues.append(PublicationIssue(field="slug", message="请填写页面路径。"))
     if not post.markdown.strip():
         issues.append(PublicationIssue(field="markdown", message="文章正文不能为空。"))
+    if post.cover_media_id is not None and not (post.cover_alt or "").strip():
+        issues.append(PublicationIssue(field="coverAlt", message="请填写封面替代文本。"))
     return PublicationValidation(valid=not issues, issues=issues)
 
 
@@ -253,6 +289,7 @@ async def list_admin_posts(
         (
             await db.scalars(
                 select(Post)
+                .options(*_post_load_options())
                 .where(*conditions)
                 .order_by(Post.updated_at.desc())
                 .offset((page - 1) * page_size)
@@ -272,17 +309,27 @@ async def list_public_posts(
     *,
     page: int,
     page_size: int,
+    category_id: uuid.UUID | None = None,
+    tag_id: uuid.UUID | None = None,
 ) -> tuple[list[Post], int, int]:
     conditions: list[ColumnElement[bool]] = [
         Post.deleted_at.is_(None),
         Post.status == PostStatus.PUBLISHED,
         Post.visibility == Visibility.PUBLIC,
     ]
-    total = await db.scalar(select(func.count()).select_from(Post).where(*conditions)) or 0
+    if category_id is not None:
+        conditions.append(Post.category_id == category_id)
+    count_statement = select(func.count()).select_from(Post)
+    posts_statement = select(Post)
+    if tag_id is not None:
+        count_statement = count_statement.join(Post.tags)
+        posts_statement = posts_statement.join(Post.tags)
+        conditions.append(Tag.id == tag_id)
+    total = await db.scalar(count_statement.where(*conditions)) or 0
     posts = list(
         (
             await db.scalars(
-                select(Post)
+                posts_statement.options(*_post_load_options())
                 .where(*conditions)
                 .order_by(Post.is_pinned.desc(), Post.published_at.desc())
                 .offset((page - 1) * page_size)
@@ -295,10 +342,13 @@ async def list_public_posts(
 
 async def get_public_post(db: AsyncSession, slug: str) -> Post:
     post = await db.scalar(
-        select(Post).where(
+        select(Post)
+        .options(*_post_load_options())
+        .where(
             Post.slug == slug,
             Post.deleted_at.is_(None),
             Post.status == PostStatus.PUBLISHED,
+            Post.visibility == Visibility.PUBLIC,
         )
     )
     if post is None:
@@ -312,7 +362,11 @@ async def _get_admin_post(
     *,
     for_update: bool = False,
 ) -> Post:
-    statement = select(Post).where(Post.id == post_id, Post.deleted_at.is_(None))
+    statement = (
+        select(Post)
+        .options(*_post_load_options())
+        .where(Post.id == post_id, Post.deleted_at.is_(None))
+    )
     if for_update:
         statement = statement.with_for_update()
     post = await db.scalar(statement)
@@ -358,6 +412,10 @@ def _snapshot(post: Post) -> dict[str, Any]:
         "slug": post.slug,
         "excerpt": post.excerpt,
         "markdown": post.markdown,
+        "categoryId": str(post.category.id) if post.category else None,
+        "tagIds": [str(tag.id) for tag in post.tags],
+        "coverMediaId": str(post.cover_media.id) if post.cover_media else None,
+        "coverAlt": post.cover_alt,
         "status": post.status.value,
         "visibility": post.visibility.value,
         "seo": {
@@ -367,3 +425,46 @@ def _snapshot(post: Post) -> dict[str, Any]:
             "allowIndexing": post.allow_indexing,
         },
     }
+
+
+def _post_load_options():
+    return (
+        selectinload(Post.category),
+        selectinload(Post.tags),
+        selectinload(Post.cover_media),
+    )
+
+
+async def _resolve_category(db: AsyncSession, category_id: uuid.UUID | None) -> Category | None:
+    if category_id is None:
+        return None
+    category = await db.scalar(
+        select(Category).where(Category.id == category_id, Category.deleted_at.is_(None))
+    )
+    if category is None:
+        raise AppError(status_code=422, code="CATEGORY_NOT_FOUND", message="所选分类不存在。")
+    return category
+
+
+async def _resolve_tags(db: AsyncSession, tag_ids: list[uuid.UUID]) -> list[Tag]:
+    unique_ids = list(dict.fromkeys(tag_ids))
+    if not unique_ids:
+        return []
+    tags = list(
+        (
+            await db.scalars(select(Tag).where(Tag.id.in_(unique_ids), Tag.deleted_at.is_(None)))
+        ).all()
+    )
+    if len(tags) != len(unique_ids):
+        raise AppError(status_code=422, code="TAG_NOT_FOUND", message="部分标签不存在。")
+    tags_by_id = {tag.id: tag for tag in tags}
+    return [tags_by_id[tag_id] for tag_id in unique_ids]
+
+
+async def _resolve_cover_media(db: AsyncSession, media_id: uuid.UUID | None) -> Media | None:
+    if media_id is None:
+        return None
+    media = await db.scalar(select(Media).where(Media.id == media_id, Media.deleted_at.is_(None)))
+    if media is None:
+        raise AppError(status_code=422, code="MEDIA_NOT_FOUND", message="所选封面不存在。")
+    return media

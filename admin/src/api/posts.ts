@@ -3,6 +3,19 @@ import { apiRequest } from './http'
 export type PostStatus = 'DRAFT' | 'SCHEDULED' | 'PUBLISHED' | 'WITHDRAWN' | 'ARCHIVED'
 export type PostVisibility = 'PUBLIC' | 'UNLISTED'
 
+export interface TaxonomySummary {
+  id: string
+  name: string
+  slug: string
+}
+
+export interface CoverMediaSummary {
+  id: string
+  publicUrl: string
+  width: number
+  height: number
+}
+
 interface ResponseMeta {
   requestId: string
 }
@@ -29,6 +42,10 @@ export interface PostListItem {
   title: string
   slug: string
   excerpt: string | null
+  category: TaxonomySummary | null
+  tags: TaxonomySummary[]
+  coverMedia: CoverMediaSummary | null
+  coverAlt: string | null
   status: PostStatus
   visibility: PostVisibility
   revision: number
@@ -40,6 +57,7 @@ export interface PostListItem {
 export interface PostRead extends PostListItem {
   authorId: string
   categoryId: string | null
+  coverMediaId: string | null
   markdown: string
   renderedHtml: string
   toc: Record<string, unknown>[]
@@ -57,6 +75,10 @@ export interface PostDraftInput {
   slug: string
   markdown: string
   excerpt: string | null
+  categoryId: string | null
+  tagIds: string[]
+  coverMediaId: string | null
+  coverAlt: string | null
 }
 
 export interface PostUpdateInput extends PostDraftInput {

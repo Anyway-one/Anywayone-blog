@@ -7,6 +7,10 @@ from app.api.schemas import ApiModel
 from app.db.enums import PostStatus, Visibility
 
 
+def empty_tag_ids() -> list[uuid.UUID]:
+    return []
+
+
 class SeoInput(ApiModel):
     title: str | None = Field(default=None, max_length=200)
     description: str | None = Field(default=None, max_length=320)
@@ -19,6 +23,10 @@ class PostCreate(ApiModel):
     slug: str = Field(min_length=1, max_length=200, pattern=r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
     markdown: str = ""
     excerpt: str | None = None
+    category_id: uuid.UUID | None = None
+    tag_ids: list[uuid.UUID] = Field(default_factory=empty_tag_ids, max_length=20)
+    cover_media_id: uuid.UUID | None = None
+    cover_alt: str | None = Field(default=None, max_length=320)
 
     @field_validator("title", "slug")
     @classmethod
@@ -37,6 +45,10 @@ class PostUpdate(ApiModel):
     )
     markdown: str | None = None
     excerpt: str | None = None
+    category_id: uuid.UUID | None = None
+    tag_ids: list[uuid.UUID] | None = Field(default=None, max_length=20)
+    cover_media_id: uuid.UUID | None = None
+    cover_alt: str | None = Field(default=None, max_length=320)
     visibility: Visibility | None = None
     is_pinned: bool | None = None
     seo: SeoInput | None = None
@@ -56,10 +68,28 @@ class PublicationValidation(ApiModel):
     issues: list[PublicationIssue]
 
 
+class TaxonomySummary(ApiModel):
+    id: uuid.UUID
+    name: str
+    slug: str
+
+
+class CoverMediaSummary(ApiModel):
+    id: uuid.UUID
+    public_url: str
+    width: int
+    height: int
+
+
 class PostRead(ApiModel):
     id: uuid.UUID
     author_id: uuid.UUID
     category_id: uuid.UUID | None
+    category: TaxonomySummary | None
+    tags: list[TaxonomySummary]
+    cover_media_id: uuid.UUID | None
+    cover_media: CoverMediaSummary | None
+    cover_alt: str | None
     title: str
     slug: str
     excerpt: str | None
@@ -86,6 +116,10 @@ class PostListItem(ApiModel):
     title: str
     slug: str
     excerpt: str | None
+    category: TaxonomySummary | None
+    tags: list[TaxonomySummary]
+    cover_media: CoverMediaSummary | None
+    cover_alt: str | None
     status: PostStatus
     visibility: Visibility
     revision: int
@@ -99,6 +133,10 @@ class PublicPostListItem(ApiModel):
     title: str
     slug: str
     excerpt: str | None
+    category: TaxonomySummary | None
+    tags: list[TaxonomySummary]
+    cover_media: CoverMediaSummary | None
+    cover_alt: str | None
     reading_time_minutes: int
     published_at: datetime
 

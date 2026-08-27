@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowLeft, ArrowRight, Clock3, FileText, RefreshCw, Rss } from "lucide-react";
+import { ArrowLeft, ArrowRight, FileText, RefreshCw, Rss } from "lucide-react";
+import { parsePage, PublicPostRow } from "@/components/public-post-list";
 import { SiteFooter } from "@/components/site-footer";
-import { listPublicPosts, type PublicPostListItem } from "@/lib/public-posts";
+import { listPublicPosts } from "@/lib/public-posts";
 import styles from "./posts.module.css";
 
 export const metadata: Metadata = {
@@ -11,38 +12,6 @@ export const metadata: Metadata = {
   description: "Anywayone 的技术文章与生活随笔。",
   alternates: { canonical: "/posts" },
 };
-
-const dateFormatter = new Intl.DateTimeFormat("zh-CN", {
-  year: "numeric",
-  month: "2-digit",
-  day: "2-digit",
-  timeZone: "Asia/Shanghai",
-});
-
-function parsePage(value: string | string[] | undefined) {
-  const input = Array.isArray(value) ? value[0] : value;
-  const page = Number.parseInt(input ?? "1", 10);
-  return Number.isSafeInteger(page) && page > 0 ? page : 1;
-}
-
-function PostRow({ post, index }: { post: PublicPostListItem; index: number }) {
-  return (
-    <li className={styles.postRow}>
-      <p className={styles.postIndex}>{String(index + 1).padStart(2, "0")}</p>
-      <article>
-        <div className={styles.postMeta}>
-          <time dateTime={post.publishedAt}>{dateFormatter.format(new Date(post.publishedAt))}</time>
-          <span><Clock3 aria-hidden="true" />{post.readingTimeMinutes} 分钟阅读</span>
-        </div>
-        <h2><Link href={`/posts/${post.slug}`}>{post.title}</Link></h2>
-        {post.excerpt && <p className={styles.excerpt}>{post.excerpt}</p>}
-      </article>
-      <Link className={styles.readLink} href={`/posts/${post.slug}`} aria-label={`阅读《${post.title}》`}>
-        <ArrowRight aria-hidden="true" />
-      </Link>
-    </li>
-  );
-}
 
 function EmptyPosts() {
   return (
@@ -107,7 +76,7 @@ export default async function PostsPage({
           <>
             <ol className={styles.postList}>
               {ready.data.map((post, index) => (
-                <PostRow key={post.id} post={post} index={(currentPage - 1) * ready.meta.pageSize + index} />
+                <PublicPostRow key={post.id} post={post} index={(currentPage - 1) * ready.meta.pageSize + index} />
               ))}
             </ol>
             <nav className={styles.pagination} aria-label="文章分页">

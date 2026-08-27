@@ -32,12 +32,34 @@
   text-align: center;
 }
 
-.articleHeader > p,
+.articleTaxonomy,
 .toc > p {
   margin: 0;
   color: #8a691f;
   font-size: 12px;
   font-weight: 600;
+}
+
+.articleTaxonomy {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 7px 14px;
+}
+
+.articleTaxonomy a,
+.articleTaxonomy span {
+  min-height: 24px;
+  line-height: 24px;
+}
+
+.articleTaxonomy a {
+  transition: color 160ms ease;
+}
+
+.articleTaxonomy a:hover {
+  color: var(--color-ink);
 }
 
 .articleHeader h1 {
@@ -80,6 +102,21 @@
 .meta svg {
   width: 14px;
   height: 14px;
+}
+
+.cover {
+  overflow: hidden;
+  width: min(100%, 1100px);
+  aspect-ratio: 16 / 9;
+  margin: -28px auto 72px;
+  background: var(--color-surface);
+}
+
+.cover img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .articleLayout {
@@ -307,6 +344,14 @@
   .articleHeader {
     margin: 38px auto 48px;
     text-align: left;
+  }
+
+  .articleTaxonomy {
+    justify-content: flex-start;
+  }
+
+  .cover {
+    margin: -18px auto 48px;
   }
 
   .loadingHeader {
