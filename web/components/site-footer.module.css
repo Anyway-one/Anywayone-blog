@@ -1,0 +1,35 @@
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  min-height: 88px;
+  padding: 24px max(32px, calc((100vw - var(--content-width)) / 2));
+  color: #d8d5cc;
+  background: var(--color-ink);
+  font-size: 13px;
+}
+
+.footer nav {
+  display: flex;
+  gap: 20px;
+}
+
+.footer a:hover {
+  color: #ffffff;
+}
+
+.dark {
+  color: #c8c5bc;
+  background: #0b0c0a;
+  border-top: 1px solid rgba(245, 242, 234, 0.12);
+}
+
+@media (max-width: 767px) {
+  .footer {
+    min-height: 112px;
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 24px 20px;
+  }
+}

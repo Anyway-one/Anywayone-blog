@@ -1,0 +1,17 @@
+version: "3"
+
+tasks:
+  web:dev:
+    desc: Start the public Web application
+    cmds:
+      - pnpm dev:web
+
+  web:check:
+    desc: Run Web lint and TypeScript checks
+    cmds:
+      - pnpm check:web
+
+  web:build:
+    desc: Build the public Web application
+    cmds:
+      - pnpm build:web
