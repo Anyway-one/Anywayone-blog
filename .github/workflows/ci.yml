@@ -119,7 +119,7 @@ jobs:
           --env ACME_EMAIL=admin@anywayone.com
           --volume "${PWD}/deploy/Caddyfile:/etc/caddy/Caddyfile:ro"
           caddy:2-alpine
-          validate --config /etc/caddy/Caddyfile
+          caddy validate --config /etc/caddy/Caddyfile
 
       - name: Check deployment script syntax
         run: bash -n deploy/scripts/deploy.sh

@@ -44,7 +44,7 @@ export IMAGE_TAG
 
 docker compose config --quiet
 docker compose pull caddy web admin backend
-docker compose run --rm --no-deps caddy validate --config /etc/caddy/Caddyfile
+docker compose run --rm --no-deps caddy caddy validate --config /etc/caddy/Caddyfile
 docker compose run --rm --no-deps backend alembic upgrade head
 docker compose up -d --remove-orphans --wait --wait-timeout 180
 
