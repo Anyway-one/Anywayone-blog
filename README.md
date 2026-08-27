@@ -71,6 +71,7 @@ Anywayone-blog/
 ├── web/          # 面向读者的展示端
 ├── admin/        # 当前开发中的内容管理端
 ├── backend/      # 当前开发中的 FastAPI 后端
+├── deploy/       # Docker Compose、Caddy 与生产部署脚本
 ├── doc/          # 产品、架构和 UI 文档
 └── Taskfile.yml  # 可选的跨端命令入口
 ```
@@ -103,6 +104,12 @@ Admin 登录已使用真实后端接口；统计与内容接口仍不展示虚�
 - 管理员登录、刷新令牌轮换、退出和当前用户接口。
 - 文章草稿、保存、发布、撤回、公开列表与详情 API。
 - Markdown 安全渲染、文章版本、乐观锁、审计日志和 Outbox。
+
+## 生产部署
+
+生产环境使用 GitHub Actions 构建 ARM64 Docker 镜像，并将 Web、Admin 和 Backend 自动部署到 Oracle Cloud。Caddy 负责 HTTPS 与反向代理，PostgreSQL 运行在同一台宿主机。
+
+服务器首次初始化、GitHub Secrets、数据库私网连接、Cloudflare 和回退操作见 [部署与运维文档](./doc/07-部署与运维.md)。仓库中的 `deploy/*.env.example` 仅为字段模板，生产密钥只保存在服务器 `/opt/anywayone/`。
 
 ## Git 约定
 

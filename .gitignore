@@ -23,7 +23,13 @@ __pycache__/
 # Environment files
 .env
 .env.*
+*.env
 !.env.example
+
+# Private keys and certificates
+*.key
+*.key.pub
+*.pem
 
 # Logs
 *.log

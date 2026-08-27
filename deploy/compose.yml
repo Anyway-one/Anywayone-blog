@@ -1,0 +1,69 @@
+name: anywayone
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: "3"
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      ACME_EMAIL: ${ACME_EMAIL:?ACME_EMAIL must be set}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      web:
+        condition: service_healthy
+      admin:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+    networks:
+      - app
+    logging: *default-logging
+
+  web:
+    image: ghcr.io/anyway-one/anywayone-web:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    init: true
+    networks:
+      - app
+    logging: *default-logging
+
+  admin:
+    image: ghcr.io/anyway-one/anywayone-admin:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    networks:
+      - app
+    logging: *default-logging
+
+  backend:
+    image: ghcr.io/anyway-one/anywayone-backend:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    init: true
+    env_file:
+      - ./backend.env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - app
+    logging: *default-logging
+
+networks:
+  app:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.0.0/24
+
+volumes:
+  caddy_data:
+  caddy_config:

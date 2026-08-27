@@ -14,6 +14,7 @@
 | [04-数据与API设计.md](./04-数据与API设计.md) | 数据模型和接口契约如何定义 | 接口与数据库设计 |
 | [05-开发路线图.md](./05-开发路线图.md) | 按什么顺序开发、如何验收 | 排期与执行 |
 | [06-UI设计方案.md](./06-UI设计方案.md) | 品牌视觉、页面规格、响应式和动效如何落地 | UI 设计与前端验收 |
+| [07-部署与运维.md](./07-部署与运维.md) | Oracle Cloud、Docker、GitHub Actions 和生产运维如何落地 | 首次部署与运维 |
 
 ## 3. 当前基线决策
 
@@ -33,7 +34,7 @@
 | 展示端 | Next.js App Router + React，服务端渲染与增量静态再生成并用 |
 | API | REST + OpenAPI，统一响应与错误码，生成类型化客户端 |
 | 文件存储 | S3 兼容对象存储；本地开发使用 MinIO 或本地适配器 |
-| 部署 | Docker Compose 起步，反向代理 + Web/Admin/FastAPI + Worker + PostgreSQL |
+| 部署 | Oracle ARM64 + GitHub Actions + Docker Compose + Caddy；PostgreSQL 运行在同机宿主机 |
 
 ## 4. 核心原则
 

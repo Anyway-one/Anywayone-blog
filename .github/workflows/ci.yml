@@ -1,0 +1,125 @@
+name: CI
+
+on:
+  pull_request:
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  frontend:
+    name: Frontend checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.34.5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check Web
+        run: pnpm check:web
+
+      - name: Check Admin
+        run: pnpm check:admin
+
+      - name: Build Web
+        env:
+          NEXT_PUBLIC_SITE_URL: https://www.anywayone.com
+          NEXT_PUBLIC_API_BASE_URL: https://api.anywayone.com/api/v1
+        run: pnpm build:web
+
+      - name: Build Admin
+        env:
+          VITE_API_BASE_URL: https://api.anywayone.com/api/v1
+          VITE_WEB_URL: https://www.anywayone.com
+        run: pnpm build:admin
+
+  backend:
+    name: Backend checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: backend
+    env:
+      APP_ENV: test
+      DATABASE_HOST: 127.0.0.1
+      DATABASE_PORT: 5432
+      DATABASE_NAME: anywayone_test
+      DATABASE_USER: anywayone_test
+      DATABASE_PASSWORD: test-only-password
+      DATABASE_SSL_MODE: disable
+      SECRET_KEY: test-only-development-secret-key
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.11.0"
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Run Ruff lint
+        run: uv run ruff check .
+
+      - name: Check Ruff formatting
+        run: uv run ruff format --check .
+
+      - name: Run strict type checks
+        run: uv run pyright
+
+      - name: Run tests
+        run: uv run pytest
+
+      - name: Compile Alembic migration SQL
+        run: uv run alembic upgrade head --sql >/dev/null
+
+  deployment-config:
+    name: Deployment config
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Prepare example environment
+        run: |
+          cp deploy/.env.example deploy/.env
+          cp deploy/backend.env.example deploy/backend.env
+
+      - name: Validate Docker Compose
+        run: docker compose --file deploy/compose.yml config --quiet
+
+      - name: Validate Caddy configuration
+        run: >-
+          docker run --rm
+          --env ACME_EMAIL=admin@anywayone.com
+          --volume "${PWD}/deploy/Caddyfile:/etc/caddy/Caddyfile:ro"
+          caddy:2-alpine
+          validate --config /etc/caddy/Caddyfile
+
+      - name: Check deployment script syntax
+        run: bash -n deploy/scripts/deploy.sh
