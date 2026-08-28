@@ -61,8 +61,6 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    op.drop_index(
-        op.f("ix_site_history_events_image_media_id"), table_name="site_history_events"
-    )
+    op.drop_index(op.f("ix_site_history_events_image_media_id"), table_name="site_history_events")
     op.drop_index(op.f("ix_site_history_events_event_date"), table_name="site_history_events")
     op.drop_table("site_history_events")
