@@ -138,7 +138,7 @@ export default function SiteHistoryPage() {
 
   const selectedMedia = media.find((item) => item.id === selectedMediaId)
   const selectedImageUrl = selectedMedia?.publicUrl
-    ?? (editing?.imageMediaId === selectedMediaId ? editing.imagePublicUrl : null)
+    ?? (editing && editing.imageMediaId === selectedMediaId ? editing.imagePublicUrl : null)
 
   return (
     <div className="page-stack history-admin-page">
