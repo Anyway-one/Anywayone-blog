@@ -33,11 +33,24 @@ export function SiteFooter({ dark = false, socialLinks = [] }: SiteFooterProps) 
       {socialLinks.length > 0 && (
         <div className={styles.social} aria-label="社交平台">
           {socialLinks.map((item) => item.url ? (
-            <a key={item.id} href={item.url} target="_blank" rel="noreferrer" aria-label={socialLabels[item.platform]} title={item.accountName || socialLabels[item.platform]}>
+            <a
+              key={item.id}
+              href={item.url}
+              target="_blank"
+              rel="noreferrer"
+              aria-label={`${socialLabels[item.platform]}${item.accountName ? `：${item.accountName}` : ""}`}
+              data-tooltip={item.accountName || socialLabels[item.platform]}
+            >
               <PlatformIcon platform={item.platform} size={18} />
             </a>
           ) : (
-            <span key={item.id} aria-label={socialLabels[item.platform]} title={item.accountName || socialLabels[item.platform]}>
+            <span
+              key={item.id}
+              role="img"
+              tabIndex={0}
+              aria-label={`${socialLabels[item.platform]}：${item.accountName || socialLabels[item.platform]}`}
+              data-tooltip={item.accountName || socialLabels[item.platform]}
+            >
               <PlatformIcon platform={item.platform} size={18} />
             </span>
           ))}

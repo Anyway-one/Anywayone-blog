@@ -1,4 +1,4 @@
-import { SiteFooter } from "@/components/site-footer";
+import { PublicSiteFooter } from "@/components/public-site-footer";
 import styles from "./posts.module.css";
 
 export default function PostsLoading() {
@@ -22,7 +22,7 @@ export default function PostsLoading() {
           ))}
         </div>
       </div>
-      <SiteFooter />
+      <PublicSiteFooter />
     </main>
   );
 }

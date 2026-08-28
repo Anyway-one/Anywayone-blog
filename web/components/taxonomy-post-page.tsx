@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowLeft, ArrowRight, FileText, RefreshCw } from "lucide-react";
 import { PublicPostRow } from "@/components/public-post-list";
-import { SiteFooter } from "@/components/site-footer";
+import { PublicSiteFooter } from "@/components/public-site-footer";
 import type { PublicApiResult, PublicPostListItem, PublicTaxonomy, TaxonomyKind } from "@/lib/public-posts";
 import type { PageMeta } from "@/lib/public-posts";
 import styles from "@/app/posts/posts.module.css";
@@ -85,7 +85,7 @@ export function TaxonomyPostPage({
           </section>
         )}
       </div>
-      <SiteFooter />
+      <PublicSiteFooter />
     </main>
   );
 }

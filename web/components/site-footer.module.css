@@ -23,6 +23,7 @@
 
 .social a,
 .social span {
+  position: relative;
   width: 32px;
   height: 32px;
   display: grid;
@@ -31,9 +32,70 @@
   border-radius: 50%;
 }
 
+.social a::after,
+.social span::after {
+  position: absolute;
+  z-index: 2;
+  bottom: calc(100% + 9px);
+  left: 50%;
+  width: max-content;
+  max-width: min(240px, calc(100vw - 40px));
+  padding: 6px 9px;
+  border-radius: 4px;
+  color: var(--color-ink);
+  background: var(--color-paper);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  content: attr(data-tooltip);
+  font-size: 12px;
+  line-height: 1.3;
+  opacity: 0;
+  overflow-wrap: anywhere;
+  pointer-events: none;
+  transform: translate(-50%, 4px);
+  transition: opacity 160ms ease, transform 160ms ease;
+  visibility: hidden;
+  white-space: normal;
+}
+
+.social a:hover::after,
+.social a:focus-visible::after,
+.social span:hover::after,
+.social span:focus-visible::after {
+  opacity: 1;
+  transform: translate(-50%, 0);
+  visibility: visible;
+}
+
+.social > :first-child::after {
+  left: 0;
+  transform: translateY(4px);
+}
+
+.social > :first-child:hover::after,
+.social > :first-child:focus-visible::after {
+  transform: translateY(0);
+}
+
+.social > :last-child::after {
+  right: 0;
+  left: auto;
+  transform: translateY(4px);
+}
+
+.social > :last-child:hover::after,
+.social > :last-child:focus-visible::after {
+  transform: translateY(0);
+}
+
 .social a:hover {
   color: #ffffff;
   border-color: rgba(255, 255, 255, 0.54);
+}
+
+.social a:focus-visible,
+.social span:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 3px;
 }
 
 .footer a:hover {

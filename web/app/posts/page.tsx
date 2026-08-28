@@ -3,7 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowLeft, ArrowRight, FileText, RefreshCw, Rss } from "lucide-react";
 import { parsePage, PublicPostRow } from "@/components/public-post-list";
-import { SiteFooter } from "@/components/site-footer";
+import { PublicSiteFooter } from "@/components/public-site-footer";
 import { listPublicPosts } from "@/lib/public-posts";
 import styles from "./posts.module.css";
 
@@ -97,7 +97,7 @@ export default async function PostsPage({
           <EmptyPosts />
         )}
       </div>
-      <SiteFooter />
+      <PublicSiteFooter />
     </main>
   );
 }

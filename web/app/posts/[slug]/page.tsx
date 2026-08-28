@@ -6,7 +6,7 @@ import { ArrowLeft, Clock3, RefreshCw } from "lucide-react";
 import { ArticleBody } from "@/components/article-body";
 import { SiteFooter } from "@/components/site-footer";
 import { getPublicPost, type PublicPost } from "@/lib/public-posts";
-import { getPublicSite } from "@/lib/public-site";
+import { getPublicSite, type PublicSocialLink } from "@/lib/public-site";
 import styles from "./post.module.css";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
@@ -69,7 +69,7 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
   };
 }
 
-function UnavailableArticle() {
+function UnavailableArticle({ socialLinks }: { socialLinks?: PublicSocialLink[] }) {
   return (
     <main className={styles.page}>
       <section className={styles.unavailable}>
@@ -79,7 +79,7 @@ function UnavailableArticle() {
         <div>内容服务当前没有响应，请稍后重新加载。</div>
         <Link href="/posts"><ArrowLeft aria-hidden="true" />返回文章列表</Link>
       </section>
-      <SiteFooter />
+      <SiteFooter socialLinks={socialLinks} />
     </main>
   );
 }
@@ -88,7 +88,7 @@ export default async function PostPage({ params }: PostPageProps) {
   const { slug } = await params;
   const [result, site] = await Promise.all([getPublicPost(slug), getPublicSite()]);
   if (result.status === "not-found") notFound();
-  if (result.status !== "ready") return <UnavailableArticle />;
+  if (result.status !== "ready") return <UnavailableArticle socialLinks={site?.socialLinks} />;
 
   const post = result.data;
   const authorName = site?.profile.publicName || "Anywayone";

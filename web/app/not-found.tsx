@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowLeft, SearchX } from "lucide-react";
-import { SiteFooter } from "@/components/site-footer";
+import { PublicSiteFooter } from "@/components/public-site-footer";
 import styles from "./status-page.module.css";
 
 export default function NotFound() {
@@ -16,7 +16,7 @@ export default function NotFound() {
           返回首页
         </Link>
       </section>
-      <SiteFooter />
+      <PublicSiteFooter />
     </main>
   );
 }

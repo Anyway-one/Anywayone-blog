@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft, Image as ImageIcon } from "lucide-react";
-import { SiteFooter } from "@/components/site-footer";
+import { PublicSiteFooter } from "@/components/public-site-footer";
 import styles from "./photography.module.css";
 
 export const metadata: Metadata = {
@@ -29,7 +29,7 @@ export default function PhotographyPage() {
           </Link>
         </section>
       </div>
-      <SiteFooter dark />
+      <PublicSiteFooter dark />
     </main>
   );
 }
