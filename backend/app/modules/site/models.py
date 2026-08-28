@@ -42,6 +42,17 @@ class SiteSettings(UuidPrimaryKeyMixin, TimestampMixin, Base):
     launch_date: Mapped[date | None] = mapped_column(Date)
 
 
+class SiteHistoryEvent(UuidPrimaryKeyMixin, TimestampMixin, Base):
+    __tablename__ = "site_history_events"
+
+    event_date: Mapped[date] = mapped_column(Date, nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(120), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    image_media_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("media.id", ondelete="SET NULL"), index=True
+    )
+
+
 class ContactMethod(UuidPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "contact_methods"
 

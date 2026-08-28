@@ -4,9 +4,11 @@ import Image from "next/image";
 import {
   Activity,
   ArrowDown,
+  CalendarDays,
   ChartNoAxesColumnIncreasing,
+  ChevronLeft,
+  ChevronRight,
   FileText,
-  History,
   Monitor,
   Users,
   X,
@@ -22,7 +24,6 @@ const siteLogItems = [
   { label: "文章 / 摄影", value: "— / —", icon: FileText },
   { label: "访问趋势", value: "暂未记录", icon: ChartNoAxesColumnIncreasing },
   { label: "访问统计", value: "—", icon: Users },
-  { label: "站点历史", value: "暂未配置", icon: History },
 ];
 
 type HomeTab = "profile" | "log";
@@ -30,9 +31,11 @@ type HomeTab = "profile" | "log";
 export function HomeExperience({ site }: { site: PublicSiteData | null }) {
   const [expanded, setExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState<HomeTab>("profile");
+  const [historyScrollState, setHistoryScrollState] = useState({ canBack: false, canForward: false });
   const moreButtonRef = useRef<HTMLButtonElement>(null);
   const profileTabRef = useRef<HTMLButtonElement>(null);
   const logTabRef = useRef<HTMLButtonElement>(null);
+  const historyTrackRef = useRef<HTMLDivElement>(null);
   const profile = site?.profile;
   const publicName = profile?.publicName || "Anywayone";
   const profileFields = [
@@ -49,6 +52,7 @@ export function HomeExperience({ site }: { site: PublicSiteData | null }) {
     { overline: "INTERESTS / 兴趣爱好", value: profile?.interests.join(" · ") },
     { overline: "CITIES / 喜欢的城市", value: profile?.favoriteCities.join(" · ") },
   ].filter((item) => item.value);
+  const history = site?.history ?? [];
 
   const closeDetails = () => {
     window.scrollTo({ top: 0 });
@@ -66,6 +70,28 @@ export function HomeExperience({ site }: { site: PublicSiteData | null }) {
     window.addEventListener("keydown", handleEscape);
     return () => window.removeEventListener("keydown", handleEscape);
   }, [expanded]);
+
+  useEffect(() => {
+    if (activeTab !== "log") return;
+    const track = historyTrackRef.current;
+    if (!track) return;
+
+    const updateScrollState = () => {
+      const maximum = track.scrollWidth - track.clientWidth;
+      setHistoryScrollState({
+        canBack: track.scrollLeft > 2,
+        canForward: track.scrollLeft < maximum - 2,
+      });
+    };
+    const frame = window.requestAnimationFrame(updateScrollState);
+    track.addEventListener("scroll", updateScrollState, { passive: true });
+    window.addEventListener("resize", updateScrollState);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      track.removeEventListener("scroll", updateScrollState);
+      window.removeEventListener("resize", updateScrollState);
+    };
+  }, [activeTab, history.length]);
 
   const openDetails = () => {
     window.scrollTo({ top: 0 });
@@ -85,6 +111,12 @@ export function HomeExperience({ site }: { site: PublicSiteData | null }) {
     const nextTab = tab === "profile" ? "log" : "profile";
     changeTab(nextTab);
     (nextTab === "profile" ? profileTabRef.current : logTabRef.current)?.focus({ preventScroll: true });
+  };
+
+  const scrollHistory = (direction: -1 | 1) => {
+    const track = historyTrackRef.current;
+    if (!track) return;
+    track.scrollBy({ left: direction * Math.min(track.clientWidth * 0.78, 720), behavior: "smooth" });
   };
 
   return (
@@ -212,19 +244,73 @@ export function HomeExperience({ site }: { site: PublicSiteData | null }) {
                   </div>}
                 </div>
               ) : (
-                <div className={styles.logPanel} id="log-panel" role="tabpanel">
-                  {siteLogItems.map((item) => {
-                    const Icon = item.icon;
-                    return (
-                      <div className={styles.logItem} key={item.label}>
-                        <div className={styles.logLabel}>
-                          <Icon aria-hidden="true" />
-                          {item.label}
+                <div className={styles.logContent} id="log-panel" role="tabpanel">
+                  <div className={styles.logPanel}>
+                    {siteLogItems.map((item) => {
+                      const Icon = item.icon;
+                      return (
+                        <div className={styles.logItem} key={item.label}>
+                          <div className={styles.logLabel}>
+                            <Icon aria-hidden="true" />
+                            {item.label}
+                          </div>
+                          <strong>{item.value}</strong>
                         </div>
-                        <strong>{item.value}</strong>
+                      );
+                    })}
+                  </div>
+
+                  <section className={styles.historySection} aria-labelledby="site-history-title">
+                    <div className={styles.historyHeader}>
+                      <div>
+                        <p className={styles.sectionKicker}>SITE CHRONICLE</p>
+                        <h3 id="site-history-title">站点纪事<span>。</span></h3>
                       </div>
-                    );
-                  })}
+                      <div className={styles.historyControls}>
+                        <span>{history.length > 0 ? `${history.length} 个节点` : "尚未记录"}</span>
+                        {history.length > 1 && <div>
+                          <button type="button" title="上一组纪事" aria-label="上一组纪事" disabled={!historyScrollState.canBack} onClick={() => scrollHistory(-1)}>
+                            <ChevronLeft aria-hidden="true" />
+                          </button>
+                          <button type="button" title="下一组纪事" aria-label="下一组纪事" disabled={!historyScrollState.canForward} onClick={() => scrollHistory(1)}>
+                            <ChevronRight aria-hidden="true" />
+                          </button>
+                        </div>}
+                      </div>
+                    </div>
+
+                    {history.length > 0 ? (
+                      <div className={styles.historyTrack} ref={historyTrackRef} tabIndex={0} aria-label="站点纪事时间线">
+                        {history.map((item, index) => (
+                          <article className={styles.historyCard} key={item.id}>
+                            <div className={styles.historyCopy}>
+                              <div className={styles.historyMeta}>
+                                <time dateTime={item.eventDate}>{item.eventDate.replaceAll("-", ".")}</time>
+                                <span>{String(index + 1).padStart(2, "0")}</span>
+                              </div>
+                              <h4>{item.name}</h4>
+                              <p>{item.description}</p>
+                            </div>
+                            <div className={styles.historyImage}>
+                              {item.imagePublicUrl ? (
+                                <Image
+                                  src={item.imagePublicUrl}
+                                  alt=""
+                                  fill
+                                  sizes="(max-width: 767px) 82vw, 348px"
+                                />
+                              ) : <CalendarDays aria-hidden="true" />}
+                            </div>
+                          </article>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className={styles.historyEmpty}>
+                        <CalendarDays aria-hidden="true" />
+                        <p>尚未添加站点纪事。</p>
+                      </div>
+                    )}
+                  </section>
                 </div>
               )}
             </div>

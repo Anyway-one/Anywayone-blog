@@ -9,10 +9,18 @@ from app.db.enums import ContactType
 from app.modules.audit.models import AuditLog
 from app.modules.auth.models import User
 from app.modules.media.models import Media
-from app.modules.site.models import ContactMethod, SiteProfile, SiteSettings, SocialLink
+from app.modules.site.models import (
+    ContactMethod,
+    SiteHistoryEvent,
+    SiteProfile,
+    SiteSettings,
+    SocialLink,
+)
 from app.modules.site.schemas import (
     ContactMethodInput,
     ContactMethodRead,
+    SiteHistoryInput,
+    SiteHistoryRead,
     SiteProfileRead,
     SiteProfileUpdate,
     SiteSettingsRead,
@@ -104,6 +112,137 @@ async def update_site_settings(
     await db.commit()
     await db.refresh(settings)
     return settings
+
+
+async def list_history(db: AsyncSession) -> list[SiteHistoryRead]:
+    rows = (
+        await db.execute(
+            select(SiteHistoryEvent, Media)
+            .outerjoin(
+                Media,
+                (Media.id == SiteHistoryEvent.image_media_id) & Media.deleted_at.is_(None),
+            )
+            .order_by(SiteHistoryEvent.event_date, SiteHistoryEvent.created_at)
+        )
+    ).all()
+    return [
+        SiteHistoryRead.model_validate(
+            {
+                **event.__dict__,
+                "image_public_url": media.public_url if media else None,
+                "image_width": media.width if media else None,
+                "image_height": media.height if media else None,
+            }
+        )
+        for event, media in rows
+    ]
+
+
+async def create_history_event(
+    db: AsyncSession,
+    *,
+    payload: SiteHistoryInput,
+    actor: User,
+    request_id: str,
+) -> SiteHistoryRead:
+    await _validate_media_ids(db, [payload.image_media_id])
+    event = SiteHistoryEvent(**payload.model_dump())
+    db.add(event)
+    await db.flush()
+    _add_audit(
+        db,
+        actor,
+        "site_history.create",
+        event.id,
+        request_id,
+        ["event"],
+        resource_type="site_history",
+    )
+    await db.commit()
+    return await get_history_event_read(db, event.id)
+
+
+async def update_history_event(
+    db: AsyncSession,
+    *,
+    event_id: uuid.UUID,
+    payload: SiteHistoryInput,
+    actor: User,
+    request_id: str,
+) -> SiteHistoryRead:
+    await _validate_media_ids(db, [payload.image_media_id])
+    event = await _get_history_event(db, event_id, for_update=True)
+    changes = payload.model_dump()
+    for field, value in changes.items():
+        setattr(event, field, value)
+    _add_audit(
+        db,
+        actor,
+        "site_history.update",
+        event.id,
+        request_id,
+        sorted(changes),
+        resource_type="site_history",
+    )
+    await db.commit()
+    return await get_history_event_read(db, event.id)
+
+
+async def delete_history_event(
+    db: AsyncSession,
+    *,
+    event_id: uuid.UUID,
+    actor: User,
+    request_id: str,
+) -> None:
+    event = await _get_history_event(db, event_id, for_update=True)
+    _add_audit(
+        db,
+        actor,
+        "site_history.delete",
+        event.id,
+        request_id,
+        ["event"],
+        resource_type="site_history",
+    )
+    await db.delete(event)
+    await db.commit()
+
+
+async def get_history_event_read(db: AsyncSession, event_id: uuid.UUID) -> SiteHistoryRead:
+    row = (
+        await db.execute(
+            select(SiteHistoryEvent, Media)
+            .outerjoin(
+                Media,
+                (Media.id == SiteHistoryEvent.image_media_id) & Media.deleted_at.is_(None),
+            )
+            .where(SiteHistoryEvent.id == event_id)
+        )
+    ).first()
+    if row is None:
+        raise AppError(status_code=404, code="SITE_HISTORY_NOT_FOUND", message="站点纪事不存在。")
+    event, media = row
+    return SiteHistoryRead.model_validate(
+        {
+            **event.__dict__,
+            "image_public_url": media.public_url if media else None,
+            "image_width": media.width if media else None,
+            "image_height": media.height if media else None,
+        }
+    )
+
+
+async def _get_history_event(
+    db: AsyncSession, event_id: uuid.UUID, *, for_update: bool = False
+) -> SiteHistoryEvent:
+    statement = select(SiteHistoryEvent).where(SiteHistoryEvent.id == event_id)
+    if for_update:
+        statement = statement.with_for_update()
+    event = await db.scalar(statement)
+    if event is None:
+        raise AppError(status_code=404, code="SITE_HISTORY_NOT_FOUND", message="站点纪事不存在。")
+    return event
 
 
 async def list_contacts(
@@ -220,7 +359,7 @@ async def _validate_media_ids(
         ).all()
     )
     if existing != expected:
-        raise AppError(status_code=422, code="MEDIA_NOT_FOUND", message="二维码图片不存在。")
+        raise AppError(status_code=422, code="MEDIA_NOT_FOUND", message="图片不存在。")
 
 
 def _add_audit(
@@ -230,12 +369,13 @@ def _add_audit(
     resource_id: uuid.UUID | None,
     request_id: str,
     fields: list[str],
+    resource_type: str = "site_settings",
 ) -> None:
     db.add(
         AuditLog(
             actor_id=actor.id,
             action=action,
-            resource_type="site_settings",
+            resource_type=resource_type,
             resource_id=resource_id,
             request_id=request_id,
             summary={"fields": fields},

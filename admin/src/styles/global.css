@@ -1061,6 +1061,101 @@ a {
   font-size: 10px;
 }
 
+.history-admin-list {
+  width: min(100%, 1120px);
+  display: grid;
+  gap: 10px;
+}
+
+.history-admin-empty {
+  width: min(100%, 1040px);
+  min-height: 360px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.history-admin-item {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 156px minmax(0, 1fr) auto;
+  gap: 20px;
+  align-items: center;
+  border: 1px solid var(--color-line);
+  border-radius: 8px;
+  padding: 10px;
+  background: #ffffff;
+}
+
+.history-admin-item__image {
+  width: 156px;
+  aspect-ratio: 16 / 9;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 5px;
+  color: #a1a29d;
+  background: #f0efea;
+}
+
+.history-admin-item__image img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.history-admin-item__body {
+  min-width: 0;
+}
+
+.history-admin-item__body time {
+  color: #986f17;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.history-admin-item__body h2 {
+  margin: 5px 0 4px;
+  font-size: 17px;
+  line-height: 24px;
+}
+
+.history-admin-item__body p {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 0;
+  color: #747572;
+  font-size: 12px;
+  line-height: 19px;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.history-admin-item__actions {
+  display: flex;
+  align-items: center;
+}
+
+.history-editor-image {
+  overflow: hidden;
+  width: 100%;
+  aspect-ratio: 16 / 7;
+  margin: -8px 0 14px;
+  border: 1px solid var(--color-line);
+  border-radius: 6px;
+  background: #f0efea;
+}
+
+.history-editor-image img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+}
+
 .settings-divider {
   height: 1px;
   margin: 20px 0;
@@ -1525,6 +1620,23 @@ a {
 
   .media-grid {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .history-admin-item {
+    grid-template-columns: 92px minmax(0, 1fr) auto;
+    gap: 12px;
+  }
+
+  .history-admin-item__image {
+    width: 92px;
+  }
+
+  .history-admin-item__body p {
+    -webkit-line-clamp: 1;
+  }
+
+  .history-admin-item__actions {
+    flex-direction: column;
   }
 
   .editor-cover-preview {

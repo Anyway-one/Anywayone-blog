@@ -45,6 +45,22 @@ export interface SiteSettings {
 
 export type SiteSettingsInput = Omit<SiteSettings, 'id'>
 
+export interface SiteHistoryEvent {
+  id: string
+  eventDate: string
+  name: string
+  description: string
+  imageMediaId: string | null
+  imagePublicUrl: string | null
+  imageWidth: number | null
+  imageHeight: number | null
+}
+
+export type SiteHistoryInput = Pick<
+  SiteHistoryEvent,
+  'eventDate' | 'name' | 'description' | 'imageMediaId'
+>
+
 export interface ContactMethod {
   id?: string
   contactType: ContactType
@@ -88,6 +104,31 @@ export async function saveSiteSettings(input: SiteSettingsInput) {
     body: JSON.stringify(input),
   })
   return response.data
+}
+
+export async function getSiteHistory() {
+  const response = await apiRequest<DataResponse<SiteHistoryEvent[]>>('/admin/settings/history')
+  return response.data
+}
+
+export async function createSiteHistoryEvent(input: SiteHistoryInput) {
+  const response = await apiRequest<DataResponse<SiteHistoryEvent>>('/admin/settings/history', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
+  return response.data
+}
+
+export async function updateSiteHistoryEvent(id: string, input: SiteHistoryInput) {
+  const response = await apiRequest<DataResponse<SiteHistoryEvent>>(`/admin/settings/history/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(input),
+  })
+  return response.data
+}
+
+export async function deleteSiteHistoryEvent(id: string) {
+  await apiRequest(`/admin/settings/history/${id}`, { method: 'DELETE' })
 }
 
 export async function getContacts() {

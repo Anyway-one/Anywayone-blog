@@ -39,6 +39,17 @@ export interface PublicSiteSettings {
   launchDate: string | null;
 }
 
+export interface PublicSiteHistoryEvent {
+  id: string;
+  eventDate: string;
+  name: string;
+  description: string;
+  imageMediaId: string | null;
+  imagePublicUrl: string | null;
+  imageWidth: number | null;
+  imageHeight: number | null;
+}
+
 export interface PublicContact {
   id: string;
   contactType: ContactType;
@@ -62,6 +73,7 @@ export interface PublicSocialLink {
 export interface PublicSiteData {
   profile: PublicProfile;
   settings: PublicSiteSettings;
+  history: PublicSiteHistoryEvent[];
   contacts: PublicContact[];
   socialLinks: PublicSocialLink[];
 }

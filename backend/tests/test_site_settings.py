@@ -8,6 +8,8 @@ from app.db.enums import ContactType, SocialPlatform
 from app.modules.site.schemas import (
     ContactMethodInput,
     ContactSettingsUpdate,
+    SiteHistoryInput,
+    SiteHistoryRead,
     SiteProfileRead,
     SiteSettingsRead,
     SiteSettingsUpdate,
@@ -45,6 +47,38 @@ def test_site_settings_serialize_launch_date_as_camel_case() -> None:
 def test_launch_date_cannot_be_in_the_future() -> None:
     with pytest.raises(ValidationError):
         SiteSettingsUpdate(launch_date=date.today() + timedelta(days=1))
+
+
+def test_site_history_serializes_media_and_date_as_camel_case() -> None:
+    media_id = uuid.uuid4()
+    item = SiteHistoryRead(
+        id=uuid.uuid4(),
+        event_date=date(2026, 8, 28),
+        name="2.0 版本发布",
+        description="完成首页改版。",
+        image_media_id=media_id,
+        image_public_url="https://api.anywayone.com/media/history.webp",
+        image_width=1600,
+        image_height=900,
+    )
+
+    data = item.model_dump(by_alias=True, mode="json")
+
+    assert data["eventDate"] == "2026-08-28"
+    assert data["imageMediaId"] == str(media_id)
+    assert data["imagePublicUrl"].endswith("history.webp")
+
+
+def test_site_history_rejects_future_dates_and_blank_text() -> None:
+    with pytest.raises(ValidationError):
+        SiteHistoryInput(
+            event_date=date.today() + timedelta(days=1),
+            name="未来事件",
+            description="尚未发生。",
+        )
+
+    with pytest.raises(ValidationError):
+        SiteHistoryInput(event_date=date.today(), name="  ", description="说明")
 
 
 def test_qr_code_is_only_available_for_supported_contacts() -> None:

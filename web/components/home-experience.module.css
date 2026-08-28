@@ -321,10 +321,13 @@
   font-weight: 500;
 }
 
+.logContent {
+  padding-top: 34px;
+}
+
 .logPanel {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  padding-top: 34px;
 }
 
 .logItem {
@@ -342,6 +345,13 @@
   padding-left: 36px;
 }
 
+.logItem:last-child {
+  grid-column: 1 / -1;
+  padding-right: 0;
+  padding-left: 0;
+  border-right: 0;
+}
+
 .logLabel {
   display: flex;
   align-items: center;
@@ -355,6 +365,189 @@
   width: 17px;
   height: 17px;
   color: var(--color-brand);
+}
+
+.historySection {
+  min-width: 0;
+  padding-top: 42px;
+}
+
+.historyHeader {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 0 0 20px;
+  border-bottom: 1px solid var(--color-line);
+}
+
+.historyHeader h3 {
+  margin: 0;
+  font-size: 28px;
+  line-height: 1.2;
+  font-weight: 500;
+}
+
+.historyHeader h3 span {
+  color: var(--color-brand);
+}
+
+.historyControls {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.historyControls > span {
+  color: var(--color-secondary-text);
+  font-size: 12px;
+}
+
+.historyControls > div {
+  display: flex;
+  gap: 8px;
+}
+
+.historyControls button {
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  color: var(--color-ink);
+  background: var(--color-paper);
+  border: 1px solid var(--color-line);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: color 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+
+.historyControls button:hover {
+  color: var(--color-brand);
+  border-color: var(--color-brand);
+  transform: translateY(-1px);
+}
+
+.historyControls button:disabled {
+  color: #aaa9a4;
+  border-color: var(--color-line);
+  cursor: default;
+  opacity: 0.55;
+  transform: none;
+}
+
+.historyControls svg {
+  width: 19px;
+  height: 19px;
+}
+
+.historyTrack {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  padding: 20px 1px 12px;
+  scroll-behavior: smooth;
+  scroll-snap-type: x mandatory;
+  scrollbar-color: var(--color-line) transparent;
+  scrollbar-width: thin;
+}
+
+.historyCard {
+  width: 348px;
+  height: 410px;
+  flex: 0 0 348px;
+  display: flex;
+  overflow: hidden;
+  flex-direction: column;
+  border: 1px solid var(--color-line);
+  border-radius: 6px;
+  background: var(--color-paper);
+  scroll-snap-align: start;
+}
+
+.historyCopy {
+  min-height: 172px;
+  padding: 24px 24px 18px;
+}
+
+.historyMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  color: var(--color-secondary-text);
+  font-size: 11px;
+}
+
+.historyMeta span {
+  color: var(--color-brand);
+  font-variant-numeric: tabular-nums;
+}
+
+.historyCopy h4 {
+  margin: 10px 0 8px;
+  font-size: 20px;
+  line-height: 1.35;
+  font-weight: 500;
+}
+
+.historyCopy p {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 0;
+  color: var(--color-secondary-text);
+  font-size: 13px;
+  line-height: 1.7;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.historyImage {
+  position: relative;
+  flex: 1;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  margin: 0 14px 14px;
+  color: #b5b4ae;
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: 4px;
+}
+
+.historyImage img {
+  padding: 12px;
+  object-fit: contain;
+}
+
+.historyImage > svg {
+  width: 36px;
+  height: 36px;
+  stroke-width: 1.25;
+}
+
+.historyEmpty {
+  min-height: 176px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 12px;
+  color: var(--color-secondary-text);
+  border-bottom: 1px solid var(--color-line);
+}
+
+.historyEmpty svg {
+  width: 28px;
+  height: 28px;
+  color: var(--color-brand);
+  stroke-width: 1.5;
+}
+
+.historyEmpty p {
+  margin: 0;
+  font-size: 13px;
 }
 
 @media (max-width: 1023px) {
@@ -463,5 +656,45 @@
     min-height: 126px;
     padding: 24px 0;
     border-right: 0;
+  }
+
+  .logItem:last-child {
+    grid-column: auto;
+  }
+
+  .historySection {
+    padding-top: 32px;
+  }
+
+  .historyHeader {
+    align-items: flex-start;
+  }
+
+  .historyHeader h3 {
+    font-size: 24px;
+  }
+
+  .historyControls > span {
+    display: none;
+  }
+
+  .historyControls button {
+    width: 36px;
+    height: 36px;
+  }
+
+  .historyCard {
+    width: min(82vw, 300px);
+    height: 372px;
+    flex-basis: min(82vw, 300px);
+  }
+
+  .historyCopy {
+    min-height: 164px;
+    padding: 21px 20px 16px;
+  }
+
+  .historyImage {
+    margin: 0 12px 12px;
   }
 }

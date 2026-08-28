@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Request
+import uuid
+
+from fastapi import APIRouter, Request, Response, status
 
 from app.api.schemas import DataResponse, Meta
 from app.core.request_id import get_request_id
@@ -8,6 +10,8 @@ from app.modules.site.schemas import (
     ContactMethodRead,
     ContactSettingsUpdate,
     PublicSiteData,
+    SiteHistoryInput,
+    SiteHistoryRead,
     SiteProfileRead,
     SiteProfileUpdate,
     SiteSettingsRead,
@@ -82,6 +86,67 @@ async def update_admin_site_settings(
     )
 
 
+@admin_router.get("/history", response_model=DataResponse[list[SiteHistoryRead]])
+async def get_admin_history(
+    request: Request,
+    db: DbSession,
+    _: CurrentUser,
+) -> DataResponse[list[SiteHistoryRead]]:
+    return DataResponse(
+        data=await service.list_history(db),
+        meta=Meta(request_id=get_request_id(request)),
+    )
+
+
+@admin_router.post(
+    "/history", response_model=DataResponse[SiteHistoryRead], status_code=status.HTTP_201_CREATED
+)
+async def create_admin_history_event(
+    payload: SiteHistoryInput,
+    request: Request,
+    db: DbSession,
+    current_user: CurrentUser,
+) -> DataResponse[SiteHistoryRead]:
+    item = await service.create_history_event(
+        db, payload=payload, actor=current_user, request_id=get_request_id(request)
+    )
+    return DataResponse(data=item, meta=Meta(request_id=get_request_id(request)))
+
+
+@admin_router.put("/history/{event_id}", response_model=DataResponse[SiteHistoryRead])
+async def update_admin_history_event(
+    event_id: uuid.UUID,
+    payload: SiteHistoryInput,
+    request: Request,
+    db: DbSession,
+    current_user: CurrentUser,
+) -> DataResponse[SiteHistoryRead]:
+    item = await service.update_history_event(
+        db,
+        event_id=event_id,
+        payload=payload,
+        actor=current_user,
+        request_id=get_request_id(request),
+    )
+    return DataResponse(data=item, meta=Meta(request_id=get_request_id(request)))
+
+
+@admin_router.delete("/history/{event_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_admin_history_event(
+    event_id: uuid.UUID,
+    request: Request,
+    db: DbSession,
+    current_user: CurrentUser,
+) -> Response:
+    await service.delete_history_event(
+        db,
+        event_id=event_id,
+        actor=current_user,
+        request_id=get_request_id(request),
+    )
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
 @admin_router.get("/contacts", response_model=DataResponse[list[ContactMethodRead]])
 async def get_admin_contacts(
     request: Request,
@@ -143,6 +208,7 @@ async def get_public_site(request: Request, db: DbSession) -> DataResponse[Publi
     data = PublicSiteData(
         profile=await service.get_profile_read(db),
         settings=await service.get_site_settings_read(db),
+        history=await service.list_history(db),
         contacts=await service.list_contacts(db, public_only=True),
         social_links=await service.list_social_links(db, public_only=True),
     )

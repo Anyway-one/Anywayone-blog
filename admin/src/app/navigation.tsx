@@ -7,6 +7,7 @@ import {
   FolderKanban,
   ImagePlus,
   Images,
+  History,
   LayoutDashboard,
   Library,
   Mail,
@@ -58,6 +59,7 @@ export const navigationItems: NavigationItem[] = [
       { key: '/profile', label: '个人资料', icon: icon(CircleUserRound) },
       { key: '/contact', label: '联系方式', icon: icon(Mail) },
       { key: '/social', label: '社交平台', icon: icon(Share2) },
+      { key: '/history', label: '站点纪事', icon: icon(History) },
       { key: '/settings', label: '站点设置', icon: icon(Settings) },
     ],
   },
@@ -74,6 +76,7 @@ export const routeMeta: Record<string, { title: string; group?: string }> = {
   '/profile': { title: '个人资料', group: '站点管理' },
   '/contact': { title: '联系方式', group: '站点管理' },
   '/social': { title: '社交平台', group: '站点管理' },
+  '/history': { title: '站点纪事', group: '站点管理' },
   '/settings': { title: '站点设置', group: '站点管理' },
 }
 

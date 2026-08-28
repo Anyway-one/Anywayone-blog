@@ -76,6 +76,35 @@ class SiteSettingsRead(SiteSettingsUpdate):
     id: uuid.UUID | None = None
 
 
+class SiteHistoryInput(ApiModel):
+    event_date: date
+    name: str = Field(min_length=1, max_length=120)
+    description: str = Field(min_length=1, max_length=1000)
+    image_media_id: uuid.UUID | None = None
+
+    @field_validator("event_date")
+    @classmethod
+    def validate_event_date(cls, value: date) -> date:
+        if value > date.today():
+            raise ValueError("事件日期不能晚于今天")
+        return value
+
+    @field_validator("name", "description")
+    @classmethod
+    def normalize_required_text(cls, value: str) -> str:
+        stripped = value.strip()
+        if not stripped:
+            raise ValueError("内容不能为空")
+        return stripped
+
+
+class SiteHistoryRead(SiteHistoryInput):
+    id: uuid.UUID
+    image_public_url: str | None = None
+    image_width: int | None = None
+    image_height: int | None = None
+
+
 class ContactMethodInput(ApiModel):
     contact_type: ContactType
     value: str = Field(min_length=1, max_length=320)
@@ -156,5 +185,6 @@ class SocialLinkRead(ApiModel):
 class PublicSiteData(ApiModel):
     profile: SiteProfileRead
     settings: SiteSettingsRead
+    history: list[SiteHistoryRead]
     contacts: list[ContactMethodRead]
     social_links: list[SocialLinkRead]

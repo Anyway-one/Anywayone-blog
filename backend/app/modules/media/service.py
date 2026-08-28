@@ -17,7 +17,7 @@ from app.modules.auth.models import User
 from app.modules.media.models import Media
 from app.modules.photography.models import PhotoItem
 from app.modules.posts.models import Post
-from app.modules.site.models import ContactMethod, SiteProfile
+from app.modules.site.models import ContactMethod, SiteHistoryEvent, SiteProfile
 
 IMAGE_FORMATS = {
     "JPEG": ("jpg", "image/jpeg"),
@@ -138,11 +138,22 @@ async def delete_media(db: AsyncSession, media_id: uuid.UUID) -> None:
     photography_references = await db.scalar(
         select(func.count()).select_from(PhotoItem).where(PhotoItem.media_id == media.id)
     )
-    if post_references or profile_references or contact_references or photography_references:
+    history_references = await db.scalar(
+        select(func.count())
+        .select_from(SiteHistoryEvent)
+        .where(SiteHistoryEvent.image_media_id == media.id)
+    )
+    if (
+        post_references
+        or profile_references
+        or contact_references
+        or photography_references
+        or history_references
+    ):
         raise AppError(
             status_code=409,
             code="MEDIA_IN_USE",
-            message="图片仍被文章、摄影集、头像或二维码使用，不能删除。",
+            message="图片仍被站点内容使用，不能删除。",
         )
     media.deleted_at = datetime.now(UTC)
     await db.commit()
