@@ -1,0 +1,19 @@
+.stream { display: flex; flex-direction: column; gap: 72px; padding: 64px 0 96px; }
+.figure { margin: 0 auto; width: min(100%, 920px); }
+.imageButton { position: relative; display: block; width: 100%; padding: 0; color: inherit; background: #191a16; border: 0; cursor: zoom-in; }
+.imageButton img { display: block; width: 100%; height: auto; }
+.expand { position: absolute; right: 16px; bottom: 16px; display: grid; width: 38px; height: 38px; place-items: center; color: var(--color-photo-text); background: rgba(17, 18, 15, .72); opacity: 0; transition: opacity 160ms ease; }
+.imageButton:hover .expand, .imageButton:focus-visible .expand { opacity: 1; }
+.expand svg { width: 16px; height: 16px; }
+.figure figcaption { display: flex; flex-direction: column; gap: 6px; padding: 16px 0 0 20px; border-left: 1px solid var(--color-photo-accent); }
+.figure figcaption strong { font-size: 15px; font-weight: 500; }
+.figure figcaption span { color: #aaa99f; line-height: 1.7; }
+.lightbox { position: fixed; z-index: 100; inset: 0; display: grid; place-items: center; background: rgba(10, 11, 9, .97); }
+.lightboxImage { position: relative; width: min(88vw, 1200px); height: min(84vh, 900px); }
+.close, .nav { position: absolute; z-index: 1; display: grid; place-items: center; width: 48px; height: 48px; padding: 0; color: var(--color-photo-text); background: rgba(245, 242, 234, .1); border: 1px solid rgba(245, 242, 234, .25); cursor: pointer; }
+.close { top: 24px; right: 24px; }
+.nav { top: 50%; transform: translateY(-50%); }
+.previous { left: 24px; }.next { right: 24px; }
+.close svg, .nav svg { width: 21px; height: 21px; }
+.counter { position: absolute; right: 32px; bottom: 24px; margin: 0; color: #aaa99f; font-size: 12px; font-variant-numeric: tabular-nums; }
+@media (max-width: 767px) { .stream { gap: 48px; padding: 40px 0 64px; }.figure figcaption { padding-left: 14px; }.lightboxImage { width: 100vw; height: 76vh; }.close { top: 16px; right: 16px; }.nav { top: auto; bottom: 20px; transform: none; }.previous { left: 20px; }.next { right: 20px; }.counter { right: 50%; bottom: 37px; transform: translateX(50%); } }

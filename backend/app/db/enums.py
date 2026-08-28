@@ -20,6 +20,12 @@ class Visibility(StrEnum):
     UNLISTED = "UNLISTED"
 
 
+class PhotographyStatus(StrEnum):
+    DRAFT = "DRAFT"
+    PUBLISHED = "PUBLISHED"
+    WITHDRAWN = "WITHDRAWN"
+
+
 class PostVersionChangeType(StrEnum):
     AUTO_SAVE = "AUTO_SAVE"
     MANUAL_SAVE = "MANUAL_SAVE"
