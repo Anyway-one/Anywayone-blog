@@ -1,83 +1,66 @@
-import { Button, Checkbox, Form, Input, Select, message } from 'antd'
+import { useEffect, useState } from 'react'
+import { Button, Form, Input, Spin, message } from 'antd'
 import { Save } from 'lucide-react'
+import { getSiteSettings, saveSiteSettings, type SiteSettingsInput } from '../api/site'
 import PageHeader from '../components/PageHeader'
 
-const sections = {
-  profile: {
-    eyebrow: 'PROFILE',
-    title: '个人资料',
-    description: '配置首页第二屏使用的真实个人信息。',
-  },
-  contact: {
-    eyebrow: 'CONTACT',
-    title: '联系方式',
-    description: '只有已配置的联系方式才会显示在展示端。',
-  },
-  site: {
-    eyebrow: 'SETTINGS',
-    title: '站点设置',
-    description: '管理站点基础信息、默认语言和公开状态。',
-  },
+function localToday() {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
 }
 
-export default function SettingsPage({ section }: { section: keyof typeof sections }) {
+export default function SettingsPage() {
+  const [form] = Form.useForm<SiteSettingsInput>()
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
   const [messageApi, contextHolder] = message.useMessage()
-  const content = sections[section]
+
+  useEffect(() => {
+    void getSiteSettings()
+      .then((settings) => form.setFieldsValue(settings))
+      .catch((error: unknown) => void messageApi.error(error instanceof Error ? error.message : '站点设置加载失败。'))
+      .finally(() => setLoading(false))
+  }, [form, messageApi])
+
+  const submit = async () => {
+    try {
+      const values = await form.validateFields()
+      setSaving(true)
+      const settings = await saveSiteSettings({ launchDate: values.launchDate || null })
+      form.setFieldsValue(settings)
+      void messageApi.success('站点设置已保存')
+    } catch (error) {
+      if (error instanceof Error) void messageApi.error(error.message)
+    } finally {
+      setSaving(false)
+    }
+  }
 
   return (
     <div className="page-stack settings-page">
       {contextHolder}
       <PageHeader
-        eyebrow={content.eyebrow}
-        title={content.title}
-        description={content.description}
-        actions={
-          <Button type="primary" icon={<Save size={17} />} onClick={() => void messageApi.success('设置已保存在当前页面')}>
-            保存设置
-          </Button>
-        }
+        eyebrow="SITE / SETTINGS"
+        title="站点设置"
+        description="维护站点运营信息。"
+        actions={<Button type="primary" icon={<Save size={17} />} loading={saving} onClick={() => void submit()}>保存设置</Button>}
       />
 
-      <section className="surface-panel settings-form-panel">
-        {section === 'profile' && (
-          <Form layout="vertical" requiredMark="optional">
+      <Spin spinning={loading}>
+        <Form form={form} className="settings-sections" layout="vertical" requiredMark="optional">
+          <section className="surface-panel settings-section-panel">
+            <div className="settings-section-heading"><span>OPERATION</span><h2>运营信息</h2></div>
             <div className="form-grid">
-              <Form.Item label="显示名称"><Input placeholder="Anywayone" /></Form.Item>
-              <Form.Item label="职业"><Input placeholder="例如：独立开发者" /></Form.Item>
-              <Form.Item label="所在城市"><Input placeholder="可选" /></Form.Item>
-              <Form.Item label="个人属性"><Input placeholder="可选" /></Form.Item>
-            </div>
-            <Form.Item label="个人简介"><Input.TextArea rows={5} placeholder="介绍你自己，不填写则展示端显示空状态。" /></Form.Item>
-            <Form.Item label="个人标签"><Select mode="tags" options={[]} placeholder="输入后按回车添加" /></Form.Item>
-          </Form>
-        )}
-
-        {section === 'contact' && (
-          <Form layout="vertical" requiredMark="optional">
-            <div className="form-grid">
-              <Form.Item label="邮箱"><Input type="email" placeholder="未配置" /></Form.Item>
-              <Form.Item label="GitHub"><Input prefix="github.com/" placeholder="用户名" /></Form.Item>
-              <Form.Item label="微信"><Input placeholder="未配置" /></Form.Item>
-              <Form.Item label="其他链接"><Input placeholder="https://" /></Form.Item>
-            </div>
-            <p className="form-help">留空的联系方式不会出现在公开联系页。</p>
-          </Form>
-        )}
-
-        {section === 'site' && (
-          <Form layout="vertical" requiredMark="optional">
-            <div className="form-grid">
-              <Form.Item label="站点名称"><Input defaultValue="Anywayone" /></Form.Item>
-              <Form.Item label="默认语言">
-                <Select defaultValue="zh-CN" options={[{ value: 'zh-CN', label: '简体中文' }]} />
+              <Form.Item name="launchDate" label="网站上线日期">
+                <Input type="date" max={localToday()} />
               </Form.Item>
-              <Form.Item label="站点口号"><Input defaultValue="ANYWAY, BE YOUR ONE." /></Form.Item>
-              <Form.Item label="公开地址"><Input placeholder="https://example.com" /></Form.Item>
             </div>
-            <Form.Item><Checkbox>允许搜索引擎收录公开内容</Checkbox></Form.Item>
-          </Form>
-        )}
-      </section>
+          </section>
+        </Form>
+      </Spin>
     </div>
   )
 }

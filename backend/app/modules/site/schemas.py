@@ -1,4 +1,5 @@
 import uuid
+from datetime import date
 from typing import Annotated, Self, TypeAlias
 
 from pydantic import Field, HttpUrl, field_validator, model_validator
@@ -58,6 +59,21 @@ class SiteProfileUpdate(ApiModel):
 class SiteProfileRead(SiteProfileUpdate):
     id: uuid.UUID | None = None
     avatar_public_url: str | None = None
+
+
+class SiteSettingsUpdate(ApiModel):
+    launch_date: date | None = None
+
+    @field_validator("launch_date")
+    @classmethod
+    def validate_launch_date(cls, value: date | None) -> date | None:
+        if value is not None and value > date.today():
+            raise ValueError("上线日期不能晚于今天")
+        return value
+
+
+class SiteSettingsRead(SiteSettingsUpdate):
+    id: uuid.UUID | None = None
 
 
 class ContactMethodInput(ApiModel):
@@ -139,5 +155,6 @@ class SocialLinkRead(ApiModel):
 
 class PublicSiteData(ApiModel):
     profile: SiteProfileRead
+    settings: SiteSettingsRead
     contacts: list[ContactMethodRead]
     social_links: list[SocialLinkRead]

@@ -38,7 +38,7 @@ export default function App() {
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/social" element={<SocialLinksPage />} />
-            <Route path="/settings" element={<SettingsPage section="site" />} />
+            <Route path="/settings" element={<SettingsPage />} />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Route>
         </Route>

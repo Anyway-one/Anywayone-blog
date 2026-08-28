@@ -127,108 +127,114 @@ export function HomeExperience({ site }: { site: PublicSiteData | null }) {
           </div>
         </section>
 
-        <section
-          className={styles.details}
-          id="home-details"
-          aria-hidden={!expanded}
-          aria-labelledby="details-title"
-        >
-          <div className={styles.detailsInner}>
-            <div className={styles.detailsHeader}>
-              <div>
-                <p className={styles.sectionKicker}>PROFILE / SITE LOG</p>
-                <h2 id="details-title">
-                  认识 {publicName}<span>。</span>
-                </h2>
-              </div>
-
-              <div className={styles.detailsActions}>
-                <div className={styles.tabs} role="tablist" aria-label="首页信息">
-                  <button
-                    ref={profileTabRef}
-                    type="button"
-                    role="tab"
-                    aria-selected={activeTab === "profile"}
-                    aria-controls="profile-panel"
-                    onClick={() => changeTab("profile")}
-                    onKeyDown={(event) => handleTabKeyDown(event, "profile")}
-                  >
-                    关于我
-                  </button>
-                  <button
-                    ref={logTabRef}
-                    type="button"
-                    role="tab"
-                    aria-selected={activeTab === "log"}
-                    aria-controls="log-panel"
-                    onClick={() => changeTab("log")}
-                    onKeyDown={(event) => handleTabKeyDown(event, "log")}
-                  >
-                    站点日志
-                  </button>
+        <div className={styles.widgetRoot}>
+          <section
+            className={styles.details}
+            id="home-details"
+            aria-hidden={!expanded}
+            aria-labelledby="details-title"
+          >
+            <div className={styles.detailsInner}>
+              <div className={styles.detailsHeader}>
+                <div>
+                  <p className={styles.sectionKicker}>PROFILE / SITE LOG</p>
+                  <h2 id="details-title">
+                    认识 {publicName}<span>。</span>
+                  </h2>
                 </div>
-                <button className={styles.closeButton} type="button" aria-label="关闭并返回首屏" onClick={closeDetails}>
-                  <X aria-hidden="true" />
-                </button>
-              </div>
-            </div>
 
-            {activeTab === "profile" ? (
-              <div className={styles.profilePanel} id="profile-panel" role="tabpanel">
-                <div className={styles.profileIntro}>
-                  <Image
-                    className={styles.avatar}
-                    src={profile?.avatarPublicUrl || "/brand/anywayone-avatar.png"}
-                    alt={`${publicName} 头像`}
-                    width={132}
-                    height={132}
-                  />
-                  <div>
-                    <p className={styles.sectionKicker}>ABOUT ME</p>
-                    <h3>{profile?.motto || "个人简介待配置"}<span>。</span></h3>
-                    <p className={styles.profileDescription}>
-                      {profile?.bio || "作者尚未配置公开个人简介。"}
-                    </p>
+                <div className={styles.detailsActions}>
+                  <div className={styles.tabs} role="tablist" aria-label="首页信息">
+                    <button
+                      ref={profileTabRef}
+                      type="button"
+                      role="tab"
+                      aria-selected={activeTab === "profile"}
+                      aria-controls="profile-panel"
+                      onClick={() => changeTab("profile")}
+                      onKeyDown={(event) => handleTabKeyDown(event, "profile")}
+                    >
+                      关于我
+                    </button>
+                    <button
+                      ref={logTabRef}
+                      type="button"
+                      role="tab"
+                      aria-selected={activeTab === "log"}
+                      aria-controls="log-panel"
+                      onClick={() => changeTab("log")}
+                      onKeyDown={(event) => handleTabKeyDown(event, "log")}
+                    >
+                      站点日志
+                    </button>
                   </div>
+                  <button className={styles.closeButton} type="button" aria-label="关闭并返回首屏" onClick={closeDetails}>
+                    <X aria-hidden="true" />
+                  </button>
                 </div>
-
-                {profileFields.length > 0 ? <dl className={styles.profileFields}>
-                  {profileFields.map((field) => (
-                    <div key={field.label}>
-                      <dt>{field.label}</dt>
-                      <dd>{field.value}</dd>
-                    </div>
-                  ))}
-                </dl> : <p className={styles.profileEmpty}>更多个人信息暂未公开。</p>}
-
-                {profileModules.length > 0 && <div className={styles.profileModules}>
-                  {profileModules.map((item) => (
-                    <div key={item.overline}>
-                      <span>{item.overline}</span>
-                      <strong>{item.value}</strong>
-                    </div>
-                  ))}
-                </div>}
               </div>
-            ) : (
-              <div className={styles.logPanel} id="log-panel" role="tabpanel">
-                {siteLogItems.map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <div className={styles.logItem} key={item.label}>
-                      <div className={styles.logLabel}>
-                        <Icon aria-hidden="true" />
-                        {item.label}
+
+              {activeTab === "profile" ? (
+                <div className={styles.profilePanel} id="profile-panel" role="tabpanel">
+                  <div className={styles.profileIntro}>
+                    <Image
+                      className={styles.avatar}
+                      src={profile?.avatarPublicUrl || "/brand/anywayone-avatar.png"}
+                      alt={`${publicName} 头像`}
+                      width={132}
+                      height={132}
+                    />
+                    <div>
+                      <p className={styles.sectionKicker}>ABOUT ME</p>
+                      <h3>{profile?.motto || "个人简介待配置"}<span>。</span></h3>
+                      <p className={styles.profileDescription}>
+                        {profile?.bio || "作者尚未配置公开个人简介。"}
+                      </p>
+                    </div>
+                  </div>
+
+                  {profileFields.length > 0 ? <dl className={styles.profileFields}>
+                    {profileFields.map((field) => (
+                      <div key={field.label}>
+                        <dt>{field.label}</dt>
+                        <dd>{field.value}</dd>
                       </div>
-                      <strong>{item.value}</strong>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-          <SiteFooter socialLinks={site?.socialLinks} />
-        </section>
+                    ))}
+                  </dl> : <p className={styles.profileEmpty}>更多个人信息暂未公开。</p>}
+
+                  {profileModules.length > 0 && <div className={styles.profileModules}>
+                    {profileModules.map((item) => (
+                      <div key={item.overline}>
+                        <span>{item.overline}</span>
+                        <strong>{item.value}</strong>
+                      </div>
+                    ))}
+                  </div>}
+                </div>
+              ) : (
+                <div className={styles.logPanel} id="log-panel" role="tabpanel">
+                  {siteLogItems.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <div className={styles.logItem} key={item.label}>
+                        <div className={styles.logLabel}>
+                          <Icon aria-hidden="true" />
+                          {item.label}
+                        </div>
+                        <strong>{item.value}</strong>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+            <SiteFooter
+              socialLinks={site?.socialLinks}
+              launchDate={site?.settings?.launchDate}
+              copyrightOwner={site?.profile.publicName}
+            />
+          </section>
+        </div>
       </div>
     </main>
   );

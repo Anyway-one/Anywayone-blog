@@ -6,6 +6,8 @@ import styles from "./site-footer.module.css";
 type SiteFooterProps = {
   dark?: boolean;
   socialLinks?: PublicSocialLink[];
+  launchDate?: string | null;
+  copyrightOwner?: string | null;
 };
 
 const socialLabels: Record<SocialPlatform, string> = {
@@ -21,41 +23,77 @@ const socialLabels: Record<SocialPlatform, string> = {
   WECHAT_OFFICIAL: "公众号",
 };
 
-export function SiteFooter({ dark = false, socialLinks = [] }: SiteFooterProps) {
+const millisecondsPerDay = 24 * 60 * 60 * 1000;
+
+function shanghaiDateParts(now: Date) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Shanghai",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(now);
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return [Number(values.year), Number(values.month), Number(values.day)] as const;
+}
+
+export function runningDaysSince(launchDate: string, now = new Date()) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(launchDate);
+  if (!match) return null;
+  const launch = Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+  const [year, month, day] = shanghaiDateParts(now);
+  const today = Date.UTC(year, month - 1, day);
+  if (launch > today) return null;
+  return Math.floor((today - launch) / millisecondsPerDay) + 1;
+}
+
+export function SiteFooter({
+  dark = false,
+  socialLinks = [],
+  launchDate,
+  copyrightOwner,
+}: SiteFooterProps) {
+  const currentYear = shanghaiDateParts(new Date())[0];
+  const runningDays = launchDate ? runningDaysSince(launchDate) : null;
+
   return (
     <footer className={`${styles.footer} ${dark ? styles.dark : ""}`}>
-      <span>Anywayone · ANYWAY, BE YOUR ONE.</span>
-      <nav aria-label="页脚导航">
-        <Link href="/posts">文章</Link>
-        <Link href="/photography">摄影</Link>
-        <Link href="/about">联系</Link>
-      </nav>
-      {socialLinks.length > 0 && (
-        <div className={styles.social} aria-label="社交平台">
-          {socialLinks.map((item) => item.url ? (
-            <a
-              key={item.id}
-              href={item.url}
-              target="_blank"
-              rel="noreferrer"
-              aria-label={`${socialLabels[item.platform]}${item.accountName ? `：${item.accountName}` : ""}`}
-              data-tooltip={item.accountName || socialLabels[item.platform]}
-            >
-              <PlatformIcon platform={item.platform} size={18} />
-            </a>
-          ) : (
-            <span
-              key={item.id}
-              role="img"
-              tabIndex={0}
-              aria-label={`${socialLabels[item.platform]}：${item.accountName || socialLabels[item.platform]}`}
-              data-tooltip={item.accountName || socialLabels[item.platform]}
-            >
-              <PlatformIcon platform={item.platform} size={18} />
-            </span>
-          ))}
-        </div>
-      )}
+      <div className={styles.meta}>
+        <span>© {currentYear} {copyrightOwner || "Anywayone"}. 保留所有权利。</span>
+        {runningDays !== null && <span className={styles.runtime}>本站已运行 <strong>{runningDays}</strong> 天</span>}
+      </div>
+
+      <div className={styles.actions}>
+        <nav aria-label="法律信息">
+          <Link href="/privacy">隐私政策</Link>
+          <Link href="/terms">服务条款</Link>
+        </nav>
+        {socialLinks.length > 0 && (
+          <div className={styles.social} aria-label="社交平台">
+            {socialLinks.map((item) => item.url ? (
+              <a
+                key={item.id}
+                href={item.url}
+                target="_blank"
+                rel="noreferrer"
+                aria-label={`${socialLabels[item.platform]}${item.accountName ? `：${item.accountName}` : ""}`}
+                data-tooltip={item.accountName || socialLabels[item.platform]}
+              >
+                <PlatformIcon platform={item.platform} size={18} />
+              </a>
+            ) : (
+              <span
+                key={item.id}
+                role="img"
+                tabIndex={0}
+                aria-label={`${socialLabels[item.platform]}：${item.accountName || socialLabels[item.platform]}`}
+                data-tooltip={item.accountName || socialLabels[item.platform]}
+              >
+                <PlatformIcon platform={item.platform} size={18} />
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
     </footer>
   );
 }

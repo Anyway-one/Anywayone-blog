@@ -38,6 +38,13 @@ export interface SiteProfile {
 
 export type SiteProfileInput = Omit<SiteProfile, 'id' | 'avatarPublicUrl'>
 
+export interface SiteSettings {
+  id: string | null
+  launchDate: string | null
+}
+
+export type SiteSettingsInput = Omit<SiteSettings, 'id'>
+
 export interface ContactMethod {
   id?: string
   contactType: ContactType
@@ -64,6 +71,19 @@ export async function getProfile() {
 
 export async function saveProfile(input: SiteProfileInput) {
   const response = await apiRequest<DataResponse<SiteProfile>>('/admin/settings/profile', {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
+  return response.data
+}
+
+export async function getSiteSettings() {
+  const response = await apiRequest<DataResponse<SiteSettings>>('/admin/settings/site')
+  return response.data
+}
+
+export async function saveSiteSettings(input: SiteSettingsInput) {
+  const response = await apiRequest<DataResponse<SiteSettings>>('/admin/settings/site', {
     method: 'PATCH',
     body: JSON.stringify(input),
   })

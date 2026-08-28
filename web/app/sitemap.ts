@@ -4,7 +4,7 @@ import { listAllPublicPosts, listPublicTaxonomies } from "@/lib/public-posts";
 const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/$/, "");
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const staticPages: MetadataRoute.Sitemap = ["", "/posts", "/photography", "/about"].map((path) => ({
+  const staticPages: MetadataRoute.Sitemap = ["", "/posts", "/photography", "/about", "/privacy", "/terms"].map((path) => ({
     url: `${siteUrl}${path}`,
     changeFrequency: path === "" ? "weekly" : "monthly",
     priority: path === "" ? 1 : 0.8,

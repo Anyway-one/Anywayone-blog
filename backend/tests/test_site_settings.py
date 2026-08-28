@@ -1,4 +1,5 @@
 import uuid
+from datetime import date, timedelta
 
 import pytest
 from pydantic import ValidationError
@@ -8,6 +9,8 @@ from app.modules.site.schemas import (
     ContactMethodInput,
     ContactSettingsUpdate,
     SiteProfileRead,
+    SiteSettingsRead,
+    SiteSettingsUpdate,
     SocialLinkInput,
     SocialSettingsUpdate,
 )
@@ -29,6 +32,19 @@ def test_profile_serializes_avatar_and_lists_as_camel_case() -> None:
     assert data["avatarPublicUrl"].endswith("avatar.webp")
     assert data["publicName"] == "Anywayone"
     assert data["interests"] == ["摄影", "跑步"]
+
+
+def test_site_settings_serialize_launch_date_as_camel_case() -> None:
+    settings = SiteSettingsRead(launch_date=date(2026, 1, 1))
+
+    data = settings.model_dump(by_alias=True, mode="json")
+
+    assert data["launchDate"] == "2026-01-01"
+
+
+def test_launch_date_cannot_be_in_the_future() -> None:
+    with pytest.raises(ValidationError):
+        SiteSettingsUpdate(launch_date=date.today() + timedelta(days=1))
 
 
 def test_qr_code_is_only_available_for_supported_contacts() -> None:

@@ -34,6 +34,11 @@ export interface PublicProfile {
   bio: string | null;
 }
 
+export interface PublicSiteSettings {
+  id: string | null;
+  launchDate: string | null;
+}
+
 export interface PublicContact {
   id: string;
   contactType: ContactType;
@@ -56,6 +61,7 @@ export interface PublicSocialLink {
 
 export interface PublicSiteData {
   profile: PublicProfile;
+  settings: PublicSiteSettings;
   contacts: PublicContact[];
   socialLinks: PublicSocialLink[];
 }

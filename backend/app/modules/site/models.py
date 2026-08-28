@@ -1,6 +1,7 @@
 import uuid
+from datetime import date
 
-from sqlalchemy import Boolean, Enum, ForeignKey, Integer, String, Text
+from sqlalchemy import Boolean, Date, Enum, ForeignKey, Integer, String, Text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -30,6 +31,15 @@ class SiteProfile(UuidPrimaryKeyMixin, TimestampMixin, Base):
     personality_type: Mapped[str | None] = mapped_column(String(40))
     motto: Mapped[str | None] = mapped_column(String(240))
     bio: Mapped[str | None] = mapped_column(Text)
+
+
+class SiteSettings(UuidPrimaryKeyMixin, TimestampMixin, Base):
+    __tablename__ = "site_settings"
+
+    singleton_key: Mapped[str] = mapped_column(
+        String(20), default="primary", unique=True, nullable=False
+    )
+    launch_date: Mapped[date | None] = mapped_column(Date)
 
 
 class ContactMethod(UuidPrimaryKeyMixin, TimestampMixin, Base):

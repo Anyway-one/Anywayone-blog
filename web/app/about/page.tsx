@@ -43,7 +43,11 @@ export default async function AboutPage() {
           </Link>
         </section>
       </div>
-      <SiteFooter socialLinks={site?.socialLinks} />
+      <SiteFooter
+        socialLinks={site?.socialLinks}
+        launchDate={site?.settings?.launchDate}
+        copyrightOwner={site?.profile.publicName}
+      />
     </main>
   );
 }

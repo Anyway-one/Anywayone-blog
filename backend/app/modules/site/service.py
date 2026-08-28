@@ -9,12 +9,14 @@ from app.db.enums import ContactType
 from app.modules.audit.models import AuditLog
 from app.modules.auth.models import User
 from app.modules.media.models import Media
-from app.modules.site.models import ContactMethod, SiteProfile, SocialLink
+from app.modules.site.models import ContactMethod, SiteProfile, SiteSettings, SocialLink
 from app.modules.site.schemas import (
     ContactMethodInput,
     ContactMethodRead,
     SiteProfileRead,
     SiteProfileUpdate,
+    SiteSettingsRead,
+    SiteSettingsUpdate,
     SocialLinkRead,
     SocialSettingsUpdate,
 )
@@ -70,6 +72,38 @@ async def update_profile(
     await db.commit()
     await db.refresh(profile)
     return profile
+
+
+async def get_site_settings(db: AsyncSession) -> SiteSettings | None:
+    return await db.scalar(select(SiteSettings).where(SiteSettings.singleton_key == "primary"))
+
+
+async def get_site_settings_read(db: AsyncSession) -> SiteSettingsRead:
+    settings = await get_site_settings(db)
+    if settings is None:
+        return SiteSettingsRead()
+    return SiteSettingsRead.model_validate(settings)
+
+
+async def update_site_settings(
+    db: AsyncSession,
+    *,
+    payload: SiteSettingsUpdate,
+    actor: User,
+    request_id: str,
+) -> SiteSettings:
+    settings = await get_site_settings(db)
+    if settings is None:
+        settings = SiteSettings(singleton_key="primary")
+        db.add(settings)
+    changes = payload.model_dump()
+    for field, value in changes.items():
+        setattr(settings, field, value)
+    await db.flush()
+    _add_audit(db, actor, "settings.site.update", settings.id, request_id, sorted(changes))
+    await db.commit()
+    await db.refresh(settings)
+    return settings
 
 
 async def list_contacts(
