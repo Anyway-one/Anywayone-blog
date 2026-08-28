@@ -1,7 +1,7 @@
 import uuid
-from datetime import date
+from datetime import date, datetime
 
-from sqlalchemy import Boolean, Date, Enum, ForeignKey, Integer, String, Text
+from sqlalchemy import Boolean, Date, DateTime, Enum, ForeignKey, Integer, String, Text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -51,6 +51,25 @@ class SiteHistoryEvent(UuidPrimaryKeyMixin, TimestampMixin, Base):
     image_media_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("media.id", ondelete="SET NULL"), index=True
     )
+
+
+class VisitorEvent(UuidPrimaryKeyMixin, Base):
+    """An anonymized page view used for aggregate traffic reporting."""
+
+    __tablename__ = "visitor_events"
+
+    occurred_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, index=True
+    )
+    session_id: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    path: Mapped[str] = mapped_column(String(500), nullable=False)
+    referrer: Mapped[str | None] = mapped_column(String(500))
+    country: Mapped[str | None] = mapped_column(String(120), index=True)
+    region: Mapped[str | None] = mapped_column(String(120))
+    city: Mapped[str | None] = mapped_column(String(120))
+    device_type: Mapped[str] = mapped_column(String(32), default="unknown", nullable=False)
+    browser: Mapped[str] = mapped_column(String(64), default="unknown", nullable=False)
+    os: Mapped[str] = mapped_column(String(64), default="unknown", nullable=False)
 
 
 class ContactMethod(UuidPrimaryKeyMixin, TimestampMixin, Base):

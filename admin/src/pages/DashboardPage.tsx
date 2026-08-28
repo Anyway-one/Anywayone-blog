@@ -1,20 +1,46 @@
-import { Button, Card } from 'antd'
-import { ArrowRight, FileText, Image, Plus, Radio, Server } from 'lucide-react'
+import { Button, Card, Spin } from 'antd'
+import { ArrowRight, FileText, Image, MapPin, Plus, Radio, Server, Share2, Smartphone } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
 import { useAuth } from '../auth/AuthContext'
+import { getVisitorAnalytics, type VisitorAdminStats, type VisitorBreakdownItem } from '../api/analytics'
 import EmptyPanel from '../components/EmptyPanel'
 import PageHeader from '../components/PageHeader'
 
 const metrics = [
   { label: '已发布文章', icon: FileText },
   { label: '摄影集', icon: Image },
-  { label: '本月访问', icon: Radio },
+  { label: '近 30 天访问', icon: Radio },
   { label: '服务状态', icon: Server },
 ]
 
 export default function DashboardPage() {
   const navigate = useNavigate()
   const { user } = useAuth()
+  const [analytics, setAnalytics] = useState<VisitorAdminStats | null>(null)
+  const [analyticsLoading, setAnalyticsLoading] = useState(true)
+
+  useEffect(() => {
+    let active = true
+    void getVisitorAnalytics().then((data) => {
+      if (active) setAnalytics(data)
+    }).catch(() => undefined).finally(() => {
+      if (active) setAnalyticsLoading(false)
+    })
+    return () => { active = false }
+  }, [])
+
+  const breakdown = (items: VisitorBreakdownItem[] | undefined) => (
+    <div className="analytics-breakdown">
+      {(items || []).length > 0 ? items?.map((item) => (
+        <div className="analytics-breakdown__row" key={item.name}>
+          <span title={item.name}>{item.name}</span>
+          <strong>{item.count}</strong>
+          <small>{item.percentage}%</small>
+        </div>
+      )) : <p className="surface-note">暂无数据</p>}
+    </div>
+  )
 
   return (
     <div className="page-stack">
@@ -36,10 +62,36 @@ export default function DashboardPage() {
               <span>{label}</span>
               <Icon size={18} aria-hidden="true" />
             </div>
-            <strong>—</strong>
-            <small>等待后端数据接入</small>
+            <strong>{label === '近 30 天访问' ? (analytics?.pageViews ?? '—') : '—'}</strong>
+            <small>{label === '近 30 天访问' ? `${analytics?.todayVisitors ?? 0} 位今日访客` : '内容统计'}</small>
           </Card>
         ))}
+      </section>
+
+      <section className="surface-panel dashboard-analytics">
+        <div className="section-heading">
+          <div>
+            <span className="section-heading__eyebrow">VISITOR ANALYTICS</span>
+            <h2>访客统计</h2>
+          </div>
+          <span className="analytics-range">近 {analytics?.rangeDays ?? 30} 天</span>
+        </div>
+        {analyticsLoading ? <div className="analytics-loading"><Spin size="small" />正在加载访问数据</div> : (
+          <>
+            <div className="analytics-summary">
+              <div><span>访客数</span><strong>{analytics?.visitors ?? 0}</strong></div>
+              <div><span>浏览量</span><strong>{analytics?.pageViews ?? 0}</strong></div>
+              <div><span>今日访客</span><strong>{analytics?.todayVisitors ?? 0}</strong></div>
+              <div><span>今日浏览</span><strong>{analytics?.todayPageViews ?? 0}</strong></div>
+            </div>
+            <div className="analytics-detail-grid">
+              <div><h3><MapPin size={15} />来源地</h3>{breakdown(analytics?.locations)}</div>
+              <div><h3><Share2 size={15} />来源页</h3>{breakdown(analytics?.referrers)}</div>
+              <div><h3><Smartphone size={15} />设备</h3>{breakdown(analytics?.devices)}</div>
+              <div><h3><FileText size={15} />热门页面</h3>{breakdown(analytics?.pages)}</div>
+            </div>
+          </>
+        )}
       </section>
 
       <section className="dashboard-grid">

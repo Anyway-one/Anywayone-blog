@@ -21,3 +21,4 @@ api_router.include_router(taxonomy_router.admin_router, prefix=get_settings().ap
 api_router.include_router(taxonomy_router.public_router, prefix=get_settings().api_v1_prefix)
 api_router.include_router(site_router.admin_router, prefix=get_settings().api_v1_prefix)
 api_router.include_router(site_router.public_router, prefix=get_settings().api_v1_prefix)
+api_router.include_router(site_router.analytics_router, prefix=get_settings().api_v1_prefix)

@@ -1,0 +1,24 @@
+.grid { display: grid; grid-template-columns: minmax(0, 0.78fr) minmax(0, 1.22fr); gap: 12px; margin-top: 0; }
+.card { min-width: 0; padding: 24px; border: 1px solid var(--color-line); border-radius: 6px; background: var(--color-paper); }
+.cardLabel { display: flex; align-items: center; gap: 8px; color: var(--color-secondary-text); font-size: 13px; }
+.cardLabel svg { width: 17px; height: 17px; color: var(--color-brand); }
+.cardLabel span, .trendHeader > span { margin-left: auto; color: var(--color-muted); font-size: 11px; }
+.blogCard, .summaryCard { min-height: 158px; }
+.blogCard strong { display: block; margin-top: 28px; font-size: 22px; font-weight: 500; }
+.card p { margin: 10px 0 0; color: var(--color-secondary-text); font-size: 12px; line-height: 1.7; }
+.summaryValues { display: flex; gap: 42px; margin-top: 24px; }
+.summaryValues div { display: flex; flex-direction: column; gap: 4px; }
+.summaryValues strong { font-size: 28px; font-weight: 500; line-height: 1; }
+.summaryValues span { color: var(--color-secondary-text); font-size: 11px; }
+.summaryCard p { display: flex; align-items: center; gap: 5px; }
+.summaryCard p svg { width: 14px; height: 14px; color: var(--color-brand); }
+.trendCard { grid-column: 2; grid-row: 1 / span 2; min-height: 328px; display: flex; flex-direction: column; }
+.trendHeader { display: flex; align-items: center; }
+.chart { width: 100%; min-height: 228px; flex: 1; }
+.emptyChart { display: grid; min-height: 228px; flex: 1; place-items: center; color: var(--color-muted); font-size: 12px; }
+.legend { display: flex; gap: 18px; color: var(--color-secondary-text); font-size: 11px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 18px; height: 2px; display: inline-block; }
+.legendViews { background: var(--color-brand); }
+.legendVisitors { background: var(--color-ink); }
+@media (max-width: 767px) { .grid { grid-template-columns: minmax(0, 1fr); } .trendCard { grid-column: auto; grid-row: auto; } }

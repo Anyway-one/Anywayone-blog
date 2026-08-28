@@ -11,6 +11,7 @@ from app.modules.site.models import (
     SiteProfile,
     SiteSettings,
     SocialLink,
+    VisitorEvent,
 )
 from app.modules.taxonomy.models import Category, Tag
 
@@ -31,6 +32,7 @@ __all__ = [
     "SocialLink",
     "Tag",
     "User",
+    "VisitorEvent",
     "post_tags",
 ]
 

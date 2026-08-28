@@ -188,3 +188,49 @@ class PublicSiteData(ApiModel):
     history: list[SiteHistoryRead]
     contacts: list[ContactMethodRead]
     social_links: list[SocialLinkRead]
+
+
+class VisitorEventInput(ApiModel):
+    session_id: str = Field(min_length=8, max_length=64)
+    path: str = Field(min_length=1, max_length=500)
+    referrer: str | None = Field(default=None, max_length=500)
+    country: str | None = Field(default=None, max_length=120)
+    region: str | None = Field(default=None, max_length=120)
+    city: str | None = Field(default=None, max_length=120)
+    device_type: str = Field(default="unknown", max_length=32)
+    browser: str = Field(default="unknown", max_length=64)
+    os: str = Field(default="unknown", max_length=64)
+
+    @field_validator("path", "session_id", "device_type", "browser", "os")
+    @classmethod
+    def strip_required_text(cls, value: str) -> str:
+        return value.strip()
+
+
+class VisitorTrendPoint(ApiModel):
+    date: date
+    page_views: int
+    visitors: int
+
+
+class VisitorStatsRead(ApiModel):
+    range_days: int
+    page_views: int
+    visitors: int
+    today_page_views: int
+    today_visitors: int
+    trend: list[VisitorTrendPoint]
+
+
+class VisitorBreakdownItem(ApiModel):
+    name: str
+    count: int
+    percentage: float
+
+
+class VisitorAdminStatsRead(VisitorStatsRead):
+    locations: list[VisitorBreakdownItem]
+    countries: list[VisitorBreakdownItem]
+    referrers: list[VisitorBreakdownItem]
+    devices: list[VisitorBreakdownItem]
+    pages: list[VisitorBreakdownItem]

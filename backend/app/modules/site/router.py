@@ -18,10 +18,40 @@ from app.modules.site.schemas import (
     SiteSettingsUpdate,
     SocialLinkRead,
     SocialSettingsUpdate,
+    VisitorAdminStatsRead,
+    VisitorEventInput,
+    VisitorStatsRead,
 )
 
 admin_router = APIRouter(prefix="/admin/settings", tags=["admin-site-settings"])
 public_router = APIRouter(prefix="/public/site", tags=["public-site-settings"])
+analytics_router = APIRouter(prefix="/analytics", tags=["analytics"])
+
+
+@analytics_router.post("/visit", status_code=status.HTTP_204_NO_CONTENT)
+async def record_visit(payload: VisitorEventInput, request: Request, db: DbSession) -> Response:
+    await service.record_visitor_event(db, payload, request)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@analytics_router.get("/public", response_model=DataResponse[VisitorStatsRead])
+async def get_public_analytics(
+    request: Request, db: DbSession, days: int = 30
+) -> DataResponse[VisitorStatsRead]:
+    return DataResponse(
+        data=await service.get_visitor_stats(db, range_days=days),
+        meta=Meta(request_id=get_request_id(request)),
+    )
+
+
+@analytics_router.get("/admin", response_model=DataResponse[VisitorAdminStatsRead])
+async def get_admin_analytics(
+    request: Request, db: DbSession, _: CurrentUser, days: int = 30
+) -> DataResponse[VisitorAdminStatsRead]:
+    return DataResponse(
+        data=await service.get_visitor_stats(db, range_days=days, detailed=True),
+        meta=Meta(request_id=get_request_id(request)),
+    )
 
 
 @admin_router.get("/profile", response_model=DataResponse[SiteProfileRead])

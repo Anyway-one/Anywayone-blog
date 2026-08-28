@@ -1,5 +1,7 @@
 import re
 import uuid
+from datetime import UTC, datetime, timedelta
+from urllib.parse import urlsplit, urlunsplit
 
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -15,6 +17,7 @@ from app.modules.site.models import (
     SiteProfile,
     SiteSettings,
     SocialLink,
+    VisitorEvent,
 )
 from app.modules.site.schemas import (
     ContactMethodInput,
@@ -27,7 +30,112 @@ from app.modules.site.schemas import (
     SiteSettingsUpdate,
     SocialLinkRead,
     SocialSettingsUpdate,
+    VisitorAdminStatsRead,
+    VisitorBreakdownItem,
+    VisitorEventInput,
+    VisitorStatsRead,
+    VisitorTrendPoint,
 )
+
+
+async def record_visitor_event(
+    db: AsyncSession, payload: VisitorEventInput, request: object
+) -> None:
+    headers = getattr(request, "headers", {})
+    # Prefer the edge-provided country while allowing a client-provided value in local setups.
+    country = (
+        headers.get("cf-ipcountry")
+        or headers.get("x-vercel-ip-country")
+        or payload.country
+    )
+    region = headers.get("x-vercel-ip-country-region") or payload.region
+    city = headers.get("x-vercel-ip-city") or payload.city
+    event = VisitorEvent(
+        occurred_at=datetime.now(UTC),
+        **{
+            **payload.model_dump(),
+            "referrer": _sanitize_referrer(payload.referrer),
+            "country": country,
+            "region": region,
+            "city": city,
+        },
+    )
+    db.add(event)
+    await db.commit()
+
+
+def _sanitize_referrer(value: str | None) -> str | None:
+    if not value:
+        return None
+    parsed = urlsplit(value)
+    if not parsed.scheme or not parsed.netloc:
+        return None
+    return urlunsplit((parsed.scheme, parsed.netloc, parsed.path, "", ""))[:500]
+
+
+def _breakdown(rows: list[tuple[str | None, int]], total: int) -> list[VisitorBreakdownItem]:
+    return [
+        VisitorBreakdownItem(
+            name=name or "直接访问",
+            count=count,
+            percentage=round((count / total) * 100, 1) if total else 0,
+        )
+        for name, count in rows
+    ]
+
+
+async def get_visitor_stats(
+    db: AsyncSession, *, range_days: int = 30, detailed: bool = False
+) -> VisitorStatsRead | VisitorAdminStatsRead:
+    range_days = max(7, min(range_days, 90))
+    since = datetime.now(UTC) - timedelta(days=range_days - 1)
+    base = select(VisitorEvent).where(VisitorEvent.occurred_at >= since)
+    events = list((await db.scalars(base)).all())
+    page_views = len(events)
+    visitors = len({event.session_id for event in events})
+    today = datetime.now(UTC).date()
+    today_events = [event for event in events if event.occurred_at.date() == today]
+    trend = []
+    for offset in range(range_days - 1, -1, -1):
+        day = today - timedelta(days=offset)
+        day_events = [event for event in events if event.occurred_at.date() == day]
+        trend.append(
+            VisitorTrendPoint(
+                date=day,
+                page_views=len(day_events),
+                visitors=len({event.session_id for event in day_events}),
+            )
+        )
+    common = VisitorStatsRead(
+        range_days=range_days,
+        page_views=page_views,
+        visitors=visitors,
+        today_page_views=len(today_events),
+        today_visitors=len({event.session_id for event in today_events}),
+        trend=trend,
+    )
+    if not detailed:
+        return common
+    def counts(key: str) -> list[tuple[str | None, int]]:
+        values: dict[str | None, int] = {}
+        for event in events:
+            value = getattr(event, key)
+            values[value] = values.get(value, 0) + 1
+        return sorted(values.items(), key=lambda item: item[1], reverse=True)[:8]
+    location_values: dict[str | None, int] = {}
+    for event in events:
+        parts = [part for part in (event.country, event.region, event.city) if part]
+        location = " / ".join(parts) or None
+        location_values[location] = location_values.get(location, 0) + 1
+    locations = sorted(location_values.items(), key=lambda item: item[1], reverse=True)[:8]
+    return VisitorAdminStatsRead(
+        **common.model_dump(),
+        locations=_breakdown(locations, page_views),
+        countries=_breakdown(counts("country"), page_views),
+        referrers=_breakdown(counts("referrer"), page_views),
+        devices=_breakdown(counts("device_type"), page_views),
+        pages=_breakdown(counts("path"), page_views),
+    )
 
 
 async def get_profile(db: AsyncSession) -> SiteProfile | None:

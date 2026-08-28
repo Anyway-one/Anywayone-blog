@@ -2,29 +2,17 @@
 
 import Image from "next/image";
 import {
-  Activity,
   ArrowDown,
   CalendarDays,
-  ChartNoAxesColumnIncreasing,
   ChevronLeft,
   ChevronRight,
-  FileText,
-  Monitor,
-  Users,
   X,
 } from "lucide-react";
 import { KeyboardEvent, useEffect, useRef, useState } from "react";
 import { SiteFooter } from "./site-footer";
 import type { PublicSiteData } from "@/lib/public-site";
 import styles from "./home-experience.module.css";
-
-const siteLogItems = [
-  { label: "站点状态", value: "—", icon: Activity },
-  { label: "客户端环境", value: "—", icon: Monitor },
-  { label: "文章 / 摄影", value: "— / —", icon: FileText },
-  { label: "访问趋势", value: "暂未记录", icon: ChartNoAxesColumnIncreasing },
-  { label: "访问统计", value: "—", icon: Users },
-];
+import { VisitorAnalytics } from "./visitor-analytics";
 
 type HomeTab = "profile" | "log";
 
@@ -245,20 +233,7 @@ export function HomeExperience({ site }: { site: PublicSiteData | null }) {
                 </div>
               ) : (
                 <div className={styles.logContent} id="log-panel" role="tabpanel">
-                  <div className={styles.logPanel}>
-                    {siteLogItems.map((item) => {
-                      const Icon = item.icon;
-                      return (
-                        <div className={styles.logItem} key={item.label}>
-                          <div className={styles.logLabel}>
-                            <Icon aria-hidden="true" />
-                            {item.label}
-                          </div>
-                          <strong>{item.value}</strong>
-                        </div>
-                      );
-                    })}
-                  </div>
+                  <VisitorAnalytics />
 
                   <section className={styles.historySection} aria-labelledby="site-history-title">
                     <div className={styles.historyHeader}>
