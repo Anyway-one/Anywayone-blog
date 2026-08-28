@@ -5,6 +5,7 @@ import { ArrowDown, ArrowLeft, ArrowUp, Eye, ImagePlus, Save, Trash2, UploadClou
 import { useNavigate, useParams } from 'react-router-dom'
 import { createPhotography, getPhotography, publishPhotography, updatePhotography, type PhotographyCollection } from '../api/photography'
 import { uploadMedia, type MediaItem } from '../api/media'
+import { compressPhotographyImage } from '../utils/image'
 
 type PhotoDraft = { title: string; slug: string; description: string; locationText: string; capturedFrom: string; capturedTo: string }
 
@@ -17,6 +18,7 @@ export default function PhotographyEditorPage() {
   const [collection, setCollection] = useState<PhotographyCollection | null>(null)
   const [saving, setSaving] = useState(false)
   const previewUrls = useRef(new Set<string>())
+  const uploadingUids = useRef(new Set<string>())
   const [messageApi, contextHolder] = message.useMessage()
 
   useEffect(() => () => previewUrls.current.forEach((url) => URL.revokeObjectURL(url)), [])
@@ -35,14 +37,15 @@ export default function PhotographyEditorPage() {
     onChange: ({ fileList }) => {
       setFiles(fileList)
       for (const file of fileList) {
-        if (mediaByUid[file.uid] || !file.originFileObj) continue
+        if (mediaByUid[file.uid] || uploadingUids.current.has(file.uid) || !file.originFileObj) continue
+        uploadingUids.current.add(file.uid)
         const thumbUrl = URL.createObjectURL(file.originFileObj)
         previewUrls.current.add(thumbUrl)
         setFiles((current) => current.map((item) => item.uid === file.uid ? { ...item, thumbUrl, status: 'uploading' } : item))
-        void uploadMedia(file.originFileObj).then((media) => {
+        void compressPhotographyImage(file.originFileObj).then((preparedFile) => uploadMedia(preparedFile)).then((media) => {
           setMediaByUid((current) => ({ ...current, [file.uid]: media }))
           setFiles((current) => current.map((item) => item.uid === file.uid ? { ...item, status: 'done' } : item))
-        }).catch((error: unknown) => { setFiles((current) => current.filter((item) => item.uid !== file.uid)); void messageApi.error(error instanceof Error ? error.message : '图片上传失败。') })
+        }).catch((error: unknown) => { setFiles((current) => current.filter((item) => item.uid !== file.uid)); void messageApi.error(error instanceof Error ? error.message : '图片上传失败。') }).finally(() => uploadingUids.current.delete(file.uid))
       }
     },
   }
