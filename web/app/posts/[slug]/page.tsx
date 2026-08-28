@@ -6,6 +6,7 @@ import { ArrowLeft, Clock3, RefreshCw } from "lucide-react";
 import { ArticleBody } from "@/components/article-body";
 import { SiteFooter } from "@/components/site-footer";
 import { getPublicPost, type PublicPost } from "@/lib/public-posts";
+import { getPublicSite } from "@/lib/public-site";
 import styles from "./post.module.css";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
@@ -27,7 +28,7 @@ function descriptionFor(post: PublicPost) {
 
 export async function generateMetadata({ params }: PostPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const result = await getPublicPost(slug);
+  const [result, site] = await Promise.all([getPublicPost(slug), getPublicSite()]);
   if (result.status !== "ready") {
     return {
       title: result.status === "not-found" ? "文章未找到" : "文章暂时无法加载",
@@ -39,6 +40,7 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
   const title = post.seoTitle ?? post.title;
   const description = descriptionFor(post);
   const canonical = post.canonicalUrl ?? `/posts/${post.slug}`;
+  const authorName = site?.profile.publicName || "Anywayone";
   const socialImage = post.coverMedia ? [{
     url: post.coverMedia.publicUrl,
     width: post.coverMedia.width,
@@ -55,6 +57,7 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
       title,
       description,
       publishedTime: post.publishedAt,
+      authors: [authorName],
       images: socialImage,
     },
     twitter: {
@@ -83,11 +86,12 @@ function UnavailableArticle() {
 
 export default async function PostPage({ params }: PostPageProps) {
   const { slug } = await params;
-  const result = await getPublicPost(slug);
+  const [result, site] = await Promise.all([getPublicPost(slug), getPublicSite()]);
   if (result.status === "not-found") notFound();
   if (result.status !== "ready") return <UnavailableArticle />;
 
   const post = result.data;
+  const authorName = site?.profile.publicName || "Anywayone";
   const canonicalUrl = new URL(post.canonicalUrl ?? `/posts/${post.slug}`, siteUrl).toString();
   const jsonLd = {
     "@context": "https://schema.org",
@@ -97,8 +101,8 @@ export default async function PostPage({ params }: PostPageProps) {
     datePublished: post.publishedAt,
     mainEntityOfPage: canonicalUrl,
     url: canonicalUrl,
-    author: { "@type": "Person", name: "Anywayone" },
-    publisher: { "@type": "Person", name: "Anywayone" },
+    author: { "@type": "Person", name: authorName },
+    publisher: { "@type": "Person", name: authorName },
     ...(post.coverMedia ? { image: post.coverMedia.publicUrl } : {}),
     ...(post.category ? { articleSection: post.category.name } : {}),
     ...(post.tags.length ? { keywords: post.tags.map((tag) => tag.name) } : {}),
@@ -123,6 +127,7 @@ export default async function PostPage({ params }: PostPageProps) {
           <h1>{post.title}<span>。</span></h1>
           {post.excerpt && <div className={styles.lead}>{post.excerpt}</div>}
           <div className={styles.meta}>
+            <span>{authorName}</span>
             <time dateTime={post.publishedAt}>{dateFormatter.format(new Date(post.publishedAt))}</time>
             <span><Clock3 aria-hidden="true" />{post.readingTimeMinutes} 分钟阅读</span>
           </div>
@@ -169,7 +174,7 @@ export default async function PostPage({ params }: PostPageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
       />
-      <SiteFooter />
+      <SiteFooter socialLinks={site?.socialLinks} />
     </main>
   );
 }

@@ -13,20 +13,8 @@ import {
 } from "lucide-react";
 import { KeyboardEvent, useEffect, useRef, useState } from "react";
 import { SiteFooter } from "./site-footer";
+import type { PublicSiteData } from "@/lib/public-site";
 import styles from "./home-experience.module.css";
-
-const profileFields = [
-  { label: "属性", value: "—" },
-  { label: "职业", value: "—" },
-  { label: "位置", value: "—" },
-  { label: "装备", value: "—" },
-];
-
-const profileModules = [
-  { overline: "TAGS / 标签", value: "—" },
-  { overline: "PERSONALITY / 人格", value: "—" },
-  { overline: "RUNNING / 跑步", value: "—" },
-];
 
 const siteLogItems = [
   { label: "站点状态", value: "—", icon: Activity },
@@ -39,12 +27,28 @@ const siteLogItems = [
 
 type HomeTab = "profile" | "log";
 
-export function HomeExperience() {
+export function HomeExperience({ site }: { site: PublicSiteData | null }) {
   const [expanded, setExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState<HomeTab>("profile");
   const moreButtonRef = useRef<HTMLButtonElement>(null);
   const profileTabRef = useRef<HTMLButtonElement>(null);
   const logTabRef = useRef<HTMLButtonElement>(null);
+  const profile = site?.profile;
+  const publicName = profile?.publicName || "Anywayone";
+  const profileFields = [
+    { label: "专业领域", value: profile?.expertise },
+    { label: "职业", value: profile?.occupation },
+    { label: "所在地", value: profile?.location },
+    { label: "星座", value: profile?.zodiacSign },
+    { label: "生肖", value: profile?.chineseZodiac },
+    { label: "血型", value: profile?.bloodType ? `${profile.bloodType} 型` : null },
+  ].filter((field) => field.value);
+  const profileModules = [
+    { overline: "TAGS / 个人标签", value: profile?.tags.join(" · ") },
+    { overline: "PERSONALITY / 人格类型", value: profile?.personalityType },
+    { overline: "INTERESTS / 兴趣爱好", value: profile?.interests.join(" · ") },
+    { overline: "CITIES / 喜欢的城市", value: profile?.favoriteCities.join(" · ") },
+  ].filter((item) => item.value);
 
   const closeDetails = () => {
     window.scrollTo({ top: 0 });
@@ -134,7 +138,7 @@ export function HomeExperience() {
               <div>
                 <p className={styles.sectionKicker}>PROFILE / SITE LOG</p>
                 <h2 id="details-title">
-                  认识 Anywayone<span>。</span>
+                  认识 {publicName}<span>。</span>
                 </h2>
               </div>
 
@@ -174,37 +178,37 @@ export function HomeExperience() {
                 <div className={styles.profileIntro}>
                   <Image
                     className={styles.avatar}
-                    src="/brand/anywayone-avatar.png"
-                    alt="Anywayone 头像"
+                    src={profile?.avatarPublicUrl || "/brand/anywayone-avatar.png"}
+                    alt={`${publicName} 头像`}
                     width={132}
                     height={132}
                   />
                   <div>
                     <p className={styles.sectionKicker}>ABOUT ME</p>
-                    <h3>个人简介待配置<span>。</span></h3>
+                    <h3>{profile?.motto || "个人简介待配置"}<span>。</span></h3>
                     <p className={styles.profileDescription}>
-                      这里将承载真实的个人档案。配置完成后，可展示个人介绍、关注方向与长期记录。
+                      {profile?.bio || "作者尚未配置公开个人简介。"}
                     </p>
                   </div>
                 </div>
 
-                <dl className={styles.profileFields}>
+                {profileFields.length > 0 ? <dl className={styles.profileFields}>
                   {profileFields.map((field) => (
                     <div key={field.label}>
                       <dt>{field.label}</dt>
                       <dd>{field.value}</dd>
                     </div>
                   ))}
-                </dl>
+                </dl> : <p className={styles.profileEmpty}>更多个人信息暂未公开。</p>}
 
-                <div className={styles.profileModules}>
+                {profileModules.length > 0 && <div className={styles.profileModules}>
                   {profileModules.map((item) => (
                     <div key={item.overline}>
                       <span>{item.overline}</span>
                       <strong>{item.value}</strong>
                     </div>
                   ))}
-                </div>
+                </div>}
               </div>
             ) : (
               <div className={styles.logPanel} id="log-panel" role="tabpanel">
@@ -223,7 +227,7 @@ export function HomeExperience() {
               </div>
             )}
           </div>
-          <SiteFooter />
+          <SiteFooter socialLinks={site?.socialLinks} />
         </section>
       </div>
     </main>

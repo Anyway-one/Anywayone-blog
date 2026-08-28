@@ -62,7 +62,7 @@ export default function MediaPage() {
   const remove = (item: MediaItem) => {
     modal.confirm({
       title: `删除“${item.originalName}”？`,
-      content: '正在作为文章封面的图片不会被删除。',
+      content: '正在作为文章封面、个人头像或联系二维码使用的图片不会被删除。',
       okText: '删除',
       okButtonProps: { danger: true },
       cancelText: '取消',
@@ -87,7 +87,7 @@ export default function MediaPage() {
       <PageHeader
         eyebrow="ASSETS / MEDIA"
         title="媒体库"
-        description="管理文章封面图片。支持 JPEG、PNG、WebP、GIF 和 AVIF，单张不超过 10 MB。"
+        description="管理文章封面、个人头像和联系二维码。支持 JPEG、PNG、WebP、GIF 和 AVIF，单张不超过 10 MB。"
         actions={(
           <Button type="primary" icon={<ImagePlus size={16} />} loading={uploading} onClick={() => inputRef.current?.click()}>
             上传图片
@@ -111,7 +111,7 @@ export default function MediaPage() {
       </div>
       <Spin spinning={loading}>
         {items.length === 0 ? (
-          <div className="media-empty">上传第一张图片后，即可在文章编辑器中选择封面。</div>
+          <div className="media-empty">上传第一张图片后，即可用于文章封面、个人头像或联系二维码。</div>
         ) : (
           <section className="media-grid" aria-label="图片列表">
             {items.map((item) => (

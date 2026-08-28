@@ -16,6 +16,7 @@ from app.core.errors import AppError
 from app.modules.auth.models import User
 from app.modules.media.models import Media
 from app.modules.posts.models import Post
+from app.modules.site.models import ContactMethod, SiteProfile
 
 IMAGE_FORMATS = {
     "JPEG": ("jpg", "image/jpeg"),
@@ -119,7 +120,7 @@ async def delete_media(db: AsyncSession, media_id: uuid.UUID) -> None:
     )
     if media is None:
         raise AppError(status_code=404, code="MEDIA_NOT_FOUND", message="图片不存在。")
-    references = await db.scalar(
+    post_references = await db.scalar(
         select(func.count())
         .select_from(Post)
         .where(
@@ -127,11 +128,17 @@ async def delete_media(db: AsyncSession, media_id: uuid.UUID) -> None:
             Post.deleted_at.is_(None),
         )
     )
-    if references:
+    profile_references = await db.scalar(
+        select(func.count()).select_from(SiteProfile).where(SiteProfile.avatar_media_id == media.id)
+    )
+    contact_references = await db.scalar(
+        select(func.count()).select_from(ContactMethod).where(ContactMethod.qr_media_id == media.id)
+    )
+    if post_references or profile_references or contact_references:
         raise AppError(
             status_code=409,
             code="MEDIA_IN_USE",
-            message="图片仍被文章封面使用，不能删除。",
+            message="图片仍被文章封面、头像或二维码使用，不能删除。",
         )
     media.deleted_at = datetime.now(UTC)
     await db.commit()

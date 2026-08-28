@@ -8,6 +8,9 @@ const PostEditorPage = lazy(() => import('./pages/PostEditorPage'))
 const PostsPage = lazy(() => import('./pages/PostsPage'))
 const PhotographyEditorPage = lazy(() => import('./pages/PhotographyEditorPage'))
 const PhotographyPage = lazy(() => import('./pages/PhotographyPage'))
+const ProfilePage = lazy(() => import('./pages/ProfilePage'))
+const ContactPage = lazy(() => import('./pages/ContactPage'))
+const SocialLinksPage = lazy(() => import('./pages/SocialLinksPage'))
 const SettingsPage = lazy(() => import('./pages/SettingsPage'))
 const TaxonomyPage = lazy(() => import('./pages/TaxonomyPage'))
 const MediaPage = lazy(() => import('./pages/MediaPage'))
@@ -32,8 +35,9 @@ export default function App() {
             <Route path="/photography/new" element={<PhotographyEditorPage />} />
             <Route path="/photography/:albumId/edit" element={<PhotographyEditorPage />} />
             <Route path="/media" element={<MediaPage />} />
-            <Route path="/profile" element={<SettingsPage section="profile" />} />
-            <Route path="/contact" element={<SettingsPage section="contact" />} />
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/contact" element={<ContactPage />} />
+            <Route path="/social" element={<SocialLinksPage />} />
             <Route path="/settings" element={<SettingsPage section="site" />} />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Route>

@@ -1,0 +1,113 @@
+import { apiRequest } from './http'
+
+interface DataResponse<T> {
+  data: T
+}
+
+export type ContactType = 'WECHAT' | 'QQ' | 'WHATSAPP' | 'TELEGRAM' | 'PHONE' | 'EMAIL'
+export type SocialPlatform =
+  | 'GITHUB'
+  | 'X'
+  | 'WEIBO'
+  | 'XIAOHONGSHU'
+  | 'BILIBILI'
+  | 'INSTAGRAM'
+  | 'DOUYIN'
+  | 'WECHAT_CHANNELS'
+  | 'YOUTUBE'
+  | 'WECHAT_OFFICIAL'
+
+export interface SiteProfile {
+  id: string | null
+  avatarMediaId: string | null
+  avatarPublicUrl: string | null
+  publicName: string | null
+  expertise: string | null
+  occupation: string | null
+  zodiacSign: string | null
+  chineseZodiac: string | null
+  bloodType: string | null
+  interests: string[]
+  location: string | null
+  favoriteCities: string[]
+  tags: string[]
+  personalityType: string | null
+  motto: string | null
+  bio: string | null
+}
+
+export type SiteProfileInput = Omit<SiteProfile, 'id' | 'avatarPublicUrl'>
+
+export interface ContactMethod {
+  id?: string
+  contactType: ContactType
+  value: string
+  qrMediaId: string | null
+  qrPublicUrl?: string | null
+  sortOrder: number
+  isEnabled: boolean
+}
+
+export interface SocialLink {
+  id?: string
+  platform: SocialPlatform
+  accountName: string | null
+  url: string | null
+  sortOrder: number
+  isEnabled: boolean
+}
+
+export async function getProfile() {
+  const response = await apiRequest<DataResponse<SiteProfile>>('/admin/settings/profile')
+  return response.data
+}
+
+export async function saveProfile(input: SiteProfileInput) {
+  const response = await apiRequest<DataResponse<SiteProfile>>('/admin/settings/profile', {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
+  return response.data
+}
+
+export async function getContacts() {
+  const response = await apiRequest<DataResponse<ContactMethod[]>>('/admin/settings/contacts')
+  return response.data
+}
+
+export async function saveContacts(items: ContactMethod[]) {
+  const response = await apiRequest<DataResponse<ContactMethod[]>>('/admin/settings/contacts', {
+    method: 'PATCH',
+    body: JSON.stringify({
+      items: items.map(({ contactType, value, qrMediaId, sortOrder, isEnabled }) => ({
+        contactType,
+        value,
+        qrMediaId,
+        sortOrder,
+        isEnabled,
+      })),
+    }),
+  })
+  return response.data
+}
+
+export async function getSocialLinks() {
+  const response = await apiRequest<DataResponse<SocialLink[]>>('/admin/settings/social-links')
+  return response.data
+}
+
+export async function saveSocialLinks(items: SocialLink[]) {
+  const response = await apiRequest<DataResponse<SocialLink[]>>('/admin/settings/social-links', {
+    method: 'PATCH',
+    body: JSON.stringify({
+      items: items.map(({ platform, accountName, url, sortOrder, isEnabled }) => ({
+        platform,
+        accountName,
+        url,
+        sortOrder,
+        isEnabled,
+      })),
+    }),
+  })
+  return response.data
+}

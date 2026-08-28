@@ -1,0 +1,202 @@
+.directory {
+  display: flex;
+  flex-direction: column;
+  gap: 44px;
+}
+
+.sectionHeading {
+  margin-bottom: 16px;
+}
+
+.sectionHeading span,
+.modal > span {
+  color: var(--color-brand);
+  font-size: 11px;
+}
+
+.sectionHeading h2,
+.modal h2 {
+  margin: 4px 0 0;
+  font-size: 20px;
+  font-weight: 500;
+}
+
+.contactList {
+  border-top: 1px solid var(--color-ink);
+}
+
+.contactItem {
+  min-height: 72px;
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+  border-bottom: 1px solid var(--color-line);
+}
+
+.icon {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--color-line);
+  border-radius: 50%;
+}
+
+.contactItem > div,
+.socialList div > div,
+.socialList a > div {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.contactItem strong,
+.socialList strong {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.contactItem span,
+.socialList div span {
+  overflow-wrap: anywhere;
+  color: var(--color-secondary-text);
+  font-size: 12px;
+}
+
+.actions {
+  display: flex;
+  flex-direction: row !important;
+  gap: 5px;
+}
+
+.actions a,
+.actions button {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--color-line);
+  border-radius: 50%;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+}
+
+.actions svg,
+.external {
+  width: 16px;
+  height: 16px;
+}
+
+.socialList {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-top: 1px solid var(--color-ink);
+}
+
+.socialList > a,
+.socialList > div {
+  min-width: 0;
+  min-height: 76px;
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) 18px;
+  gap: 14px;
+  align-items: center;
+  border-bottom: 1px solid var(--color-line);
+}
+
+.socialList > :nth-child(odd) {
+  padding-right: 20px;
+  border-right: 1px solid var(--color-line);
+}
+
+.socialList > :nth-child(even) {
+  padding-left: 20px;
+}
+
+.external {
+  color: var(--color-secondary-text);
+}
+
+.empty {
+  padding: 24px 0;
+  border-top: 1px solid var(--color-ink);
+  border-bottom: 1px solid var(--color-line);
+}
+
+.empty h2 {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.empty p {
+  margin: 0;
+  color: var(--color-secondary-text);
+}
+
+.modalBackdrop {
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(16, 17, 15, 0.68);
+}
+
+.modal {
+  position: relative;
+  width: min(100%, 360px);
+  border-radius: 6px;
+  padding: 28px;
+  background: var(--color-paper);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.24);
+}
+
+.modal img {
+  width: 100%;
+  aspect-ratio: 1;
+  display: block;
+  margin-top: 22px;
+  object-fit: contain;
+  background: #fff;
+}
+
+.modal p {
+  margin: 14px 0 0;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--color-line);
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+}
+
+.close svg {
+  width: 17px;
+}
+
+@media (max-width: 620px) {
+  .socialList {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .socialList > :nth-child(odd),
+  .socialList > :nth-child(even) {
+    padding-right: 0;
+    padding-left: 0;
+    border-right: 0;
+  }
+}

@@ -11,6 +11,7 @@ import {
   Library,
   Mail,
   Settings,
+  Share2,
   Tags,
 } from 'lucide-react'
 
@@ -56,6 +57,7 @@ export const navigationItems: NavigationItem[] = [
     children: [
       { key: '/profile', label: '个人资料', icon: icon(CircleUserRound) },
       { key: '/contact', label: '联系方式', icon: icon(Mail) },
+      { key: '/social', label: '社交平台', icon: icon(Share2) },
       { key: '/settings', label: '站点设置', icon: icon(Settings) },
     ],
   },
@@ -71,6 +73,7 @@ export const routeMeta: Record<string, { title: string; group?: string }> = {
   '/media': { title: '媒体库', group: '摄影管理' },
   '/profile': { title: '个人资料', group: '站点管理' },
   '/contact': { title: '联系方式', group: '站点管理' },
+  '/social': { title: '社交平台', group: '站点管理' },
   '/settings': { title: '站点设置', group: '站点管理' },
 }
 

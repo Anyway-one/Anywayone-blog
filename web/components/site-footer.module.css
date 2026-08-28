@@ -15,6 +15,27 @@
   gap: 20px;
 }
 
+.social {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.social a,
+.social span {
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 50%;
+}
+
+.social a:hover {
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.54);
+}
+
 .footer a:hover {
   color: #ffffff;
 }
@@ -25,11 +46,25 @@
   border-top: 1px solid rgba(245, 242, 234, 0.12);
 }
 
+@media (max-width: 1000px) {
+  .footer {
+    flex-wrap: wrap;
+  }
+
+  .social {
+    width: 100%;
+  }
+}
+
 @media (max-width: 767px) {
   .footer {
     min-height: 112px;
     align-items: flex-start;
     flex-direction: column;
     padding: 24px 20px;
+  }
+
+  .social {
+    flex-wrap: wrap;
   }
 }

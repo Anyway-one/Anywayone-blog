@@ -254,6 +254,12 @@
   line-height: 1.8;
 }
 
+.profileEmpty {
+  align-self: center;
+  margin: 0;
+  color: var(--color-secondary-text);
+}
+
 .profileFields {
   margin: 0;
   border-top: 1px solid var(--color-line);
@@ -278,7 +284,7 @@
 .profileModules {
   grid-column: 1 / -1;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   margin-top: 8px;
   border-top: 1px dashed var(--color-line);
 }
@@ -302,7 +308,8 @@
 
 .profileModules strong,
 .logItem strong {
-  font-size: 27px;
+  overflow-wrap: anywhere;
+  font-size: 21px;
   font-weight: 500;
 }
 
