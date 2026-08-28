@@ -1,6 +1,7 @@
 import re
 import uuid
 from datetime import UTC, datetime, timedelta
+from typing import Literal, overload
 from urllib.parse import urlsplit, urlunsplit
 
 from sqlalchemy import delete, select
@@ -43,11 +44,7 @@ async def record_visitor_event(
 ) -> None:
     headers = getattr(request, "headers", {})
     # Prefer the edge-provided country while allowing a client-provided value in local setups.
-    country = (
-        headers.get("cf-ipcountry")
-        or headers.get("x-vercel-ip-country")
-        or payload.country
-    )
+    country = headers.get("cf-ipcountry") or headers.get("x-vercel-ip-country") or payload.country
     region = headers.get("x-vercel-ip-country-region") or payload.region
     city = headers.get("x-vercel-ip-city") or payload.city
     event = VisitorEvent(
@@ -84,6 +81,18 @@ def _breakdown(rows: list[tuple[str | None, int]], total: int) -> list[VisitorBr
     ]
 
 
+@overload
+async def get_visitor_stats(
+    db: AsyncSession, *, range_days: int = 30, detailed: Literal[False] = False
+) -> VisitorStatsRead: ...
+
+
+@overload
+async def get_visitor_stats(
+    db: AsyncSession, *, range_days: int = 30, detailed: Literal[True]
+) -> VisitorAdminStatsRead: ...
+
+
 async def get_visitor_stats(
     db: AsyncSession, *, range_days: int = 30, detailed: bool = False
 ) -> VisitorStatsRead | VisitorAdminStatsRead:
@@ -95,7 +104,7 @@ async def get_visitor_stats(
     visitors = len({event.session_id for event in events})
     today = datetime.now(UTC).date()
     today_events = [event for event in events if event.occurred_at.date() == today]
-    trend = []
+    trend: list[VisitorTrendPoint] = []
     for offset in range(range_days - 1, -1, -1):
         day = today - timedelta(days=offset)
         day_events = [event for event in events if event.occurred_at.date() == day]
@@ -116,12 +125,14 @@ async def get_visitor_stats(
     )
     if not detailed:
         return common
+
     def counts(key: str) -> list[tuple[str | None, int]]:
         values: dict[str | None, int] = {}
         for event in events:
             value = getattr(event, key)
             values[value] = values.get(value, 0) + 1
         return sorted(values.items(), key=lambda item: item[1], reverse=True)[:8]
+
     location_values: dict[str | None, int] = {}
     for event in events:
         parts = [part for part in (event.country, event.region, event.city) if part]
