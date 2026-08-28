@@ -190,7 +190,12 @@ async def update_collection(
             raise AppError(
                 status_code=422, code="INVALID_COVER", message="封面必须是当前摄影集中的图片。"
             )
-        collection.items = [PhotoItem(**item.model_dump()) for item in parsed_items]
+        # Flush orphaned rows before inserting the submitted order. Otherwise a
+        # reorder or an ordinary metadata save can temporarily violate the
+        # collection/position unique constraint.
+        collection.items.clear()
+        await db.flush()
+        collection.items.extend(PhotoItem(**item.model_dump()) for item in parsed_items)
     elif "cover_media_id" in values:
         await _resolve_media(db, {cover_media_id} if cover_media_id else set())
         if cover_media_id is not None and cover_media_id not in {
