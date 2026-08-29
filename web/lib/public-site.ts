@@ -25,6 +25,7 @@ export interface PublicProfile {
   zodiacSign: string | null;
   chineseZodiac: string | null;
   bloodType: string | null;
+  equipment: ProfileEquipmentItem[];
   interests: string[];
   location: string | null;
   favoriteCities: string[];
@@ -43,6 +44,12 @@ export interface PublicProfile {
   personalityLearnMoreUrl: string | null;
   motto: string | null;
   bio: string | null;
+}
+
+export interface ProfileEquipmentItem {
+  icon: string;
+  name: string;
+  detail: string | null;
 }
 
 export interface PublicSiteSettings {

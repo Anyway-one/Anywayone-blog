@@ -608,6 +608,44 @@ a {
   font-size: 18px;
 }
 
+.settings-section-help {
+  margin: -10px 0 20px;
+  color: var(--color-muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.equipment-editor-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.equipment-editor-row {
+  display: grid;
+  grid-template-columns: 30px 170px minmax(150px, 1fr) minmax(180px, 1.2fr) 32px;
+  gap: 10px;
+  align-items: start;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--color-line);
+}
+
+.equipment-editor-row .ant-form-item {
+  min-width: 0;
+  margin-bottom: 0;
+}
+
+.equipment-editor-index {
+  padding-top: 8px;
+  color: var(--color-brand);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.equipment-editor-row > .ant-btn {
+  margin-top: 3px;
+}
+
 .profile-avatar-field {
   display: flex;
   align-items: center;
@@ -1743,6 +1781,15 @@ a {
 
   .personality-traits-grid {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .equipment-editor-row {
+    grid-template-columns: 24px minmax(0, 1fr) 32px;
+  }
+
+  .equipment-editor-row .ant-form-item:nth-of-type(2),
+  .equipment-editor-row .ant-form-item:nth-of-type(3) {
+    grid-column: 2 / -1;
   }
 
   .personality-traits-heading {

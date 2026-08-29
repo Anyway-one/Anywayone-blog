@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Button, Form, Input, InputNumber, Segmented, Select, Slider, Spin, message } from 'antd'
-import { ImagePlus, Save, Trash2 } from 'lucide-react'
+import { ImagePlus, Minus, Plus, Save, Trash2 } from 'lucide-react'
 import { uploadMedia } from '../api/media'
 import { getProfile, saveProfile, type SiteProfileInput } from '../api/site'
 import PageHeader from '../components/PageHeader'
@@ -10,6 +10,15 @@ const zodiacOptions = '白羊座 金牛座 双子座 巨蟹座 狮子座 处女�
 const chineseZodiacOptions = '鼠 牛 虎 兔 龙 蛇 马 羊 猴 鸡 狗 猪'
   .split(' ').map((value) => ({ value, label: value }))
 const bloodOptions = ['A', 'B', 'AB', 'O'].map((value) => ({ value, label: `${value} 型` }))
+const equipmentOptions = [
+  ['iphone', 'iPhone'],
+  ['ipad', 'iPad'],
+  ['iwatch', 'Apple Watch'],
+  ['AirPods', 'AirPods'],
+  ['MacMini', 'Mac mini'],
+  ['macbook', 'MacBook'],
+  ['lcd', '显示器'],
+].map(([value, label]) => ({ value, label }))
 const personalityTraits = [
   { scoreName: 'personalityEnergyScore', formName: 'personalityEnergyTrait', label: '能量', left: '外向 E', right: '内向 I' },
   { scoreName: 'personalityMindScore', formName: 'personalityMindTrait', label: '意识', left: '直觉 N', right: '观察 S' },
@@ -300,6 +309,33 @@ export default function ProfilePage() {
                 </Form.Item>
               ))}
             </div>
+          </section>
+
+          <section className="surface-panel settings-section-panel">
+            <div className="settings-section-heading"><span>EQUIPMENT</span><h2>装备卡片</h2></div>
+            <p className="settings-section-help">配置首页展示的设备，图标使用站点内置素材；最多可添加 20 项。</p>
+            <Form.List name="equipment">
+              {(fields, { add, remove }) => (
+                <div className="equipment-editor-list">
+                  {fields.map((field, index) => (
+                    <div className="equipment-editor-row" key={field.key}>
+                      <span className="equipment-editor-index">{String(index + 1).padStart(2, '0')}</span>
+                      <Form.Item {...field} name={[field.name, 'icon']} rules={[{ required: true, message: '请选择图标' }]}>
+                        <Select options={equipmentOptions} placeholder="选择图标" />
+                      </Form.Item>
+                      <Form.Item {...field} name={[field.name, 'name']} rules={[{ required: true, message: '请输入设备名称' }, { max: 100 }]}>
+                        <Input placeholder="设备名称" />
+                      </Form.Item>
+                      <Form.Item {...field} name={[field.name, 'detail']}>
+                        <Input placeholder="规格 / 备注（可选）" maxLength={160} />
+                      </Form.Item>
+                      <Button type="text" danger icon={<Minus size={16} />} aria-label={`移除第 ${index + 1} 项装备`} onClick={() => remove(field.name)} />
+                    </div>
+                  ))}
+                  <Button type="dashed" icon={<Plus size={16} />} onClick={() => add({ icon: undefined, name: '', detail: '' })} disabled={fields.length >= 20}>添加装备</Button>
+                </div>
+              )}
+            </Form.List>
           </section>
 
           <section className="surface-panel settings-section-panel">

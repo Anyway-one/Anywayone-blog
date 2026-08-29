@@ -27,6 +27,7 @@ export interface SiteProfile {
   zodiacSign: string | null
   chineseZodiac: string | null
   bloodType: string | null
+  equipment: ProfileEquipmentItem[]
   interests: string[]
   location: string | null
   favoriteCities: string[]
@@ -45,6 +46,12 @@ export interface SiteProfile {
   personalityLearnMoreUrl: string | null
   motto: string | null
   bio: string | null
+}
+
+export interface ProfileEquipmentItem {
+  icon: string
+  name: string
+  detail: string | null
 }
 
 export type SiteProfileInput = Omit<

@@ -936,3 +936,343 @@
     margin: 0 12px 12px;
   }
 }
+
+/* The profile panel is intentionally card-based: each row reads as a small personal dashboard. */
+.profilePanel {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 14px;
+  padding-top: 28px;
+}
+
+.profileCard {
+  min-width: 0;
+  min-height: 218px;
+  display: flex;
+  flex-direction: column;
+  padding: 22px 22px 20px;
+  overflow: hidden;
+  background: var(--color-paper);
+  border: 1px solid var(--color-line);
+  border-radius: 4px;
+}
+
+.avatarCard,
+.profilePanel > .profileCard:nth-child(2),
+.profilePanel > .profileCard:nth-child(3) {
+  grid-column: span 2;
+}
+
+.locationCard {
+  grid-column: span 2;
+}
+
+.equipmentCard {
+  grid-column: span 4;
+}
+
+.tagsCard {
+  grid-column: span 3;
+}
+
+.personalityCard {
+  grid-column: span 3;
+}
+
+.cardHeading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--color-secondary-text);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+}
+
+.cardHeading svg {
+  width: 17px;
+  height: 17px;
+  color: var(--color-brand);
+  stroke-width: 1.6;
+}
+
+.avatarCardBody {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-top: 26px;
+}
+
+.avatar {
+  width: 92px;
+  height: 92px;
+  flex: 0 0 92px;
+  object-fit: cover;
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: 50%;
+}
+
+.avatarCard h3 {
+  margin: 0 0 8px;
+  font-size: 25px;
+  font-weight: 500;
+}
+
+.avatarCard h3 span {
+  color: var(--color-brand);
+}
+
+.avatarCardBody p,
+.cardDescription,
+.cardEmpty {
+  margin: 0;
+  color: var(--color-secondary-text);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.cardDescription {
+  margin-top: auto;
+  padding-top: 18px;
+}
+
+.statList,
+.careerCopy {
+  display: grid;
+  gap: 0;
+  margin-top: 20px;
+}
+
+.statList > div,
+.careerCopy > span,
+.careerCopy > strong {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--color-line);
+}
+
+.statList > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.statList span,
+.careerCopy > span {
+  color: var(--color-secondary-text);
+  font-size: 12px;
+}
+
+.statList strong,
+.careerCopy strong {
+  font-size: 18px;
+  font-weight: 500;
+  text-align: right;
+}
+
+.careerCopy {
+  grid-template-columns: 44px minmax(0, 1fr);
+  align-items: baseline;
+}
+
+.careerCopy > span,
+.careerCopy > strong {
+  padding: 12px 0;
+}
+
+.locationMain {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 30px;
+}
+
+.locationMain svg {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  color: var(--color-brand);
+  stroke-width: 1.35;
+}
+
+.locationMain strong {
+  font-size: 19px;
+  font-weight: 500;
+}
+
+.equipmentGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 18px;
+  margin-top: 18px;
+}
+
+.equipmentItem {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--color-line);
+}
+
+.equipmentItem img {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  object-fit: contain;
+}
+
+.equipmentItem > div {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.equipmentItem strong {
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.equipmentItem span {
+  overflow: hidden;
+  color: var(--color-secondary-text);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cardEmpty {
+  margin-top: auto;
+  padding-top: 20px;
+}
+
+.tagList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-content: flex-start;
+  margin-top: 22px;
+}
+
+.tagList span {
+  padding: 7px 11px;
+  color: var(--color-ink);
+  background: var(--color-surface);
+  border: 1px solid var(--color-line);
+  border-radius: 999px;
+  font-size: 12px;
+}
+
+.personalityCompactHeading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.personalityCompactHeading h3 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 500;
+}
+
+.personalityCompactHeading strong {
+  color: var(--color-brand);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.personalityCard .personalityDescription {
+  margin-top: 8px;
+  padding-top: 0;
+}
+
+.personalityCard .personalityTraits {
+  gap: 9px;
+  margin-top: 18px;
+}
+
+.personalityCard .personalityTrait {
+  grid-template-columns: 30px minmax(0, 1fr) 30px;
+  gap: 6px;
+}
+
+.personalityCard .personalityTraitMeter {
+  padding-top: 12px;
+}
+
+.personalityMoreLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: auto;
+  padding-top: 15px;
+  color: var(--color-secondary-text);
+  font-size: 12px;
+}
+
+.personalityMoreLink:hover {
+  color: var(--color-ink);
+}
+
+.personalityMoreLink svg {
+  width: 14px;
+  height: 14px;
+}
+
+@media (max-width: 1023px) {
+  .profilePanel {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .avatarCard,
+  .profilePanel > .profileCard:nth-child(2),
+  .profilePanel > .profileCard:nth-child(3),
+  .locationCard,
+  .tagsCard,
+  .personalityCard {
+    grid-column: span 1;
+  }
+
+  .equipmentCard {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 767px) {
+  .profilePanel {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .profileCard,
+  .avatarCard,
+  .profilePanel > .profileCard:nth-child(2),
+  .profilePanel > .profileCard:nth-child(3),
+  .locationCard,
+  .equipmentCard,
+  .tagsCard,
+  .personalityCard {
+    grid-column: 1;
+  }
+
+  .profileCard {
+    min-height: 190px;
+    padding: 18px;
+  }
+
+  .avatarCardBody {
+    margin-top: 20px;
+  }
+
+  .equipmentGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

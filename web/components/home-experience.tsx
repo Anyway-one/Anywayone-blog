@@ -3,10 +3,18 @@
 import Image from "next/image";
 import {
   ArrowDown,
+  BriefcaseBusiness,
   CalendarDays,
   ChevronLeft,
   ChevronRight,
+  Compass,
   ExternalLink,
+  Heart,
+  MapPin,
+  Sparkles,
+  Tags,
+  UserRound,
+  Wrench,
   X,
 } from "lucide-react";
 import { KeyboardEvent, useEffect, useRef, useState } from "react";
@@ -54,19 +62,9 @@ export function HomeExperience({
   const publicName = profile?.publicName || "Anywayone";
   const heroEyebrow = settings?.heroEyebrow || "ANYWAY, BE YOUR ONE.";
   const heroTitle = settings?.heroTitle || "不设限，做唯一的自己。";
-  const profileFields = [
-    { label: "专业领域", value: profile?.expertise },
-    { label: "职业", value: profile?.occupation },
-    { label: "所在地", value: profile?.location },
-    { label: "星座", value: profile?.zodiacSign },
-    { label: "生肖", value: profile?.chineseZodiac },
-    { label: "血型", value: profile?.bloodType ? `${profile.bloodType} 型` : null },
-  ].filter((field) => field.value);
-  const profileModules = [
-    { overline: "TAGS / 个人标签", value: profile?.tags.join(" · ") },
-    { overline: "INTERESTS / 兴趣爱好", value: profile?.interests.join(" · ") },
-    { overline: "CITIES / 喜欢的城市", value: profile?.favoriteCities.join(" · ") },
-  ].filter((item) => item.value);
+  const equipment = profile?.equipment ?? [];
+  const tags = profile?.tags ?? [];
+  const favoriteCities = profile?.favoriteCities ?? [];
   const personalityTraits = personalityTraitDefinitions.flatMap((trait) => {
     const score = profile?.[trait.key];
     if (score == null) return [];
@@ -239,102 +237,66 @@ export function HomeExperience({
 
               {activeTab === "profile" ? (
                 <div className={styles.profilePanel} id="profile-panel" role="tabpanel">
-                  <div className={styles.profileIntro}>
-                    <Image
-                      className={styles.avatar}
-                      src={profile?.avatarPublicUrl || "/brand/anywayone-avatar.png"}
-                      alt={`${publicName} 头像`}
-                      width={132}
-                      height={132}
-                    />
-                    <div>
-                      <p className={styles.sectionKicker}>ABOUT ME</p>
-                      <h3>{profile?.motto || "个人简介待配置"}<span>。</span></h3>
-                      <p className={styles.profileDescription}>
-                        {profile?.bio || "作者尚未配置公开个人简介。"}
-                      </p>
+                  <article className={`${styles.profileCard} ${styles.avatarCard}`}>
+                    <div className={styles.cardHeading}><span>01 / ABOUT ME</span><UserRound aria-hidden="true" /></div>
+                    <div className={styles.avatarCardBody}>
+                      <Image className={styles.avatar} src={profile?.avatarPublicUrl || "/brand/anywayone-avatar.png"} alt={`${publicName} 头像`} width={118} height={118} />
+                      <div><h3>{publicName}<span>。</span></h3><p>{profile?.motto || "个人简介待配置"}</p></div>
                     </div>
-                  </div>
+                    {profile?.bio && <p className={styles.cardDescription}>{profile.bio}</p>}
+                  </article>
 
-                  {profileFields.length > 0 ? <dl className={styles.profileFields}>
-                    {profileFields.map((field) => (
-                      <div key={field.label}>
-                        <dt>{field.label}</dt>
-                        <dd>{field.value}</dd>
-                      </div>
-                    ))}
-                  </dl> : <p className={styles.profileEmpty}>更多个人信息暂未公开。</p>}
-
-                  {profileModules.length > 0 && <div className={styles.profileModules}>
-                    {profileModules.map((item) => (
-                      <div key={item.overline}>
-                        <span>{item.overline}</span>
-                        <strong>{item.value}</strong>
-                      </div>
-                    ))}
-                  </div>}
-
-                  {hasPersonality && <section className={styles.personalityCard} aria-labelledby="personality-card-title">
-                    <div className={`${styles.personalityBody} ${profile?.personalityPortraitPublicUrl ? "" : styles.personalityBodyWithoutPortrait}`}>
-                      {profile?.personalityPortraitPublicUrl && <div className={styles.personalityPortrait}>
-                        <Image
-                          src={profile.personalityPortraitPublicUrl}
-                          alt={`${profile.personalityName || profile.personalityType || "人格类型"}肖像`}
-                          fill
-                          sizes="(max-width: 767px) calc(100vw - 40px), 214px"
-                        />
-                      </div>}
-                      <div className={styles.personalityContent}>
-                        <p className={styles.sectionKicker}>PERSONALITY / 人格</p>
-                        <div className={styles.personalityHeading}>
-                          <h3 id="personality-card-title">
-                            {profile?.personalityName || "人格类型"}
-                            {profile?.personalityType && <span>({profile.personalityType})</span>}
-                          </h3>
-                          {profile?.personalityTestDate && <time dateTime={profile.personalityTestDate}>
-                            测试于 {profile.personalityTestDate.replaceAll("-", ".")}
-                          </time>}
-                        </div>
-                        {profile?.personalityDescription && <p className={styles.personalityDescription}>
-                          {profile.personalityDescription}
-                        </p>}
-
-                        {personalityTraits.length > 0 && <div className={styles.personalityTraits} aria-label="人格维度">
-                          {personalityTraits.map((trait) => <div className={styles.personalityTrait} key={trait.key}>
-                            <span>{trait.left}</span>
-                            <div className={styles.personalityTraitMeter}>
-                              <strong style={{ left: `${trait.labelPosition}%` }}>{trait.dominant.value}% {trait.dominant.label}</strong>
-                              <div className={styles.personalityTraitTrack} style={{ backgroundColor: trait.color }}>
-                                <i
-                                  className={styles.personalityTraitThumb}
-                                  style={{ left: `${trait.position}%`, borderColor: trait.color }}
-                                />
-                              </div>
-                            </div>
-                            <span>{trait.right}</span>
-                          </div>)}
-                        </div>}
-                      </div>
+                  <article className={styles.profileCard}>
+                    <div className={styles.cardHeading}><span>02 / ATTRIBUTES</span><Sparkles aria-hidden="true" /></div>
+                    <div className={styles.statList}>
+                      <div><span>星座</span><strong>{profile?.zodiacSign || "—"}</strong></div>
+                      <div><span>生肖</span><strong>{profile?.chineseZodiac || "—"}</strong></div>
+                      <div><span>血型</span><strong>{profile?.bloodType ? `${profile.bloodType} 型` : "—"}</strong></div>
                     </div>
-                    <footer className={styles.personalityFooter}>
-                      <a
-                        href={getPersonalityDetailsUrl(profile?.personalityType, profile?.personalityLearnMoreUrl)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        了解更多
-                        <ExternalLink aria-hidden="true" />
-                      </a>
-                      <a
-                        className={styles.personalityOfficialLink}
-                        href="https://www.16personalities.com/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        aria-label="访问 16Personalities 官网"
-                      >
-                        <Image src="/personality/icon-16personalities.svg" alt="16Personalities" width={150} height={31} unoptimized />
-                      </a>
-                    </footer>
+                  </article>
+
+                  <article className={styles.profileCard}>
+                    <div className={styles.cardHeading}><span>03 / CAREER</span><BriefcaseBusiness aria-hidden="true" /></div>
+                    <div className={styles.careerCopy}>
+                      <span>专业</span><strong>{profile?.expertise || "—"}</strong>
+                      <span>岗位</span><strong>{profile?.occupation || "—"}</strong>
+                    </div>
+                  </article>
+
+                  <article className={`${styles.profileCard} ${styles.locationCard}`}>
+                    <div className={styles.cardHeading}><span>04 / LOCATION</span><MapPin aria-hidden="true" /></div>
+                    <div className={styles.locationMain}><Compass aria-hidden="true" /><strong>{profile?.location || "位置待配置"}</strong></div>
+                    {favoriteCities.length > 0 && <p className={styles.cardDescription}>喜欢的城市 · {favoriteCities.join(" / ")}</p>}
+                  </article>
+
+                  <article className={`${styles.profileCard} ${styles.equipmentCard}`}>
+                    <div className={styles.cardHeading}><span>05 / EQUIPMENT</span><Wrench aria-hidden="true" /></div>
+                    {equipment.length > 0 ? <div className={styles.equipmentGrid}>
+                      {equipment.map((item, index) => <div className={styles.equipmentItem} key={`${item.icon}-${item.name}-${index}`}>
+                        <Image src={`/equipment/icon-${item.icon}.svg`} alt="" width={34} height={34} unoptimized />
+                        <div><strong>{item.name}</strong>{item.detail && <span>{item.detail}</span>}</div>
+                      </div>)}
+                    </div> : <p className={styles.cardEmpty}>装备清单待配置。</p>}
+                  </article>
+
+                  <article className={`${styles.profileCard} ${styles.tagsCard}`}>
+                    <div className={styles.cardHeading}><span>06 / PERSONAL TAGS</span><Tags aria-hidden="true" /></div>
+                    {tags.length > 0 ? <div className={styles.tagList}>{tags.map((tag) => <span key={tag}>{tag}</span>)}</div> : <p className={styles.cardEmpty}>个性标签待配置。</p>}
+                  </article>
+
+                  {hasPersonality && <section className={`${styles.profileCard} ${styles.personalityCard}`} aria-labelledby="personality-card-title">
+                    <div className={styles.cardHeading}><span>07 / PERSONALITY</span><Heart aria-hidden="true" /></div>
+                    <div className={styles.personalityCompactHeading}>
+                      <h3 id="personality-card-title">{profile?.personalityName || "人格类型"}</h3>
+                      {profile?.personalityType && <strong>{profile.personalityType}</strong>}
+                    </div>
+                    {profile?.personalityDescription && <p className={styles.cardDescription}>{profile.personalityDescription}</p>}
+                    {personalityTraits.length > 0 && <div className={styles.personalityTraits} aria-label="人格维度">
+                      {personalityTraits.map((trait) => <div className={styles.personalityTrait} key={trait.key}>
+                        <span>{trait.left}</span><div className={styles.personalityTraitMeter}><strong style={{ left: `${trait.labelPosition}%` }}>{trait.dominant.value}%</strong><div className={styles.personalityTraitTrack} style={{ backgroundColor: trait.color }}><i className={styles.personalityTraitThumb} style={{ left: `${trait.position}%`, borderColor: trait.color }} /></div></div><span>{trait.right}</span>
+                      </div>)}
+                    </div>}
+                    <a className={styles.personalityMoreLink} href={getPersonalityDetailsUrl(profile?.personalityType, profile?.personalityLearnMoreUrl)} target="_blank" rel="noopener noreferrer">了解更多 <ExternalLink aria-hidden="true" /></a>
                   </section>}
                 </div>
               ) : (
