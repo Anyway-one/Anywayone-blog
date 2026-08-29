@@ -286,17 +286,29 @@ export function HomeExperience({
 
                   {hasPersonality && <section className={`${styles.profileCard} ${styles.personalityCard}`} aria-labelledby="personality-card-title">
                     <div className={styles.cardHeading}><span>07 / PERSONALITY</span><Heart aria-hidden="true" /></div>
-                    <div className={styles.personalityCompactHeading}>
-                      <h3 id="personality-card-title">{profile?.personalityName || "人格类型"}</h3>
-                      {profile?.personalityType && <strong>{profile.personalityType}</strong>}
+                    <div className={`${styles.personalityCardBody} ${profile?.personalityPortraitPublicUrl ? "" : styles.personalityCardBodyWithoutPortrait}`}>
+                      {profile?.personalityPortraitPublicUrl && <div className={styles.personalityCompactPortrait}>
+                        <Image
+                          src={profile.personalityPortraitPublicUrl}
+                          alt={`${profile.personalityName || profile.personalityType || "人格类型"}肖像`}
+                          fill
+                          sizes="(max-width: 767px) calc(100vw - 76px), 180px"
+                        />
+                      </div>}
+                      <div className={styles.personalityCardContent}>
+                        <div className={styles.personalityCompactHeading}>
+                          <h3 id="personality-card-title">{profile?.personalityName || "人格类型"}</h3>
+                          {profile?.personalityType && <strong>{profile.personalityType}</strong>}
+                        </div>
+                        {profile?.personalityDescription && <p className={styles.cardDescription}>{profile.personalityDescription}</p>}
+                        {personalityTraits.length > 0 && <div className={styles.personalityTraits} aria-label="人格维度">
+                          {personalityTraits.map((trait) => <div className={styles.personalityTrait} key={trait.key}>
+                            <span>{trait.left}</span><div className={styles.personalityTraitMeter}><strong style={{ left: `${trait.labelPosition}%` }}>{trait.dominant.value}%</strong><div className={styles.personalityTraitTrack} style={{ backgroundColor: trait.color }}><i className={styles.personalityTraitThumb} style={{ left: `${trait.position}%`, borderColor: trait.color }} /></div></div><span>{trait.right}</span>
+                          </div>)}
+                        </div>}
+                        <a className={styles.personalityMoreLink} href={getPersonalityDetailsUrl(profile?.personalityType, profile?.personalityLearnMoreUrl)} target="_blank" rel="noopener noreferrer">了解更多 <ExternalLink aria-hidden="true" /></a>
+                      </div>
                     </div>
-                    {profile?.personalityDescription && <p className={styles.cardDescription}>{profile.personalityDescription}</p>}
-                    {personalityTraits.length > 0 && <div className={styles.personalityTraits} aria-label="人格维度">
-                      {personalityTraits.map((trait) => <div className={styles.personalityTrait} key={trait.key}>
-                        <span>{trait.left}</span><div className={styles.personalityTraitMeter}><strong style={{ left: `${trait.labelPosition}%` }}>{trait.dominant.value}%</strong><div className={styles.personalityTraitTrack} style={{ backgroundColor: trait.color }}><i className={styles.personalityTraitThumb} style={{ left: `${trait.position}%`, borderColor: trait.color }} /></div></div><span>{trait.right}</span>
-                      </div>)}
-                    </div>}
-                    <a className={styles.personalityMoreLink} href={getPersonalityDetailsUrl(profile?.personalityType, profile?.personalityLearnMoreUrl)} target="_blank" rel="noopener noreferrer">了解更多 <ExternalLink aria-hidden="true" /></a>
                   </section>}
                 </div>
               ) : (

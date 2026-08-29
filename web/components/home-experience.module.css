@@ -964,19 +964,19 @@
 }
 
 .locationCard {
-  grid-column: span 2;
+  grid-column: span 3;
 }
 
 .equipmentCard {
-  grid-column: span 4;
+  grid-column: span 3;
 }
 
 .tagsCard {
-  grid-column: span 3;
+  grid-column: span 2;
 }
 
 .personalityCard {
-  grid-column: span 3;
+  grid-column: span 4;
 }
 
 .cardHeading {
@@ -1103,8 +1103,8 @@
 
 .equipmentGrid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px 18px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px 10px;
   margin-top: 18px;
 }
 
@@ -1112,15 +1112,16 @@
   min-width: 0;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--color-line);
+  flex-direction: column;
+  gap: 8px;
+  padding: 7px 4px 4px;
+  text-align: center;
 }
 
 .equipmentItem img {
-  width: 32px;
-  height: 32px;
-  flex: 0 0 32px;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
   object-fit: contain;
 }
 
@@ -1129,6 +1130,7 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
+  align-items: center;
 }
 
 .equipmentItem strong {
@@ -1205,7 +1207,46 @@
 }
 
 .personalityCard .personalityTraitMeter {
-  padding-top: 12px;
+  padding-top: 21px;
+}
+
+.personalityCard .personalityTraitMeter strong {
+  top: 0;
+  line-height: 12px;
+}
+
+.personalityCardBody {
+  min-height: 235px;
+  display: grid;
+  grid-template-columns: minmax(140px, 0.38fr) minmax(0, 0.62fr);
+  gap: 20px;
+  flex: 1;
+  margin-top: 18px;
+}
+
+.personalityCardBodyWithoutPortrait {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.personalityCompactPortrait {
+  position: relative;
+  min-height: 235px;
+  overflow: hidden;
+  background: #e4e6df;
+  border: 1px solid var(--color-line);
+  border-radius: 3px;
+}
+
+.personalityCompactPortrait img {
+  padding: 10px 8px 0;
+  object-fit: contain;
+  object-position: center bottom;
+}
+
+.personalityCardContent {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .personalityMoreLink {
@@ -1244,6 +1285,16 @@
   .equipmentCard {
     grid-column: span 2;
   }
+
+  .locationCard,
+  .equipmentCard {
+    grid-column: span 1;
+  }
+
+  .personalityCardBody {
+    grid-template-columns: minmax(110px, 0.34fr) minmax(0, 0.66fr);
+    gap: 14px;
+  }
 }
 
 @media (max-width: 767px) {
@@ -1274,5 +1325,13 @@
 
   .equipmentGrid {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .personalityCardBody {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .personalityCompactPortrait {
+    min-height: 190px;
   }
 }
