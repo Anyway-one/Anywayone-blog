@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import type { PublicSiteSettings } from "@/lib/public-site";
 import styles from "./site-header.module.css";
 
 const navigation = [
@@ -19,12 +20,19 @@ function isCurrentPath(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function SiteHeader() {
+export function SiteHeader({ settings }: { settings?: PublicSiteSettings | null }) {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const firstMobileLinkRef = useRef<HTMLAnchorElement>(null);
   const dark = pathname.startsWith("/photography");
+  const siteName = settings?.siteName || "Anywayone";
+  const logoAlt = settings?.logoAlt || siteName;
+  const useImageLogo = settings?.logoMode === "IMAGE";
+  const webLogo = useImageLogo && settings?.logoWebPublicUrl ? settings.logoWebPublicUrl : null;
+  const mobileLogo = useImageLogo && (settings?.logoMobilePublicUrl || webLogo)
+    ? settings?.logoMobilePublicUrl || webLogo
+    : null;
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -53,23 +61,9 @@ export function SiteHeader() {
 
   return (
     <header className={`${styles.header} ${dark ? styles.dark : ""}`}>
-      <Link className={styles.brand} href="/" aria-label="Anywayone 首页">
-        <Image
-          className={styles.wordmark}
-          src="/brand/anywayone-wordmark.svg"
-          alt="Anywayone"
-          width={2380}
-          height={480}
-          priority
-        />
-        <Image
-          className={styles.mark}
-          src="/brand/anywayone-mark.svg"
-          alt=""
-          width={34}
-          height={34}
-          priority
-        />
+      <Link className={styles.brand} href="/" aria-label={`${siteName} 首页`}>
+        {webLogo ? <Image className={styles.wordmark} src={webLogo} alt={logoAlt} width={2380} height={480} priority unoptimized /> : <span className={styles.wordmarkText}>{settings?.logoText || siteName}</span>}
+        {mobileLogo ? <Image className={styles.mark} src={mobileLogo} alt={logoAlt} width={34} height={34} priority unoptimized /> : <Image className={styles.mark} src="/brand/anywayone-mark.svg" alt="" width={34} height={34} priority />}
       </Link>
 
       <nav className={styles.desktopNav} aria-label="主导航">

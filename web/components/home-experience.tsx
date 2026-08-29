@@ -33,7 +33,10 @@ export function HomeExperience({
   const logTabRef = useRef<HTMLButtonElement>(null);
   const historyTrackRef = useRef<HTMLDivElement>(null);
   const profile = site?.profile;
+  const settings = site?.settings;
   const publicName = profile?.publicName || "Anywayone";
+  const heroEyebrow = settings?.heroEyebrow || "ANYWAY, BE YOUR ONE.";
+  const heroTitle = settings?.heroTitle || "不设限，做唯一的自己。";
   const profileFields = [
     { label: "专业领域", value: profile?.expertise },
     { label: "职业", value: profile?.occupation },
@@ -121,11 +124,9 @@ export function HomeExperience({
         <section className={styles.hero} aria-labelledby="home-title">
           <div className={styles.heroInner}>
             <div className={styles.heroCopy}>
-              <p className={styles.eyebrow}>ANYWAY, BE YOUR ONE.</p>
+              <p className={styles.eyebrow}>{heroEyebrow}</p>
               <h1 className={styles.heroTitle} id="home-title">
-                不设限，
-                <br />
-                做唯一的自己<span>。</span>
+                {heroTitle.endsWith("。") ? <>{heroTitle.slice(0, -1)}<span>。</span></> : heroTitle}
               </h1>
               <button
                 ref={moreButtonRef}
@@ -299,6 +300,7 @@ export function HomeExperience({
               )}
             </div>
             <SiteFooter
+              settings={settings}
               socialLinks={site?.socialLinks}
               launchDate={site?.settings?.launchDate}
               copyrightOwner={site?.profile.publicName}

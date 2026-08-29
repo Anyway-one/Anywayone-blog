@@ -6,7 +6,7 @@ from app.core.errors import AppError
 from app.core.request_id import get_request_id
 from app.modules.auth import service
 from app.modules.auth.dependencies import CurrentUser, DbSession
-from app.modules.auth.schemas import LoginData, LoginInput, UserRead
+from app.modules.auth.schemas import LoginData, LoginInput, UserProfileUpdate, UserRead
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -43,7 +43,7 @@ async def login(
         data=LoginData(
             access_token=access_token,
             expires_in=expires_in,
-            user=UserRead.model_validate(user),
+            user=await service.user_read(db, user),
         ),
         meta=Meta(request_id=get_request_id(request)),
     )
@@ -73,7 +73,7 @@ async def refresh(
         data=LoginData(
             access_token=access_token,
             expires_in=expires_in,
-            user=UserRead.model_validate(user),
+            user=await service.user_read(db, user),
         ),
         meta=Meta(request_id=get_request_id(request)),
     )
@@ -98,8 +98,22 @@ async def logout(
 
 
 @router.get("/me", response_model=DataResponse[UserRead])
-async def me(request: Request, current_user: CurrentUser) -> DataResponse[UserRead]:
+async def me(request: Request, db: DbSession, current_user: CurrentUser) -> DataResponse[UserRead]:
     return DataResponse(
-        data=UserRead.model_validate(current_user),
+        data=await service.user_read(db, current_user),
+        meta=Meta(request_id=get_request_id(request)),
+    )
+
+
+@router.patch("/me", response_model=DataResponse[UserRead])
+async def update_me(
+    payload: UserProfileUpdate,
+    request: Request,
+    db: DbSession,
+    current_user: CurrentUser,
+) -> DataResponse[UserRead]:
+    user = await service.update_avatar(db, current_user, payload.avatar_media_id)
+    return DataResponse(
+        data=await service.user_read(db, user),
         meta=Meta(request_id=get_request_id(request)),
     )

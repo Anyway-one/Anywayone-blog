@@ -39,7 +39,31 @@ class SiteSettings(UuidPrimaryKeyMixin, TimestampMixin, Base):
     singleton_key: Mapped[str] = mapped_column(
         String(20), default="primary", unique=True, nullable=False
     )
+    site_name: Mapped[str | None] = mapped_column(String(100))
+    logo_mode: Mapped[str] = mapped_column(String(16), default="TEXT", nullable=False)
+    logo_text: Mapped[str | None] = mapped_column(String(100))
+    logo_web_media_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("media.id", ondelete="SET NULL"), index=True
+    )
+    logo_mobile_media_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("media.id", ondelete="SET NULL"), index=True
+    )
+    logo_alt: Mapped[str | None] = mapped_column(String(160))
+    hero_eyebrow: Mapped[str | None] = mapped_column(String(80))
+    hero_title: Mapped[str | None] = mapped_column(String(120))
+    copyright_owner: Mapped[str | None] = mapped_column(String(160))
+    copyright_start_year: Mapped[int | None] = mapped_column(Integer)
+    copyright_statement: Mapped[str | None] = mapped_column(String(240))
+    footer_notice: Mapped[str | None] = mapped_column(String(320))
+    icp_number: Mapped[str | None] = mapped_column(String(160))
+    police_record: Mapped[str | None] = mapped_column(String(160))
+    show_runtime_days: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     launch_date: Mapped[date | None] = mapped_column(Date)
+    seo_title: Mapped[str | None] = mapped_column(String(200))
+    seo_description: Mapped[str | None] = mapped_column(String(320))
+    og_image_media_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("media.id", ondelete="SET NULL"), index=True
+    )
 
 
 class SiteHistoryEvent(UuidPrimaryKeyMixin, TimestampMixin, Base):

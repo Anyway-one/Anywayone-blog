@@ -1,6 +1,6 @@
 import uuid
 from datetime import date
-from typing import Annotated, Self, TypeAlias
+from typing import Annotated, Literal, Self, TypeAlias
 
 from pydantic import Field, HttpUrl, field_validator, model_validator
 
@@ -62,7 +62,51 @@ class SiteProfileRead(SiteProfileUpdate):
 
 
 class SiteSettingsUpdate(ApiModel):
+    site_name: str | None = Field(default=None, max_length=100)
+    logo_mode: Literal["TEXT", "IMAGE"] = "TEXT"
+    logo_text: str | None = Field(default=None, max_length=100)
+    logo_web_media_id: uuid.UUID | None = None
+    logo_mobile_media_id: uuid.UUID | None = None
+    logo_alt: str | None = Field(default=None, max_length=160)
+    hero_eyebrow: str | None = Field(default=None, max_length=80)
+    hero_title: str | None = Field(default=None, max_length=120)
+    copyright_owner: str | None = Field(default=None, max_length=160)
+    copyright_start_year: int | None = Field(default=None, ge=1900, le=2200)
+    copyright_statement: str | None = Field(default=None, max_length=240)
+    footer_notice: str | None = Field(default=None, max_length=320)
+    icp_number: str | None = Field(default=None, max_length=160)
+    police_record: str | None = Field(default=None, max_length=160)
+    show_runtime_days: bool = True
     launch_date: date | None = None
+    seo_title: str | None = Field(default=None, max_length=200)
+    seo_description: str | None = Field(default=None, max_length=320)
+    og_image_media_id: uuid.UUID | None = None
+
+    @field_validator(
+        "site_name",
+        "logo_text",
+        "logo_alt",
+        "hero_eyebrow",
+        "hero_title",
+        "copyright_owner",
+        "copyright_statement",
+        "footer_notice",
+        "icp_number",
+        "police_record",
+        "seo_title",
+        "seo_description",
+    )
+    @classmethod
+    def normalize_optional_text(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        return value.strip() or None
+
+    @model_validator(mode="after")
+    def validate_logo(self) -> Self:
+        if self.logo_mode == "IMAGE" and self.logo_web_media_id is None:
+            raise ValueError("图片 Logo 模式必须上传 Web Logo")
+        return self
 
     @field_validator("launch_date")
     @classmethod
@@ -74,6 +118,9 @@ class SiteSettingsUpdate(ApiModel):
 
 class SiteSettingsRead(SiteSettingsUpdate):
     id: uuid.UUID | None = None
+    logo_web_public_url: str | None = None
+    logo_mobile_public_url: str | None = None
+    og_image_public_url: str | None = None
 
 
 class SiteHistoryInput(ApiModel):

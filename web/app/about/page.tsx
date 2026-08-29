@@ -44,6 +44,7 @@ export default async function AboutPage() {
         </section>
       </div>
       <SiteFooter
+        settings={site?.settings}
         socialLinks={site?.socialLinks}
         launchDate={site?.settings?.launchDate}
         copyrightOwner={site?.profile.publicName}

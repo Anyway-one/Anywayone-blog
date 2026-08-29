@@ -4,6 +4,7 @@ import type { MenuProps } from 'antd'
 import { Bell, ExternalLink, LogOut, Menu as MenuIcon, MoreHorizontal, Search } from 'lucide-react'
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
+import { getSiteSettings, type SiteSettings } from '../api/site'
 import BrandMark from '../components/BrandMark'
 import {
   getRouteMeta,
@@ -25,7 +26,7 @@ function toMenuItems(items: NavigationItem[]): MenuProps['items'] {
 const menuItems = toMenuItems(navigationItems)
 const webUrl = import.meta.env.VITE_WEB_URL || 'http://localhost:3000'
 
-function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
+function SidebarContent({ onNavigate, siteSettings }: { onNavigate?: () => void; siteSettings: SiteSettings | null }) {
   const location = useLocation()
   const navigate = useNavigate()
   const { user, logout } = useAuth()
@@ -51,7 +52,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <div className="sidebar-content">
       <div className="sidebar-content__brand">
-        <BrandMark />
+        <BrandMark settings={siteSettings} />
       </div>
 
       <Menu
@@ -67,7 +68,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
       />
 
       <div className="sidebar-account">
-        <Avatar size={36} src="/brand/anywayone-mark.svg" />
+        <Avatar size={36} src={user?.avatarPublicUrl || '/brand/anywayone-mark.svg'} />
         <div className="sidebar-account__copy">
           <strong>{user?.displayName || 'Anywayone'}</strong>
           <span title={user?.email}>{user?.email || '站点管理员'}</span>
@@ -109,7 +110,12 @@ export default function AdminLayout() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [siteSettings, setSiteSettings] = useState<SiteSettings | null>(null)
   const meta = useMemo(() => getRouteMeta(location.pathname), [location.pathname])
+
+  useEffect(() => {
+    void getSiteSettings().then(setSiteSettings).catch(() => undefined)
+  }, [])
 
   useEffect(() => {
     document.title = `${meta.title} · Anywayone Studio`
@@ -118,7 +124,7 @@ export default function AdminLayout() {
   return (
     <div className="admin-shell">
       <aside className="admin-sidebar" aria-label="侧边栏">
-        <SidebarContent />
+        <SidebarContent siteSettings={siteSettings} />
       </aside>
 
       <Drawer
@@ -129,7 +135,7 @@ export default function AdminLayout() {
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
       >
-        <SidebarContent onNavigate={() => setDrawerOpen(false)} />
+        <SidebarContent siteSettings={siteSettings} onNavigate={() => setDrawerOpen(false)} />
       </Drawer>
 
       <div className="admin-workspace">
@@ -159,7 +165,7 @@ export default function AdminLayout() {
               <Button type="text" icon={<Bell size={19} />} aria-label="通知" />
             </Tooltip>
             <Tooltip title={user?.displayName || '站点管理员'}>
-              <Avatar className="admin-topbar__avatar" size={34} src="/brand/anywayone-mark.svg" />
+              <Avatar className="admin-topbar__avatar" size={34} src={user?.avatarPublicUrl || '/brand/anywayone-mark.svg'} />
             </Tooltip>
           </div>
         </header>

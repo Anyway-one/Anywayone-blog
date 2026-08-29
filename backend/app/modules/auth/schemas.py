@@ -17,6 +17,12 @@ class UserRead(ApiModel):
     email: EmailStr
     display_name: str
     status: UserStatus
+    avatar_media_id: uuid.UUID | None = None
+    avatar_public_url: str | None = None
+
+
+class UserProfileUpdate(ApiModel):
+    avatar_media_id: uuid.UUID | None = None
 
 
 class LoginData(ApiModel):

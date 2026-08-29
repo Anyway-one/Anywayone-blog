@@ -6,6 +6,7 @@ from urllib.parse import urlsplit, urlunsplit
 
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import aliased
 
 from app.core.errors import AppError
 from app.db.enums import ContactType
@@ -206,10 +207,38 @@ async def get_site_settings(db: AsyncSession) -> SiteSettings | None:
 
 
 async def get_site_settings_read(db: AsyncSession) -> SiteSettingsRead:
-    settings = await get_site_settings(db)
-    if settings is None:
+    web_logo = aliased(Media)
+    mobile_logo = aliased(Media)
+    og_image = aliased(Media)
+    row = (
+        await db.execute(
+            select(SiteSettings, web_logo, mobile_logo, og_image)
+            .outerjoin(
+                web_logo,
+                (web_logo.id == SiteSettings.logo_web_media_id) & web_logo.deleted_at.is_(None),
+            )
+            .outerjoin(
+                mobile_logo,
+                (mobile_logo.id == SiteSettings.logo_mobile_media_id)
+                & mobile_logo.deleted_at.is_(None),
+            )
+            .outerjoin(
+                og_image,
+                (og_image.id == SiteSettings.og_image_media_id) & og_image.deleted_at.is_(None),
+            )
+        )
+    ).first()
+    if row is None:
         return SiteSettingsRead()
-    return SiteSettingsRead.model_validate(settings)
+    settings, web_media, mobile_media, og_media = row
+    return SiteSettingsRead.model_validate(
+        {
+            **settings.__dict__,
+            "logo_web_public_url": web_media.public_url if web_media else None,
+            "logo_mobile_public_url": mobile_media.public_url if mobile_media else None,
+            "og_image_public_url": og_media.public_url if og_media else None,
+        }
+    )
 
 
 async def update_site_settings(
@@ -219,6 +248,10 @@ async def update_site_settings(
     actor: User,
     request_id: str,
 ) -> SiteSettings:
+    await _validate_media_ids(
+        db,
+        [payload.logo_web_media_id, payload.logo_mobile_media_id, payload.og_image_media_id],
+    )
     settings = await get_site_settings(db)
     if settings is None:
         settings = SiteSettings(singleton_key="primary")

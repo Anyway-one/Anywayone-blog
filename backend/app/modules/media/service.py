@@ -17,7 +17,7 @@ from app.modules.auth.models import User
 from app.modules.media.models import Media
 from app.modules.photography.models import PhotoItem
 from app.modules.posts.models import Post
-from app.modules.site.models import ContactMethod, SiteHistoryEvent, SiteProfile
+from app.modules.site.models import ContactMethod, SiteHistoryEvent, SiteProfile, SiteSettings
 
 IMAGE_FORMATS = {
     "JPEG": ("jpg", "image/jpeg"),
@@ -132,6 +132,18 @@ async def delete_media(db: AsyncSession, media_id: uuid.UUID) -> None:
     profile_references = await db.scalar(
         select(func.count()).select_from(SiteProfile).where(SiteProfile.avatar_media_id == media.id)
     )
+    user_references = await db.scalar(
+        select(func.count()).select_from(User).where(User.avatar_media_id == media.id)
+    )
+    site_settings_references = await db.scalar(
+        select(func.count())
+        .select_from(SiteSettings)
+        .where(
+            (SiteSettings.logo_web_media_id == media.id)
+            | (SiteSettings.logo_mobile_media_id == media.id)
+            | (SiteSettings.og_image_media_id == media.id)
+        )
+    )
     contact_references = await db.scalar(
         select(func.count()).select_from(ContactMethod).where(ContactMethod.qr_media_id == media.id)
     )
@@ -146,6 +158,8 @@ async def delete_media(db: AsyncSession, media_id: uuid.UUID) -> None:
     if (
         post_references
         or profile_references
+        or user_references
+        or site_settings_references
         or contact_references
         or photography_references
         or history_references

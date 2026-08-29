@@ -46,6 +46,15 @@
   border-radius: 6px;
 }
 
+.brand-mark .brand-mark__image {
+  width: 148px;
+  height: 38px;
+  border: 0;
+  border-radius: 0;
+  object-fit: contain;
+  object-position: left center;
+}
+
 .brand-mark__text {
   display: flex;
   min-width: 0;

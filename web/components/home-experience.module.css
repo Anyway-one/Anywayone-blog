@@ -69,6 +69,7 @@
   line-height: 1.06;
   font-weight: 500;
   letter-spacing: 0;
+  white-space: pre-line;
 }
 
 .heroTitle span,

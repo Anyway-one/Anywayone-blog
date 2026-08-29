@@ -32,6 +32,18 @@
   height: auto;
 }
 
+.wordmarkText {
+  display: block;
+  max-width: 220px;
+  overflow: hidden;
+  color: currentColor;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .mark {
   display: none;
 }

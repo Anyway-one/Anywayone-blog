@@ -14,6 +14,9 @@ class User(UuidPrimaryKeyMixin, TimestampMixin, Base):
 
     email: Mapped[str] = mapped_column(String(320), unique=True, index=True, nullable=False)
     display_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    avatar_media_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("media.id", ondelete="SET NULL"), index=True
+    )
     password_hash: Mapped[str] = mapped_column(Text, nullable=False)
     status: Mapped[UserStatus] = mapped_column(
         Enum(UserStatus, name="user_status", native_enum=False),

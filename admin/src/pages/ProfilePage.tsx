@@ -18,6 +18,7 @@ function nullable(value: string | undefined) {
 export default function ProfilePage() {
   const [form] = Form.useForm<SiteProfileInput>()
   const avatarInputRef = useRef<HTMLInputElement>(null)
+  const [avatarMediaId, setAvatarMediaId] = useState<string | null>(null)
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -28,6 +29,7 @@ export default function ProfilePage() {
     void getProfile()
       .then((profile) => {
         form.setFieldsValue(profile)
+        setAvatarMediaId(profile.avatarMediaId)
         setAvatarUrl(profile.avatarPublicUrl)
       })
       .catch((error: unknown) => void messageApi.error(error instanceof Error ? error.message : '个人资料加载失败。'))
@@ -38,7 +40,7 @@ export default function ProfilePage() {
     setUploadingAvatar(true)
     try {
       const media = await uploadMedia(file)
-      form.setFieldValue('avatarMediaId', media.id)
+      setAvatarMediaId(media.id)
       setAvatarUrl(media.publicUrl)
       void messageApi.success('头像已上传，请保存个人资料')
     } catch (error) {
@@ -55,6 +57,7 @@ export default function ProfilePage() {
       setSaving(true)
       const profile = await saveProfile({
         ...values,
+        avatarMediaId,
         publicName: nullable(values.publicName ?? undefined),
         expertise: nullable(values.expertise ?? undefined),
         occupation: nullable(values.occupation ?? undefined),
@@ -70,6 +73,7 @@ export default function ProfilePage() {
         tags: values.tags ?? [],
       })
       form.setFieldsValue(profile)
+      setAvatarMediaId(profile.avatarMediaId)
       setAvatarUrl(profile.avatarPublicUrl)
       void messageApi.success('个人资料已保存')
     } catch (error) {
@@ -102,7 +106,7 @@ export default function ProfilePage() {
                 <span>建议使用清晰的正方形图片，展示端将裁切为圆形。</span>
                 <div className="profile-avatar-actions">
                   <Button icon={<ImagePlus size={16} />} loading={uploadingAvatar} onClick={() => avatarInputRef.current?.click()}>{avatarUrl ? '更换头像' : '上传头像'}</Button>
-                  {avatarUrl && <Button type="text" danger icon={<Trash2 size={16} />} onClick={() => { form.setFieldValue('avatarMediaId', null); setAvatarUrl(null) }}>移除</Button>}
+                  {avatarUrl && <Button type="text" danger icon={<Trash2 size={16} />} onClick={() => { setAvatarMediaId(null); setAvatarUrl(null) }}>移除</Button>}
                 </div>
               </div>
             </div>

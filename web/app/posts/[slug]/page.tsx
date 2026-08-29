@@ -80,6 +80,7 @@ function UnavailableArticle({ site }: { site: PublicSiteData | null }) {
         <Link href="/posts"><ArrowLeft aria-hidden="true" />返回文章列表</Link>
       </section>
       <SiteFooter
+        settings={site?.settings}
         socialLinks={site?.socialLinks}
         launchDate={site?.settings?.launchDate}
         copyrightOwner={site?.profile.publicName}
@@ -179,6 +180,7 @@ export default async function PostPage({ params }: PostPageProps) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
       />
       <SiteFooter
+        settings={site?.settings}
         socialLinks={site?.socialLinks}
         launchDate={site?.settings?.launchDate}
         copyrightOwner={site?.profile.publicName}

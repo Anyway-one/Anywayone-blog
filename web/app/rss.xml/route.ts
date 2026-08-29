@@ -1,4 +1,5 @@
 import { listAllPublicPosts } from "@/lib/public-posts";
+import { getPublicSite } from "@/lib/public-site";
 
 const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/$/, "");
 
@@ -12,7 +13,9 @@ function escapeXml(value: string) {
 }
 
 export async function GET() {
-  const result = await listAllPublicPosts();
+  const [result, site] = await Promise.all([listAllPublicPosts(), getPublicSite()]);
+  const siteName = site?.settings?.siteName || "Anywayone";
+  const description = site?.settings?.seoDescription || "Anywayone 的技术文章与生活随笔。";
   const items = result.status === "ready"
     ? result.data.map((post) => {
       const url = `${siteUrl}/posts/${post.slug}`;
@@ -30,10 +33,10 @@ ${post.category ? `      <category>${escapeXml(post.category.name)}</category>\n
   const xml = `<?xml version="1.0" encoding="UTF-8" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Anywayone</title>
+    <title>${escapeXml(siteName)}</title>
     <link>${escapeXml(siteUrl)}</link>
     <atom:link href="${escapeXml(`${siteUrl}/rss.xml`)}" rel="self" type="application/rss+xml" />
-    <description>Anywayone 的技术文章与生活随笔。</description>
+    <description>${escapeXml(description)}</description>
     <language>zh-CN</language>
 ${items}
   </channel>

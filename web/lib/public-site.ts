@@ -36,7 +36,28 @@ export interface PublicProfile {
 
 export interface PublicSiteSettings {
   id: string | null;
+  siteName: string | null;
+  logoMode: "TEXT" | "IMAGE";
+  logoText: string | null;
+  logoWebMediaId: string | null;
+  logoMobileMediaId: string | null;
+  logoAlt: string | null;
+  logoWebPublicUrl: string | null;
+  logoMobilePublicUrl: string | null;
+  heroEyebrow: string | null;
+  heroTitle: string | null;
+  copyrightOwner: string | null;
+  copyrightStartYear: number | null;
+  copyrightStatement: string | null;
+  footerNotice: string | null;
+  icpNumber: string | null;
+  policeRecord: string | null;
+  showRuntimeDays: boolean;
   launchDate: string | null;
+  seoTitle: string | null;
+  seoDescription: string | null;
+  ogImageMediaId: string | null;
+  ogImagePublicUrl: string | null;
 }
 
 export interface PublicSiteHistoryEvent {

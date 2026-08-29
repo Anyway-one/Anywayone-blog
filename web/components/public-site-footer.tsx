@@ -7,6 +7,7 @@ export async function PublicSiteFooter({ dark = false }: { dark?: boolean }) {
   return (
     <SiteFooter
       dark={dark}
+      settings={site?.settings}
       socialLinks={site?.socialLinks}
       launchDate={site?.settings?.launchDate}
       copyrightOwner={site?.profile.publicName}

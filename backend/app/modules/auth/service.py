@@ -17,6 +17,35 @@ from app.core.security import (
 )
 from app.db.enums import UserStatus
 from app.modules.auth.models import Session, User
+from app.modules.auth.schemas import UserRead
+from app.modules.media.models import Media
+
+
+async def user_read(db: AsyncSession, user: User) -> UserRead:
+    avatar = None
+    if user.avatar_media_id:
+        avatar = await db.scalar(
+            select(Media).where(Media.id == user.avatar_media_id, Media.deleted_at.is_(None))
+        )
+    return UserRead.model_validate(
+        {
+            **user.__dict__,
+            "avatar_public_url": avatar.public_url if avatar else None,
+        }
+    )
+
+
+async def update_avatar(db: AsyncSession, user: User, avatar_media_id: uuid.UUID | None) -> User:
+    if avatar_media_id is not None:
+        media = await db.scalar(
+            select(Media).where(Media.id == avatar_media_id, Media.deleted_at.is_(None))
+        )
+        if media is None:
+            raise AppError(status_code=422, code="MEDIA_NOT_FOUND", message="图片不存在。")
+    user.avatar_media_id = avatar_media_id
+    await db.commit()
+    await db.refresh(user)
+    return user
 
 
 async def authenticate(

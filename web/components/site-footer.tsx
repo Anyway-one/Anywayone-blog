@@ -1,10 +1,11 @@
 import Link from "next/link";
-import type { PublicSocialLink, SocialPlatform } from "@/lib/public-site";
+import type { PublicSiteSettings, PublicSocialLink, SocialPlatform } from "@/lib/public-site";
 import { PlatformIcon } from "./platform-icon";
 import styles from "./site-footer.module.css";
 
 type SiteFooterProps = {
   dark?: boolean;
+  settings?: PublicSiteSettings | null;
   socialLinks?: PublicSocialLink[];
   launchDate?: string | null;
   copyrightOwner?: string | null;
@@ -48,18 +49,27 @@ export function runningDaysSince(launchDate: string, now = new Date()) {
 
 export function SiteFooter({
   dark = false,
+  settings,
   socialLinks = [],
   launchDate,
   copyrightOwner,
 }: SiteFooterProps) {
   const currentYear = shanghaiDateParts(new Date())[0];
   const runningDays = launchDate ? runningDaysSince(launchDate) : null;
+  const owner = copyrightOwner || settings?.copyrightOwner || settings?.siteName || "Anywayone";
+  const startYear = settings?.copyrightStartYear;
+  const yearLabel = startYear && startYear < currentYear ? `${startYear}-${currentYear}` : `${currentYear}`;
+  const statement = settings?.copyrightStatement || "保留所有权利。";
+  const showRuntimeDays = settings?.showRuntimeDays ?? true;
 
   return (
     <footer className={`${styles.footer} ${dark ? styles.dark : ""}`}>
       <div className={styles.meta}>
-        <span>© {currentYear} {copyrightOwner || "Anywayone"}. 保留所有权利。</span>
-        {runningDays !== null && <span className={styles.runtime}>本站已运行 <strong>{runningDays}</strong> 天</span>}
+        <span>© {yearLabel} {owner}. {statement}</span>
+        {settings?.footerNotice && <span>{settings.footerNotice}</span>}
+        {settings?.icpNumber && <span>{settings.icpNumber}</span>}
+        {settings?.policeRecord && <span>{settings.policeRecord}</span>}
+        {showRuntimeDays && runningDays !== null && <span className={styles.runtime}>本站已运行 <strong>{runningDays}</strong> 天</span>}
       </div>
 
       <div className={styles.actions}>

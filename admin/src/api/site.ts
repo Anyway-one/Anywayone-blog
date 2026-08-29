@@ -40,10 +40,34 @@ export type SiteProfileInput = Omit<SiteProfile, 'id' | 'avatarPublicUrl'>
 
 export interface SiteSettings {
   id: string | null
+  siteName: string | null
+  logoMode: 'TEXT' | 'IMAGE'
+  logoText: string | null
+  logoWebMediaId: string | null
+  logoMobileMediaId: string | null
+  logoAlt: string | null
+  logoWebPublicUrl: string | null
+  logoMobilePublicUrl: string | null
+  heroEyebrow: string | null
+  heroTitle: string | null
+  copyrightOwner: string | null
+  copyrightStartYear: number | null
+  copyrightStatement: string | null
+  footerNotice: string | null
+  icpNumber: string | null
+  policeRecord: string | null
+  showRuntimeDays: boolean
   launchDate: string | null
+  seoTitle: string | null
+  seoDescription: string | null
+  ogImageMediaId: string | null
+  ogImagePublicUrl: string | null
 }
 
-export type SiteSettingsInput = Omit<SiteSettings, 'id'>
+export type SiteSettingsInput = Omit<
+  SiteSettings,
+  'id' | 'logoWebPublicUrl' | 'logoMobilePublicUrl' | 'ogImagePublicUrl'
+>
 
 export interface SiteHistoryEvent {
   id: string

@@ -5,6 +5,8 @@ export interface AuthUser {
   email: string
   displayName: string
   status: 'active' | 'disabled'
+  avatarMediaId: string | null
+  avatarPublicUrl: string | null
 }
 
 export interface LoginData {
@@ -60,4 +62,12 @@ export async function logout() {
   } finally {
     setAccessToken(null)
   }
+}
+
+export async function updateMe(input: { avatarMediaId: string | null }) {
+  const response = await apiRequest<DataResponse<AuthUser>>('/auth/me', {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
+  return response.data
 }
