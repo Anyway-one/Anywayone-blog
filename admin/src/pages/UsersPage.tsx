@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Alert, Avatar, Button, Form, Input, Modal, Select, Spin, Table, Tag, message } from 'antd'
 import type { TableProps } from 'antd'
-import { KeyRound, Pencil, Plus, RefreshCw, ShieldCheck, UserRound } from 'lucide-react'
+import { ImagePlus, KeyRound, Pencil, Plus, RefreshCw, ShieldCheck, Trash2, UserRound } from 'lucide-react'
+import { uploadMedia } from '../api/media'
 import { createUser, listUsers, updateUser, type AdminUser, type UserStatus } from '../api/users'
 import PageHeader from '../components/PageHeader'
 
@@ -31,6 +32,9 @@ export default function UsersPage() {
   const [reloadKey, setReloadKey] = useState(0)
   const [editing, setEditing] = useState<AdminUser | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
+  const [avatar, setAvatar] = useState({ id: null as string | null, url: null as string | null })
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
+  const avatarInputRef = useRef<HTMLInputElement>(null)
   const [messageApi, contextHolder] = message.useMessage()
   const isEditing = Boolean(editing)
 
@@ -49,6 +53,7 @@ export default function UsersPage() {
 
   const openCreate = () => {
     setEditing(null)
+    setAvatar({ id: null, url: null })
     form.resetFields()
     form.setFieldsValue({ status: 'ACTIVE' })
     setModalOpen(true)
@@ -56,8 +61,23 @@ export default function UsersPage() {
 
   const openEdit = (user: AdminUser) => {
     setEditing(user)
+    setAvatar({ id: user.avatarMediaId, url: user.avatarPublicUrl })
     form.setFieldsValue({ email: user.email, displayName: user.displayName, password: undefined, status: user.status })
     setModalOpen(true)
+  }
+
+  const uploadAvatar = async (file: File) => {
+    setUploadingAvatar(true)
+    try {
+      const media = await uploadMedia(file)
+      setAvatar({ id: media.id, url: media.publicUrl })
+      void messageApi.success('头像已上传，请保存用户信息')
+    } catch (uploadError: unknown) {
+      void messageApi.error(uploadError instanceof Error ? uploadError.message : '头像上传失败。')
+    } finally {
+      setUploadingAvatar(false)
+      if (avatarInputRef.current) avatarInputRef.current.value = ''
+    }
   }
 
   const save = async () => {
@@ -66,11 +86,11 @@ export default function UsersPage() {
       setSaving(true)
       if (editing) {
         await updateUser(editing.id, {
-          email: values.email.trim(), displayName: values.displayName.trim(), password: values.password?.trim() || undefined, status: values.status,
+          email: values.email.trim(), displayName: values.displayName.trim(), password: values.password?.trim() || undefined, status: values.status, avatarMediaId: avatar.id,
         })
         void messageApi.success('用户信息已更新')
       } else {
-        await createUser({ email: values.email.trim(), displayName: values.displayName.trim(), password: values.password?.trim() ?? '' })
+        await createUser({ email: values.email.trim(), displayName: values.displayName.trim(), password: values.password?.trim() ?? '', avatarMediaId: avatar.id })
         void messageApi.success('用户已创建')
       }
       setModalOpen(false)
@@ -106,6 +126,18 @@ export default function UsersPage() {
       </section>
       <Modal open={modalOpen} title={isEditing ? '编辑用户' : '新增用户'} okText="保存" cancelText="取消" confirmLoading={saving} onOk={() => void save()} onCancel={() => { if (!saving) setModalOpen(false) }} destroyOnHidden>
         <Form form={form} layout="vertical" requiredMark="optional">
+          <div className="user-avatar-editor">
+            <Avatar size={72} src={avatar.url || '/brand/anywayone-mark.svg'} icon={<UserRound size={24} />} />
+            <div className="user-avatar-editor__copy">
+              <strong>头像</strong>
+              <span>用于侧边栏和账号列表展示。</span>
+              <div className="user-avatar-editor__actions">
+                <input ref={avatarInputRef} className="sr-only" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" onChange={(event) => { const file = event.target.files?.[0]; if (file) void uploadAvatar(file) }} />
+                <Button icon={<ImagePlus size={15} />} loading={uploadingAvatar} onClick={() => avatarInputRef.current?.click()}>{avatar.url ? '更换头像' : '上传头像'}</Button>
+                {avatar.id && <Button type="text" danger icon={<Trash2 size={15} />} onClick={() => setAvatar({ id: null, url: null })}>移除</Button>}
+              </div>
+            </div>
+          </div>
           <Form.Item name="displayName" label="显示名称" rules={[{ required: true, message: '请输入显示名称' }, { max: 100, message: '显示名称不能超过 100 个字符' }]}><Input prefix={<UserRound size={16} />} placeholder="例如：Anywayone" autoFocus /></Form.Item>
           <Form.Item name="email" label="登录邮箱" rules={[{ required: true, message: '请输入邮箱' }, { type: 'email', message: '请输入有效的邮箱地址' }]}><Input prefix={<ShieldCheck size={16} />} autoComplete="username" /></Form.Item>
           <Form.Item name="password" label={isEditing ? '新密码（留空则不修改）' : '密码'} rules={[{ required: !isEditing, message: '请输入密码' }, { min: 12, message: '密码至少需要 12 个字符' }]}><Input.Password prefix={<KeyRound size={16} />} autoComplete="new-password" placeholder={isEditing ? '留空保持当前密码' : '至少 12 个字符'} /></Form.Item>

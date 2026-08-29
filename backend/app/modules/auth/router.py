@@ -152,6 +152,7 @@ async def create_admin_user(
         email=str(payload.email),
         display_name=payload.display_name,
         password=payload.password,
+        avatar_media_id=payload.avatar_media_id,
     )
     return DataResponse(
         data=await service.user_admin_read(db, user),
@@ -178,6 +179,8 @@ async def update_admin_user(
         display_name=payload.display_name,
         password=payload.password,
         status=payload.status,
+        avatar_media_id=payload.avatar_media_id,
+        avatar_media_id_set="avatar_media_id" in payload.model_fields_set,
     )
     return DataResponse(
         data=await service.user_admin_read(db, updated),

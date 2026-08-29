@@ -22,6 +22,7 @@ export interface CreateUserInput {
   email: string
   displayName: string
   password: string
+  avatarMediaId?: string | null
 }
 
 export interface UpdateUserInput {
@@ -29,6 +30,7 @@ export interface UpdateUserInput {
   displayName?: string
   password?: string
   status?: UserStatus
+  avatarMediaId?: string | null
 }
 
 export async function listUsers() {

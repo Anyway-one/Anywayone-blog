@@ -480,6 +480,34 @@ a {
   font-size: 12px;
 }
 
+.user-avatar-editor {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 20px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #ecece7;
+}
+
+.user-avatar-editor__copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.user-avatar-editor__copy > span {
+  color: #858681;
+  font-size: 12px;
+}
+
+.user-avatar-editor__actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 7px;
+}
+
 .list-loading,
 .editor-loading {
   display: flex;

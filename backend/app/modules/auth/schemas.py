@@ -31,6 +31,7 @@ class UserCreateInput(ApiModel):
     email: EmailStr
     display_name: str = Field(min_length=1, max_length=100)
     password: str = Field(min_length=12, max_length=256)
+    avatar_media_id: uuid.UUID | None = None
 
     @field_validator("display_name")
     @classmethod
@@ -46,6 +47,7 @@ class UserUpdateInput(ApiModel):
     display_name: str | None = Field(default=None, min_length=1, max_length=100)
     password: str | None = Field(default=None, min_length=12, max_length=256)
     status: UserStatus | None = None
+    avatar_media_id: uuid.UUID | None = None
 
     @field_validator("display_name")
     @classmethod

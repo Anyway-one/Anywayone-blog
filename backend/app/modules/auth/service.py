@@ -61,7 +61,9 @@ async def create_user(
     email: str,
     display_name: str,
     password: str,
+    avatar_media_id: uuid.UUID | None,
 ) -> User:
+    await _validate_avatar_media(db, avatar_media_id)
     normalized_email = normalize_email(email)
     existing = await db.scalar(select(User.id).where(User.email == normalized_email))
     if existing is not None:
@@ -70,6 +72,7 @@ async def create_user(
         email=normalized_email,
         display_name=display_name.strip(),
         password_hash=hash_password(password),
+        avatar_media_id=avatar_media_id,
         password_changed_at=datetime.now(UTC),
     )
     db.add(user)
@@ -86,6 +89,8 @@ async def update_user(
     display_name: str | None,
     password: str | None,
     status: UserStatus | None,
+    avatar_media_id: uuid.UUID | None,
+    avatar_media_id_set: bool,
     actor: User,
 ) -> User:
     if email is not None:
@@ -98,6 +103,9 @@ async def update_user(
         user.email = normalized_email
     if display_name is not None:
         user.display_name = display_name.strip()
+    if avatar_media_id_set:
+        await _validate_avatar_media(db, avatar_media_id)
+        user.avatar_media_id = avatar_media_id
     if password is not None:
         user.password_hash = hash_password(password)
         user.password_changed_at = datetime.now(UTC)
@@ -132,6 +140,16 @@ async def update_user(
     await db.commit()
     await db.refresh(user)
     return user
+
+
+async def _validate_avatar_media(db: AsyncSession, avatar_media_id: uuid.UUID | None) -> None:
+    if avatar_media_id is None:
+        return
+    media = await db.scalar(
+        select(Media).where(Media.id == avatar_media_id, Media.deleted_at.is_(None))
+    )
+    if media is None:
+        raise AppError(status_code=422, code="MEDIA_NOT_FOUND", message="头像图片不存在。")
 
 
 async def update_avatar(db: AsyncSession, user: User, avatar_media_id: uuid.UUID | None) -> User:
