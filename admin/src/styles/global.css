@@ -648,6 +648,11 @@ a {
   background: var(--color-paper);
 }
 
+.site-media-preview--square {
+  height: 96px;
+  flex-basis: 96px;
+}
+
 .site-media-preview img {
   width: 100%;
   height: 100%;

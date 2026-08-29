@@ -143,7 +143,7 @@ export default function SettingsPage() {
     const item = media[field]
     return (
       <div className="site-media-field">
-        <div className="site-media-preview">
+        <div className={`site-media-preview${field === 'logoMobile' ? ' site-media-preview--square' : ''}`}>
           {item.url ? <img src={item.url} alt={`${label}预览`} /> : <ImagePlus size={22} aria-hidden="true" />}
         </div>
         <div className="site-media-copy">
