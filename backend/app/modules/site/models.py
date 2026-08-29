@@ -24,7 +24,9 @@ class SiteProfile(UuidPrimaryKeyMixin, TimestampMixin, Base):
     zodiac_sign: Mapped[str | None] = mapped_column(String(20))
     chinese_zodiac: Mapped[str | None] = mapped_column(String(20))
     blood_type: Mapped[str | None] = mapped_column(String(10))
-    equipment: Mapped[list[dict[str, str | None]]] = mapped_column(JSONB, default=list, nullable=False)
+    equipment: Mapped[list[dict[str, str | None]]] = mapped_column(
+        JSONB, default=list, nullable=False
+    )
     interests: Mapped[list[str]] = mapped_column(JSONB, default=list, nullable=False)
     location: Mapped[str | None] = mapped_column(String(160))
     favorite_cities: Mapped[list[str]] = mapped_column(JSONB, default=list, nullable=False)

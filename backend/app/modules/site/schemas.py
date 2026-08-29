@@ -8,7 +8,9 @@ from app.api.schemas import ApiModel
 from app.db.enums import ContactType, SocialPlatform
 
 ProfileListItem: TypeAlias = Annotated[str, Field(min_length=1, max_length=50)]
-EquipmentIcon: TypeAlias = Literal["iphone", "ipad", "iwatch", "AirPods", "MacMini", "macbook", "lcd"]
+EquipmentIcon: TypeAlias = Literal[
+    "iphone", "ipad", "iwatch", "AirPods", "MacMini", "macbook", "lcd"
+]
 QR_CONTACT_TYPES = {
     ContactType.WECHAT,
     ContactType.QQ,
@@ -38,7 +40,9 @@ class SiteProfileUpdate(ApiModel):
     zodiac_sign: str | None = Field(default=None, max_length=20)
     chinese_zodiac: str | None = Field(default=None, max_length=20)
     blood_type: str | None = Field(default=None, max_length=10)
-    equipment: list[ProfileEquipmentItem] = Field(default_factory=list, max_length=20)
+    equipment: list[ProfileEquipmentItem] = Field(
+        default_factory=lambda: list[ProfileEquipmentItem](), max_length=20
+    )
     interests: list[ProfileListItem] = Field(default_factory=list, max_length=20)
     location: str | None = Field(default=None, max_length=160)
     favorite_cities: list[ProfileListItem] = Field(default_factory=list, max_length=20)
