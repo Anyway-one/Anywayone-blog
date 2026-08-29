@@ -11,12 +11,20 @@ import {
 import { KeyboardEvent, useEffect, useRef, useState } from "react";
 import { SiteFooter } from "./site-footer";
 import type { PublicSiteData } from "@/lib/public-site";
+import type { PublicSystemStatus } from "@/lib/public-status";
 import styles from "./home-experience.module.css";
 import { VisitorAnalytics } from "./visitor-analytics";
+import { SiteStatusCard } from "./site-status-card";
 
 type HomeTab = "profile" | "log";
 
-export function HomeExperience({ site }: { site: PublicSiteData | null }) {
+export function HomeExperience({
+  site,
+  status,
+}: {
+  site: PublicSiteData | null;
+  status: PublicSystemStatus;
+}) {
   const [expanded, setExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState<HomeTab>("profile");
   const [historyScrollState, setHistoryScrollState] = useState({ canBack: false, canForward: false });
@@ -233,6 +241,7 @@ export function HomeExperience({ site }: { site: PublicSiteData | null }) {
                 </div>
               ) : (
                 <div className={styles.logContent} id="log-panel" role="tabpanel">
+                  <SiteStatusCard status={status} launchDate={site?.settings?.launchDate} />
                   <VisitorAnalytics />
 
                   <section className={styles.historySection} aria-labelledby="site-history-title">

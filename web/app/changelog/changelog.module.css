@@ -1,0 +1,127 @@
+.page {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-surface);
+}
+
+.content {
+  width: min(calc(100% - 64px), 960px);
+  flex: 1;
+  margin: 0 auto;
+  padding: calc(var(--header-height) + 68px) 0 88px;
+}
+
+.header > p:first-child {
+  margin: 0 0 12px;
+  color: var(--color-secondary-text);
+  font-size: 13px;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 48px;
+  line-height: 1.15;
+  font-weight: 500;
+}
+
+.header h1 span {
+  color: var(--color-brand);
+}
+
+.description {
+  margin: 14px 0 0;
+  color: var(--color-secondary-text);
+  line-height: 1.7;
+}
+
+.timeline {
+  margin-top: 52px;
+  border-top: 1px solid var(--color-ink);
+}
+
+.entry {
+  display: grid;
+  grid-template-columns: 148px minmax(0, 1fr);
+  gap: 34px;
+  padding: 34px 0 38px;
+  border-bottom: 1px solid var(--color-line);
+}
+
+.entryMeta {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 4px;
+  color: var(--color-secondary-text);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.entryMeta span {
+  color: var(--color-brand);
+}
+
+.entryContent h2 {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 500;
+}
+
+.entryContent p {
+  margin: 10px 0 0;
+  color: var(--color-secondary-text);
+  font-size: 13px;
+  line-height: 1.75;
+}
+
+.entryContent ul {
+  display: grid;
+  gap: 8px;
+  margin: 22px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.entryContent li {
+  position: relative;
+  padding-left: 16px;
+  color: var(--color-secondary-text);
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.entryContent li::before {
+  position: absolute;
+  top: 0.75em;
+  left: 0;
+  width: 6px;
+  border-top: 1px solid var(--color-brand);
+  content: "";
+}
+
+@media (max-width: 767px) {
+  .content {
+    width: calc(100% - 40px);
+    padding: calc(var(--header-height) + 46px) 0 64px;
+  }
+
+  .header h1 {
+    font-size: 36px;
+  }
+
+  .timeline {
+    margin-top: 38px;
+  }
+
+  .entry {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+    padding: 28px 0 32px;
+  }
+
+  .entryMeta {
+    justify-content: flex-start;
+  }
+}

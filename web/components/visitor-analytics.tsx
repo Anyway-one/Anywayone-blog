@@ -1,7 +1,7 @@
 "use client";
 
 import { Activity, BarChart3, FileText, Users } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { getPublicVisitorStats, type VisitorStats } from "@/lib/public-analytics";
 import styles from "./visitor-analytics.module.css";
 
@@ -42,7 +42,7 @@ export function VisitorAnalytics() {
   const [stats, setStats] = useState<VisitorStats | null>(null);
   useEffect(() => { void getPublicVisitorStats().then(setStats); }, []);
   const trend = stats?.trend ?? [];
-  const latest = useMemo(() => trend.at(-1), [trend]);
+  const latest = trend.at(-1);
 
   return (
     <div className={styles.grid}>
