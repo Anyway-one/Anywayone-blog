@@ -1,31 +1,69 @@
-import { Button, Card, Spin } from 'antd'
+import { Button, Card, Spin, Tag } from 'antd'
 import { ArrowRight, FileText, Image, MapPin, Plus, Radio, Server, Share2, Smartphone } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { useAuth } from '../auth/AuthContext'
 import { getVisitorAnalytics, type VisitorAdminStats, type VisitorBreakdownItem } from '../api/analytics'
+import { getHealthStatus, type HealthStatus } from '../api/health'
+import { getMediaCount } from '../api/media'
+import { listPosts, type PostListItem, type PostStatus } from '../api/posts'
+import { getPhotographyCount } from '../api/photography'
 import EmptyPanel from '../components/EmptyPanel'
 import PageHeader from '../components/PageHeader'
 
-const metrics = [
-  { label: '已发布文章', icon: FileText },
-  { label: '摄影集', icon: Image },
-  { label: '近 30 天访问', icon: Radio },
-  { label: '服务状态', icon: Server },
-]
+const statusLabels: Record<PostStatus, string> = {
+  DRAFT: '草稿',
+  SCHEDULED: '待发布',
+  PUBLISHED: '已发布',
+  WITHDRAWN: '已撤回',
+  ARCHIVED: '已归档',
+}
+
+const statusColors: Record<PostStatus, string> = {
+  DRAFT: 'default',
+  SCHEDULED: 'gold',
+  PUBLISHED: 'green',
+  WITHDRAWN: 'orange',
+  ARCHIVED: 'default',
+}
+
+const dateTimeFormatter = new Intl.DateTimeFormat('zh-CN', {
+  year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false,
+})
 
 export default function DashboardPage() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const [analytics, setAnalytics] = useState<VisitorAdminStats | null>(null)
-  const [analyticsLoading, setAnalyticsLoading] = useState(true)
+  const [recentPosts, setRecentPosts] = useState<PostListItem[]>([])
+  const [contentStats, setContentStats] = useState({ published: null as number | null, draft: null as number | null, scheduled: null as number | null, photography: null as number | null, media: null as number | null })
+  const [health, setHealth] = useState<HealthStatus | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     let active = true
-    void getVisitorAnalytics().then((data) => {
-      if (active) setAnalytics(data)
-    }).catch(() => undefined).finally(() => {
-      if (active) setAnalyticsLoading(false)
+    void Promise.all([
+      getVisitorAnalytics().catch(() => null),
+      listPosts({ page: 1, pageSize: 5 }).catch(() => null),
+      listPosts({ page: 1, pageSize: 1, status: 'PUBLISHED' }).catch(() => null),
+      listPosts({ page: 1, pageSize: 1, status: 'DRAFT' }).catch(() => null),
+      listPosts({ page: 1, pageSize: 1, status: 'SCHEDULED' }).catch(() => null),
+      getPhotographyCount().catch(() => null),
+      getMediaCount().catch(() => null),
+      getHealthStatus().catch(() => null),
+    ]).then(([visitorData, postsResponse, publishedResponse, draftResponse, scheduledResponse, photographyCount, mediaCount, healthData]) => {
+      if (!active) return
+      setAnalytics(visitorData)
+      setRecentPosts(postsResponse?.data ?? [])
+      setContentStats({
+        published: publishedResponse?.meta.total ?? null,
+        draft: draftResponse?.meta.total ?? null,
+        scheduled: scheduledResponse?.meta.total ?? null,
+        photography: photographyCount,
+        media: mediaCount,
+      })
+      setHealth(healthData)
+      setLoading(false)
     })
     return () => { active = false }
   }, [])
@@ -42,6 +80,16 @@ export default function DashboardPage() {
     </div>
   )
 
+  const serviceLabel = health
+    ? health.status === 'ok' && health.database === 'ok' ? '正常' : '异常'
+    : '—'
+  const metrics = [
+    { label: '已发布文章', icon: FileText, value: contentStats.published, note: '篇公开文章' },
+    { label: '摄影集', icon: Image, value: contentStats.photography, note: '个摄影集' },
+    { label: '近 30 天访问', icon: Radio, value: analytics?.pageViews ?? null, note: `${analytics?.todayVisitors ?? 0} 位今日访客` },
+    { label: '服务状态', icon: Server, value: serviceLabel, note: health ? `API ${health.status === 'ok' ? '正常' : '异常'} · 数据库 ${health.database === 'ok' ? '正常' : '异常'}` : '等待检查' },
+  ]
+
   return (
     <div className="page-stack">
       <PageHeader
@@ -56,14 +104,14 @@ export default function DashboardPage() {
       />
 
       <section className="metric-grid" aria-label="站点概览">
-        {metrics.map(({ label, icon: Icon }) => (
+        {metrics.map(({ label, icon: Icon, value, note }) => (
           <Card key={label} className="metric-card">
             <div className="metric-card__head">
               <span>{label}</span>
               <Icon size={18} aria-hidden="true" />
             </div>
-            <strong>{label === '近 30 天访问' ? (analytics?.pageViews ?? '—') : '—'}</strong>
-            <small>{label === '近 30 天访问' ? `${analytics?.todayVisitors ?? 0} 位今日访客` : '内容统计'}</small>
+            <strong>{loading && value === null ? <Spin size="small" /> : value ?? '—'}</strong>
+            <small>{note}</small>
           </Card>
         ))}
       </section>
@@ -76,7 +124,7 @@ export default function DashboardPage() {
           </div>
           <span className="analytics-range">近 {analytics?.rangeDays ?? 30} 天</span>
         </div>
-        {analyticsLoading ? <div className="analytics-loading"><Spin size="small" />正在加载访问数据</div> : (
+        {loading && !analytics ? <div className="analytics-loading"><Spin size="small" />正在加载访问数据</div> : (
           <>
             <div className="analytics-summary">
               <div><span>访客数</span><strong>{analytics?.visitors ?? 0}</strong></div>
@@ -105,7 +153,21 @@ export default function DashboardPage() {
               全部文章
             </Button>
           </div>
-          <EmptyPanel title="还没有内容记录" description="新建第一篇文章后，最近编辑记录会显示在这里。" />
+          {loading ? <div className="list-loading"><Spin size="small" />正在加载最近编辑</div> : recentPosts.length > 0 ? (
+            <div className="post-list dashboard-recent-list">
+              {recentPosts.map((post) => (
+                <article className="post-list-row" key={post.id}>
+                  <button className="post-list-row__title" onClick={() => navigate(`/posts/${post.id}/edit`)}>
+                    <strong>{post.title}</strong>
+                    <span>/posts/{post.slug}</span>
+                  </button>
+                  <div><Tag color={statusColors[post.status]}>{statusLabels[post.status]}</Tag></div>
+                  <time dateTime={post.updatedAt}>{dateTimeFormatter.format(new Date(post.updatedAt))}</time>
+                  <Button type="link" icon={<ArrowRight size={15} />} aria-label={`编辑《${post.title}》`} onClick={() => navigate(`/posts/${post.id}/edit`)} />
+                </article>
+              ))}
+            </div>
+          ) : <EmptyPanel title="还没有内容记录" description="新建第一篇文章后，最近编辑记录会显示在这里。" />}
         </div>
 
         <aside className="surface-panel dashboard-grid__side">
@@ -118,18 +180,18 @@ export default function DashboardPage() {
           <dl className="status-list">
             <div>
               <dt>草稿</dt>
-              <dd>—</dd>
+              <dd>{contentStats.draft ?? '—'}</dd>
             </div>
             <div>
               <dt>待发布</dt>
-              <dd>—</dd>
+              <dd>{contentStats.scheduled ?? '—'}</dd>
             </div>
             <div>
               <dt>媒体文件</dt>
-              <dd>—</dd>
+              <dd>{contentStats.media ?? '—'}</dd>
             </div>
           </dl>
-          <p className="surface-note">FastAPI 接口可用后自动同步真实状态。</p>
+          <p className="surface-note">数据与文章、摄影集及媒体库接口保持同步。</p>
         </aside>
       </section>
     </div>

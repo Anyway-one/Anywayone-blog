@@ -55,6 +55,13 @@ export async function listPhotography(status?: PhotographyStatus, query?: string
   return response.data
 }
 
+export async function getPhotographyCount(status?: PhotographyStatus) {
+  const params = new URLSearchParams({ page: '1', pageSize: '1' })
+  if (status) params.set('status', status)
+  const response = await apiRequest<PaginatedResponse<PhotographyListItem>>(`/admin/photography?${params}`)
+  return response.meta.total
+}
+
 export async function getPhotography(id: string) {
   const response = await apiRequest<DataResponse<PhotographyCollection>>(`/admin/photography/${id}`)
   return response.data

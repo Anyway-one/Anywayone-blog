@@ -1,8 +1,10 @@
 "use client";
 
 import { Activity, BarChart3, FileText, Users } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getPublicVisitorStats, type VisitorStats } from "@/lib/public-analytics";
+import { listPublicPosts, type PublicPostListItem } from "@/lib/public-posts";
 import styles from "./visitor-analytics.module.css";
 
 function formatNumber(value: number) {
@@ -40,7 +42,18 @@ function TrendChart({ data }: { data: VisitorStats["trend"] }) {
 
 export function VisitorAnalytics() {
   const [stats, setStats] = useState<VisitorStats | null>(null);
-  useEffect(() => { void getPublicVisitorStats().then(setStats); }, []);
+  const [blog, setBlog] = useState<{ total: number; latest: PublicPostListItem | null } | null>(null);
+  useEffect(() => {
+    let active = true;
+    void Promise.all([getPublicVisitorStats(), listPublicPosts(1, 1)]).then(([visitorStats, postsResult]) => {
+      if (!active) return;
+      setStats(visitorStats);
+      setBlog(postsResult.status === "ready"
+        ? { total: postsResult.data.meta.total, latest: postsResult.data.data[0] ?? null }
+        : null);
+    });
+    return () => { active = false; };
+  }, []);
   const trend = stats?.trend ?? [];
   const latest = trend.at(-1);
 
@@ -48,8 +61,12 @@ export function VisitorAnalytics() {
     <div className={styles.grid}>
       <article className={`${styles.card} ${styles.blogCard}`}>
         <div className={styles.cardLabel}><FileText aria-hidden="true" />博客</div>
-        <strong>即将开放</strong>
-        <p>文章阅读统计将在内容数据接入后显示。</p>
+        <strong>{blog === null ? "—" : `${formatNumber(blog.total)} 篇文章`}</strong>
+        {blog?.latest ? (
+          <Link className={styles.blogLatest} href={`/posts/${blog.latest.slug}`}>
+            最新：{blog.latest.title}
+          </Link>
+        ) : <p>{blog === null ? "正在加载文章数据" : "暂无已发布文章"}</p>}
       </article>
       <article className={`${styles.card} ${styles.summaryCard}`}>
         <div className={styles.cardLabel}><Users aria-hidden="true" />访客统计 <span>近 {stats?.rangeDays ?? 30} 天</span></div>

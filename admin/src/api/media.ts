@@ -30,6 +30,11 @@ export async function listMedia(page = 1, pageSize = 100) {
   return apiRequest<PaginatedResponse<MediaItem>>(`/admin/media?page=${page}&pageSize=${pageSize}`)
 }
 
+export async function getMediaCount() {
+  const response = await listMedia(1, 1)
+  return response.meta.total
+}
+
 export async function uploadMedia(file: File) {
   const body = new FormData()
   body.append('file', file)

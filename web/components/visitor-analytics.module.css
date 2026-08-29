@@ -5,6 +5,8 @@
 .cardLabel span, .trendHeader > span { margin-left: auto; color: var(--color-muted); font-size: 11px; }
 .blogCard, .summaryCard { min-height: 158px; }
 .blogCard strong { display: block; margin-top: 28px; font-size: 22px; font-weight: 500; }
+.blogLatest { display: block; overflow: hidden; margin-top: 10px; color: var(--color-secondary-text); font-size: 12px; line-height: 1.7; text-overflow: ellipsis; white-space: nowrap; }
+.blogLatest:hover { color: var(--color-brand); }
 .card p { margin: 10px 0 0; color: var(--color-secondary-text); font-size: 12px; line-height: 1.7; }
 .summaryValues { display: flex; gap: 42px; margin-top: 24px; }
 .summaryValues div { display: flex; flex-direction: column; gap: 4px; }
