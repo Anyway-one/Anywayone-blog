@@ -305,7 +305,10 @@ export function HomeExperience({
                             <div className={styles.personalityTraitMeter}>
                               <strong style={{ left: `${trait.labelPosition}%` }}>{trait.dominant.value}% {trait.dominant.label}</strong>
                               <div className={styles.personalityTraitTrack} style={{ backgroundColor: trait.color }}>
-                                <i style={{ left: `${trait.position}%`, borderColor: trait.color }} />
+                                <i
+                                  className={styles.personalityTraitThumb}
+                                  style={{ left: `${trait.position}%`, borderColor: trait.color }}
+                                />
                               </div>
                             </div>
                             <span>{trait.right}</span>

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Button, Form, Input, Select, Slider, Spin, message } from 'antd'
+import { Button, Form, Input, InputNumber, Segmented, Select, Slider, Spin, message } from 'antd'
 import { ImagePlus, Save, Trash2 } from 'lucide-react'
 import { uploadMedia } from '../api/media'
 import { getProfile, saveProfile, type SiteProfileInput } from '../api/site'
@@ -11,19 +11,87 @@ const chineseZodiacOptions = '鼠 牛 虎 兔 龙 蛇 马 羊 猴 鸡 狗 猪'
   .split(' ').map((value) => ({ value, label: value }))
 const bloodOptions = ['A', 'B', 'AB', 'O'].map((value) => ({ value, label: `${value} 型` }))
 const personalityTraits = [
-  { name: 'personalityEnergyScore', label: '能量', left: '外向 E', right: '内向 I' },
-  { name: 'personalityMindScore', label: '意识', left: '直觉 N', right: '观察 S' },
-  { name: 'personalityNatureScore', label: '本性', left: '思维 T', right: '感觉 F' },
-  { name: 'personalityTacticsScore', label: '策略', left: '评判 J', right: '勘探 P' },
-  { name: 'personalityIdentityScore', label: '身份', left: '自信 A', right: '湍流 T' },
+  { scoreName: 'personalityEnergyScore', formName: 'personalityEnergyTrait', label: '能量', left: '外向 E', right: '内向 I' },
+  { scoreName: 'personalityMindScore', formName: 'personalityMindTrait', label: '意识', left: '直觉 N', right: '观察 S' },
+  { scoreName: 'personalityNatureScore', formName: 'personalityNatureTrait', label: '本性', left: '思维 T', right: '感觉 F' },
+  { scoreName: 'personalityTacticsScore', formName: 'personalityTacticsTrait', label: '策略', left: '评判 J', right: '勘探 P' },
+  { scoreName: 'personalityIdentityScore', formName: 'personalityIdentityTrait', label: '身份', left: '自信 A', right: '湍流 T' },
 ] as const
+
+type PersonalityTendency = 'left' | 'right'
+type PersonalityTraitValue = { tendency: PersonalityTendency; percentage: number }
+type PersonalityTraitFormName = typeof personalityTraits[number]['formName']
+type ProfileFormValues = SiteProfileInput & Partial<Record<PersonalityTraitFormName, PersonalityTraitValue>>
 
 function nullable(value: string | undefined) {
   return value?.trim() || null
 }
 
+function scoreToTraitValue(score: number | null): PersonalityTraitValue | undefined {
+  if (score == null) return undefined
+  return score > 50
+    ? { tendency: 'right', percentage: score }
+    : { tendency: 'left', percentage: 100 - score }
+}
+
+function traitValueToScore(value: PersonalityTraitValue | undefined): number | null {
+  if (!value) return null
+  const percentage = Math.min(100, Math.max(50, value.percentage))
+  return value.tendency === 'left' ? 100 - percentage : percentage
+}
+
+function PersonalityTraitControl({
+  value,
+  onChange,
+  left,
+  right,
+}: {
+  value?: PersonalityTraitValue
+  onChange?: (value: PersonalityTraitValue | undefined) => void
+  left: string
+  right: string
+}) {
+  const tendency = value?.tendency
+  const percentage = value?.percentage ?? 50
+
+  return (
+    <div className="personality-trait-control">
+      <Segmented
+        block
+        value={tendency}
+        options={[
+          { label: left, value: 'left' },
+          { label: right, value: 'right' },
+        ]}
+        onChange={(next) => {
+          onChange?.({ tendency: next as PersonalityTendency, percentage })
+        }}
+      />
+      <div className="personality-trait-value">
+        <Slider
+          min={50}
+          max={100}
+          disabled={!value}
+          value={percentage}
+          tooltip={{ formatter: (next) => next == null ? null : `${next}%` }}
+          onChange={(next) => value && onChange?.({ ...value, percentage: next })}
+        />
+        <InputNumber
+          min={50}
+          max={100}
+          disabled={!value}
+          value={value ? percentage : null}
+          suffix="%"
+          aria-label={`${value?.tendency === 'right' ? right : left}倾向百分比`}
+          onChange={(next) => value && onChange?.({ ...value, percentage: next ?? 50 })}
+        />
+      </div>
+    </div>
+  )
+}
+
 export default function ProfilePage() {
-  const [form] = Form.useForm<SiteProfileInput>()
+  const [form] = Form.useForm<ProfileFormValues>()
   const avatarInputRef = useRef<HTMLInputElement>(null)
   const personalityPortraitInputRef = useRef<HTMLInputElement>(null)
   const [avatarMediaId, setAvatarMediaId] = useState<string | null>(null)
@@ -39,7 +107,14 @@ export default function ProfilePage() {
   useEffect(() => {
     void getProfile()
       .then((profile) => {
-        form.setFieldsValue(profile)
+        form.setFieldsValue({
+          ...profile,
+          personalityEnergyTrait: scoreToTraitValue(profile.personalityEnergyScore),
+          personalityMindTrait: scoreToTraitValue(profile.personalityMindScore),
+          personalityNatureTrait: scoreToTraitValue(profile.personalityNatureScore),
+          personalityTacticsTrait: scoreToTraitValue(profile.personalityTacticsScore),
+          personalityIdentityTrait: scoreToTraitValue(profile.personalityIdentityScore),
+        })
         setAvatarMediaId(profile.avatarMediaId)
         setAvatarUrl(profile.avatarPublicUrl)
         setPersonalityPortraitMediaId(profile.personalityPortraitMediaId)
@@ -82,9 +157,17 @@ export default function ProfilePage() {
   const submit = async () => {
     try {
       const values = await form.validateFields()
+      const {
+        personalityEnergyTrait,
+        personalityMindTrait,
+        personalityNatureTrait,
+        personalityTacticsTrait,
+        personalityIdentityTrait,
+        ...profileValues
+      } = values
       setSaving(true)
       const profile = await saveProfile({
-        ...values,
+        ...profileValues,
         avatarMediaId,
         personalityPortraitMediaId,
         publicName: nullable(values.publicName ?? undefined),
@@ -99,13 +182,25 @@ export default function ProfilePage() {
         personalityDescription: nullable(values.personalityDescription ?? undefined),
         personalityTestDate: values.personalityTestDate || null,
         personalityLearnMoreUrl: nullable(values.personalityLearnMoreUrl ?? undefined),
+        personalityEnergyScore: traitValueToScore(personalityEnergyTrait),
+        personalityMindScore: traitValueToScore(personalityMindTrait),
+        personalityNatureScore: traitValueToScore(personalityNatureTrait),
+        personalityTacticsScore: traitValueToScore(personalityTacticsTrait),
+        personalityIdentityScore: traitValueToScore(personalityIdentityTrait),
         motto: nullable(values.motto ?? undefined),
         bio: nullable(values.bio ?? undefined),
         interests: values.interests ?? [],
         favoriteCities: values.favoriteCities ?? [],
         tags: values.tags ?? [],
       })
-      form.setFieldsValue(profile)
+      form.setFieldsValue({
+        ...profile,
+        personalityEnergyTrait: scoreToTraitValue(profile.personalityEnergyScore),
+        personalityMindTrait: scoreToTraitValue(profile.personalityMindScore),
+        personalityNatureTrait: scoreToTraitValue(profile.personalityNatureScore),
+        personalityTacticsTrait: scoreToTraitValue(profile.personalityTacticsScore),
+        personalityIdentityTrait: scoreToTraitValue(profile.personalityIdentityScore),
+      })
       setAvatarMediaId(profile.avatarMediaId)
       setAvatarUrl(profile.avatarPublicUrl)
       setPersonalityPortraitMediaId(profile.personalityPortraitMediaId)
@@ -196,12 +291,12 @@ export default function ProfilePage() {
                 <strong>人格维度</strong>
                 <span>滑块位置代表你在两端特质之间的倾向；没有测试数据时可以留空。</span>
               </div>
-              <Button type="text" size="small" icon={<Trash2 size={14} />} onClick={() => form.setFields(personalityTraits.map((trait) => ({ name: trait.name, value: undefined })))}>清空维度</Button>
+              <Button type="text" size="small" icon={<Trash2 size={14} />} onClick={() => form.setFields(personalityTraits.map((trait) => ({ name: trait.formName, value: undefined })))}>清空维度</Button>
             </div>
             <div className="personality-traits-grid">
               {personalityTraits.map((trait) => (
-                <Form.Item key={trait.name} name={trait.name} label={trait.label}>
-                  <Slider min={0} max={100} marks={{ 0: trait.left, 100: trait.right }} tooltip={{ formatter: (value) => value == null ? null : `${value}%` }} />
+                <Form.Item key={trait.formName} name={trait.formName} label={trait.label}>
+                  <PersonalityTraitControl left={trait.left} right={trait.right} />
                 </Form.Item>
               ))}
             </div>

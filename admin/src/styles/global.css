@@ -715,18 +715,28 @@ a {
 
 .personality-traits-grid .ant-form-item {
   min-width: 0;
-  margin-bottom: 28px;
+  margin-bottom: 12px;
 }
 
-.personality-traits-grid .ant-slider {
-  margin-right: 18px;
-  margin-left: 18px;
+.personality-trait-control {
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--color-line);
 }
 
-.personality-traits-grid .ant-slider-mark-text {
-  width: max-content;
-  color: var(--color-muted);
-  font-size: 10px;
+.personality-trait-value {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 88px;
+  gap: 14px;
+  align-items: center;
+  margin-top: 14px;
+}
+
+.personality-trait-value .ant-slider {
+  margin: 0 8px;
+}
+
+.personality-trait-value .ant-input-number {
+  width: 88px;
 }
 
 .platform-settings-list {
@@ -1733,6 +1743,10 @@ a {
 
   .personality-traits-grid {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .personality-traits-heading {
+    flex-direction: column;
   }
 
   .platform-setting-row,
