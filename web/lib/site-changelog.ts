@@ -8,6 +8,16 @@ export interface SiteChangelogEntry {
 export const siteChangelog: SiteChangelogEntry[] = [
   {
     date: "2026-08-29",
+    title: "个人主页与品牌体验升级",
+    summary: "完善个人资料展示与站点品牌配置，让首页内容更丰富、整体形象更统一。",
+    changes: [
+      "新增站点名称、Logo、页脚与用户头像等品牌配置能力。",
+      "重构首页关于我区域，新增 MBTI 人格倾向与可配置的常用装备展示。",
+      "优化个人资料卡片、人格比例和倾向进度条的布局与标注。",
+    ],
+  },
+  {
+    date: "2026-08-29",
     title: "站点状态上线",
     summary: "新增公开服务状态入口，便于快速确认展示端、API 与数据库的运行情况。",
     changes: [

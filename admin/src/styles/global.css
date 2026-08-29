@@ -427,6 +427,59 @@ a {
   padding: 18px;
 }
 
+.users-panel {
+  min-height: 280px;
+  padding: 0 4px;
+}
+
+.users-panel .ant-table {
+  background: transparent;
+}
+
+.users-panel .ant-table-thead > tr > th {
+  color: #868782;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.users-panel .ant-table-tbody > tr > td {
+  border-bottom-color: #ecece7;
+}
+
+.user-table__identity {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 11px;
+}
+
+.user-table__identity > div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.user-table__identity strong,
+.user-table__identity span {
+  overflow: hidden;
+  max-width: 420px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-table__identity strong {
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.user-table__identity span,
+.user-table__muted {
+  color: #858681;
+  font-size: 12px;
+}
+
 .list-loading,
 .editor-loading {
   display: flex;

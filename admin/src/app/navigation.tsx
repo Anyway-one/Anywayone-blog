@@ -14,6 +14,7 @@ import {
   Settings,
   Share2,
   Tags,
+  Users,
 } from 'lucide-react'
 
 export interface NavigationItem {
@@ -61,6 +62,7 @@ export const navigationItems: NavigationItem[] = [
       { key: '/social', label: '社交平台', icon: icon(Share2) },
       { key: '/history', label: '站点纪事', icon: icon(History) },
       { key: '/settings', label: '站点设置', icon: icon(Settings) },
+      { key: '/users', label: '用户管理', icon: icon(Users) },
     ],
   },
 ]
@@ -78,6 +80,7 @@ export const routeMeta: Record<string, { title: string; group?: string }> = {
   '/social': { title: '社交平台', group: '站点管理' },
   '/history': { title: '站点纪事', group: '站点管理' },
   '/settings': { title: '站点设置', group: '站点管理' },
+  '/users': { title: '用户管理', group: '站点管理' },
 }
 
 export function getRouteMeta(pathname: string) {

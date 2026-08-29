@@ -1,7 +1,7 @@
 import uuid
 from datetime import UTC, datetime, timedelta
 
-from sqlalchemy import select, update
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import get_settings
@@ -10,6 +10,7 @@ from app.core.security import (
     create_access_token,
     create_refresh_token,
     hash_ip,
+    hash_password,
     hash_refresh_token,
     normalize_email,
     verify_dummy_password,
@@ -17,7 +18,7 @@ from app.core.security import (
 )
 from app.db.enums import UserStatus
 from app.modules.auth.models import Session, User
-from app.modules.auth.schemas import UserRead
+from app.modules.auth.schemas import UserAdminRead, UserRead
 from app.modules.media.models import Media
 
 
@@ -33,6 +34,104 @@ async def user_read(db: AsyncSession, user: User) -> UserRead:
             "avatar_public_url": avatar.public_url if avatar else None,
         }
     )
+
+
+async def user_admin_read(db: AsyncSession, user: User) -> UserAdminRead:
+    avatar = None
+    if user.avatar_media_id:
+        avatar = await db.scalar(
+            select(Media).where(Media.id == user.avatar_media_id, Media.deleted_at.is_(None))
+        )
+    return UserAdminRead.model_validate(
+        {
+            **user.__dict__,
+            "avatar_public_url": avatar.public_url if avatar else None,
+        }
+    )
+
+
+async def list_users(db: AsyncSession) -> list[UserAdminRead]:
+    users = (await db.scalars(select(User).order_by(User.created_at.desc()))).all()
+    return [await user_admin_read(db, user) for user in users]
+
+
+async def create_user(
+    db: AsyncSession,
+    *,
+    email: str,
+    display_name: str,
+    password: str,
+) -> User:
+    normalized_email = normalize_email(email)
+    existing = await db.scalar(select(User.id).where(User.email == normalized_email))
+    if existing is not None:
+        raise AppError(status_code=409, code="EMAIL_ALREADY_EXISTS", message="该邮箱已被使用。")
+    user = User(
+        email=normalized_email,
+        display_name=display_name.strip(),
+        password_hash=hash_password(password),
+        password_changed_at=datetime.now(UTC),
+    )
+    db.add(user)
+    await db.commit()
+    await db.refresh(user)
+    return user
+
+
+async def update_user(
+    db: AsyncSession,
+    *,
+    user: User,
+    email: str | None,
+    display_name: str | None,
+    password: str | None,
+    status: UserStatus | None,
+    actor: User,
+) -> User:
+    if email is not None:
+        normalized_email = normalize_email(email)
+        existing = await db.scalar(
+            select(User.id).where(User.email == normalized_email, User.id != user.id)
+        )
+        if existing is not None:
+            raise AppError(status_code=409, code="EMAIL_ALREADY_EXISTS", message="该邮箱已被使用。")
+        user.email = normalized_email
+    if display_name is not None:
+        user.display_name = display_name.strip()
+    if password is not None:
+        user.password_hash = hash_password(password)
+        user.password_changed_at = datetime.now(UTC)
+        await db.execute(
+            update(Session)
+            .where(Session.user_id == user.id, Session.revoked_at.is_(None))
+            .values(revoked_at=datetime.now(UTC))
+        )
+    if status is not None and status != user.status:
+        if user.id == actor.id and status is not UserStatus.ACTIVE:
+            raise AppError(
+                status_code=422,
+                code="CANNOT_DISABLE_SELF",
+                message="不能停用当前登录账号。",
+            )
+        if status is not UserStatus.ACTIVE:
+            active_count = await db.scalar(
+                select(func.count(User.id)).where(User.status == UserStatus.ACTIVE)
+            )
+            if active_count is not None and active_count <= 1:
+                raise AppError(
+                    status_code=422,
+                    code="LAST_ACTIVE_USER",
+                    message="至少需要保留一个启用中的账号。",
+                )
+            await db.execute(
+                update(Session)
+                .where(Session.user_id == user.id, Session.revoked_at.is_(None))
+                .values(revoked_at=datetime.now(UTC))
+            )
+        user.status = status
+    await db.commit()
+    await db.refresh(user)
+    return user
 
 
 async def update_avatar(db: AsyncSession, user: User, avatar_media_id: uuid.UUID | None) -> User:

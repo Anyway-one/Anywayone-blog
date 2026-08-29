@@ -12,6 +12,7 @@ from app.modules.taxonomy import router as taxonomy_router
 api_router = APIRouter()
 api_router.include_router(health.router)
 api_router.include_router(auth_router.router, prefix=get_settings().api_v1_prefix)
+api_router.include_router(auth_router.admin_router, prefix=get_settings().api_v1_prefix)
 api_router.include_router(posts_router.admin_router, prefix=get_settings().api_v1_prefix)
 api_router.include_router(posts_router.public_router, prefix=get_settings().api_v1_prefix)
 api_router.include_router(photography_router.admin_router, prefix=get_settings().api_v1_prefix)

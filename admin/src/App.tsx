@@ -12,6 +12,7 @@ const ProfilePage = lazy(() => import('./pages/ProfilePage'))
 const ContactPage = lazy(() => import('./pages/ContactPage'))
 const SocialLinksPage = lazy(() => import('./pages/SocialLinksPage'))
 const SettingsPage = lazy(() => import('./pages/SettingsPage'))
+const UsersPage = lazy(() => import('./pages/UsersPage'))
 const SiteHistoryPage = lazy(() => import('./pages/SiteHistoryPage'))
 const TaxonomyPage = lazy(() => import('./pages/TaxonomyPage'))
 const MediaPage = lazy(() => import('./pages/MediaPage'))
@@ -40,6 +41,7 @@ export default function App() {
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/social" element={<SocialLinksPage />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/users" element={<UsersPage />} />
             <Route path="/history" element={<SiteHistoryPage />} />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Route>
