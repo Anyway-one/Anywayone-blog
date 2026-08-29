@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Alert, Button, Input, Pagination, Segmented, Spin, Tag } from 'antd'
-import { FilePenLine, FilePlus2, RefreshCw, Search } from 'lucide-react'
+import { FilePenLine, FilePlus2, RefreshCw, Search, Tags } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { listPosts, type PostListItem, type PostStatus } from '../api/posts'
 import EmptyPanel from '../components/EmptyPanel'
@@ -122,9 +122,14 @@ export default function PostsPage() {
         title="全部文章"
         description="管理草稿、定时发布和已发布文章。"
         actions={
-          <Button type="primary" icon={<FilePlus2 size={17} />} onClick={() => navigate('/posts/new')}>
-            新建文章
-          </Button>
+          <div className="page-heading__actions-group">
+            <Button icon={<Tags size={16} />} onClick={() => navigate('/taxonomy')}>
+              分类与标签
+            </Button>
+            <Button type="primary" icon={<FilePlus2 size={17} />} onClick={() => navigate('/posts/new')}>
+              新建文章
+            </Button>
+          </div>
         }
       />
 

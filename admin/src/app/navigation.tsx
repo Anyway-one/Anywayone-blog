@@ -13,7 +13,6 @@ import {
   Mail,
   Settings,
   Share2,
-  Tags,
   Users,
 } from 'lucide-react'
 
@@ -39,7 +38,6 @@ export const navigationItems: NavigationItem[] = [
     children: [
       { key: '/posts', label: '全部文章', icon: icon(Library) },
       { key: '/posts/new', label: '新建文章', icon: icon(FilePlus2) },
-      { key: '/taxonomy', label: '分类与标签', icon: icon(Tags) },
     ],
   },
   {
@@ -94,6 +92,7 @@ export function getRouteMeta(pathname: string) {
 }
 
 export function getSelectedMenuKey(pathname: string) {
+  if (pathname === '/taxonomy') return '/posts'
   if (pathname.startsWith('/posts/') && pathname !== '/posts/new') return '/posts'
   if (pathname.startsWith('/photography/') && pathname !== '/photography/new') {
     return '/photography'
