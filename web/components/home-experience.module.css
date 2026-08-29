@@ -229,9 +229,10 @@
 
 .profilePanel {
   display: grid;
-  grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.75fr);
-  gap: 36px;
-  padding-top: 34px;
+  grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+  column-gap: 40px;
+  row-gap: 30px;
+  padding-top: 32px;
 }
 
 .profileIntro {
@@ -251,8 +252,8 @@
 }
 
 .profileIntro h3 {
-  margin: 3px 0 12px;
-  font-size: 25px;
+  margin: 3px 0 10px;
+  font-size: 24px;
   font-weight: 500;
 }
 
@@ -276,9 +277,9 @@
 
 .profileFields div {
   display: grid;
-  grid-template-columns: 100px 1fr;
-  gap: 20px;
-  padding: 15px 0;
+  grid-template-columns: 92px 1fr;
+  gap: 16px;
+  padding: 13px 0;
   border-bottom: 1px solid var(--color-line);
 }
 
@@ -293,24 +294,29 @@
 .profileModules {
   grid-column: 1 / -1;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  margin-top: 8px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   border-top: 1px dashed var(--color-line);
+  border-bottom: 1px dashed var(--color-line);
 }
 
 .profileModules > div {
-  min-height: 132px;
-  padding: 24px;
+  min-height: 108px;
+  padding: 21px 24px;
   border-right: 1px dashed var(--color-line);
 }
 
+.profileModules > div:first-child {
+  padding-left: 0;
+}
+
 .profileModules > div:last-child {
+  padding-right: 0;
   border-right: 0;
 }
 
 .profileModules span {
   display: block;
-  margin-bottom: 18px;
+  margin-bottom: 14px;
   color: var(--color-secondary-text);
   font-size: 13px;
 }
@@ -320,6 +326,182 @@
   overflow-wrap: anywhere;
   font-size: 21px;
   font-weight: 500;
+}
+
+.personalityCard {
+  grid-column: 1;
+  overflow: hidden;
+  background: var(--color-paper);
+  border: 1px solid var(--color-line);
+  border-radius: 4px;
+}
+
+.personalityBody {
+  display: grid;
+  grid-template-columns: 214px minmax(0, 1fr);
+  min-height: 292px;
+}
+
+.personalityBodyWithoutPortrait {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.personalityPortrait {
+  position: relative;
+  min-height: 292px;
+  overflow: hidden;
+  background: #e4e6df;
+  border-right: 1px solid var(--color-line);
+}
+
+.personalityPortrait img {
+  object-fit: contain;
+  object-position: center bottom;
+  padding: 20px 16px 0;
+}
+
+.personalityContent {
+  min-width: 0;
+  padding: 24px 24px 26px;
+}
+
+.personalityHeading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 22px;
+}
+
+.personalityHeading h3 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 9px;
+  margin: 0;
+  font-size: 24px;
+  line-height: 1.3;
+  font-weight: 500;
+}
+
+.personalityHeading h3 span,
+.personalityHeading time {
+  color: var(--color-secondary-text);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.personalityHeading time {
+  flex: 0 0 auto;
+}
+
+.personalityDescription {
+  max-width: 620px;
+  margin: 10px 0 0;
+  color: var(--color-secondary-text);
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+.personalityTraits {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+  margin-top: 24px;
+}
+
+.personalityTrait {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) 34px;
+  gap: 9px;
+  align-items: center;
+}
+
+.personalityTrait > span {
+  color: var(--color-secondary-text);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.personalityTrait > span:first-child {
+  text-align: right;
+}
+
+.personalityTraitMeter {
+  position: relative;
+  min-width: 0;
+  padding-top: 15px;
+}
+
+.personalityTraitMeter strong {
+  position: absolute;
+  top: 0;
+  color: var(--color-secondary-text);
+  font-size: 10px;
+  font-weight: 500;
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+
+.personalityTraitTrack {
+  position: relative;
+  height: 5px;
+  border-radius: 3px;
+}
+
+.personalityTraitTrack i {
+  position: absolute;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  background: var(--color-paper);
+  border: 3px solid;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.personalityFooter {
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 12px 24px;
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-line);
+}
+
+.personalityFooter > a:first-child {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--color-secondary-text);
+  font-size: 13px;
+  transition: color 160ms ease;
+}
+
+.personalityFooter > a:first-child:hover {
+  color: var(--color-ink);
+}
+
+.personalityFooter > a:first-child svg {
+  width: 15px;
+  height: 15px;
+}
+
+.personalityOfficialLink {
+  display: inline-flex;
+  opacity: 0.68;
+  transition: opacity 160ms ease;
+}
+
+.personalityOfficialLink:hover {
+  opacity: 1;
+}
+
+.personalityOfficialLink img {
+  width: 150px;
+  height: auto;
 }
 
 .logContent {
@@ -569,6 +751,17 @@
   .mangaNote {
     right: 31%;
   }
+
+  .profilePanel {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .profileIntro,
+  .profileFields,
+  .profileModules,
+  .personalityCard {
+    grid-column: 1;
+  }
 }
 
 @media (max-width: 767px) {
@@ -644,12 +837,56 @@
 
   .profileModules > div {
     min-height: 96px;
+    padding: 20px 0;
     border-right: 0;
     border-bottom: 1px dashed var(--color-line);
   }
 
   .profileModules > div:last-child {
     border-bottom: 0;
+  }
+
+  .personalityBody {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .personalityPortrait {
+    min-height: 220px;
+    border-right: 0;
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  .personalityPortrait img {
+    padding-top: 14px;
+  }
+
+  .personalityContent {
+    padding: 22px 20px 26px;
+  }
+
+  .personalityHeading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  .personalityHeading h3 {
+    font-size: 22px;
+  }
+
+  .personalityTraits {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 15px;
+    margin-top: 22px;
+  }
+
+  .personalityFooter {
+    min-height: 60px;
+    padding: 12px 18px;
+  }
+
+  .personalityOfficialLink img {
+    width: 120px;
   }
 
   .logItem:nth-child(odd),

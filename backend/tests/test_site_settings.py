@@ -21,11 +21,20 @@ from app.modules.site.service import contact_href
 
 def test_profile_serializes_avatar_and_lists_as_camel_case() -> None:
     media_id = uuid.uuid4()
-    profile = SiteProfileRead(
-        avatar_media_id=media_id,
-        avatar_public_url="https://api.anywayone.com/media/avatar.webp",
-        public_name="Anywayone",
-        interests=["摄影", "跑步"],
+    portrait_id = uuid.uuid4()
+    profile = SiteProfileRead.model_validate(
+        {
+            "avatar_media_id": media_id,
+            "avatar_public_url": "https://api.anywayone.com/media/avatar.webp",
+            "public_name": "Anywayone",
+            "interests": ["摄影", "跑步"],
+            "personality_type": "infj-a",
+            "personality_name": "倡导者",
+            "personality_portrait_media_id": portrait_id,
+            "personality_portrait_public_url": "https://api.anywayone.com/media/infj.webp",
+            "personality_energy_score": 65,
+            "personality_learn_more_url": "https://www.16personalities.com/ch/infj-personality",
+        }
     )
 
     data = profile.model_dump(by_alias=True, mode="json")
@@ -34,6 +43,19 @@ def test_profile_serializes_avatar_and_lists_as_camel_case() -> None:
     assert data["avatarPublicUrl"].endswith("avatar.webp")
     assert data["publicName"] == "Anywayone"
     assert data["interests"] == ["摄影", "跑步"]
+    assert data["personalityType"] == "INFJ-A"
+    assert data["personalityPortraitMediaId"] == str(portrait_id)
+    assert data["personalityPortraitPublicUrl"].endswith("infj.webp")
+    assert data["personalityEnergyScore"] == 65
+    assert data["personalityLearnMoreUrl"].startswith("https://")
+
+
+def test_profile_rejects_invalid_personality_scores_and_future_date() -> None:
+    with pytest.raises(ValidationError):
+        SiteProfileRead(personality_energy_score=101)
+
+    with pytest.raises(ValidationError):
+        SiteProfileRead(personality_test_date=date.today() + timedelta(days=1))
 
 
 def test_site_settings_serialize_launch_date_as_camel_case() -> None:

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Button, Form, Input, Select, Spin, message } from 'antd'
+import { Button, Form, Input, Select, Slider, Spin, message } from 'antd'
 import { ImagePlus, Save, Trash2 } from 'lucide-react'
 import { uploadMedia } from '../api/media'
 import { getProfile, saveProfile, type SiteProfileInput } from '../api/site'
@@ -10,6 +10,13 @@ const zodiacOptions = '白羊座 金牛座 双子座 巨蟹座 狮子座 处女�
 const chineseZodiacOptions = '鼠 牛 虎 兔 龙 蛇 马 羊 猴 鸡 狗 猪'
   .split(' ').map((value) => ({ value, label: value }))
 const bloodOptions = ['A', 'B', 'AB', 'O'].map((value) => ({ value, label: `${value} 型` }))
+const personalityTraits = [
+  { name: 'personalityEnergyScore', label: '能量', left: '外向 E', right: '内向 I' },
+  { name: 'personalityMindScore', label: '意识', left: '直觉 N', right: '观察 S' },
+  { name: 'personalityNatureScore', label: '本性', left: '思维 T', right: '感觉 F' },
+  { name: 'personalityTacticsScore', label: '策略', left: '评判 J', right: '勘探 P' },
+  { name: 'personalityIdentityScore', label: '身份', left: '自信 A', right: '湍流 T' },
+] as const
 
 function nullable(value: string | undefined) {
   return value?.trim() || null
@@ -18,11 +25,15 @@ function nullable(value: string | undefined) {
 export default function ProfilePage() {
   const [form] = Form.useForm<SiteProfileInput>()
   const avatarInputRef = useRef<HTMLInputElement>(null)
+  const personalityPortraitInputRef = useRef<HTMLInputElement>(null)
   const [avatarMediaId, setAvatarMediaId] = useState<string | null>(null)
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+  const [personalityPortraitMediaId, setPersonalityPortraitMediaId] = useState<string | null>(null)
+  const [personalityPortraitUrl, setPersonalityPortraitUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
+  const [uploadingPersonalityPortrait, setUploadingPersonalityPortrait] = useState(false)
   const [messageApi, contextHolder] = message.useMessage()
 
   useEffect(() => {
@@ -31,6 +42,8 @@ export default function ProfilePage() {
         form.setFieldsValue(profile)
         setAvatarMediaId(profile.avatarMediaId)
         setAvatarUrl(profile.avatarPublicUrl)
+        setPersonalityPortraitMediaId(profile.personalityPortraitMediaId)
+        setPersonalityPortraitUrl(profile.personalityPortraitPublicUrl)
       })
       .catch((error: unknown) => void messageApi.error(error instanceof Error ? error.message : '个人资料加载失败。'))
       .finally(() => setLoading(false))
@@ -51,6 +64,21 @@ export default function ProfilePage() {
     }
   }
 
+  const uploadPersonalityPortrait = async (file: File) => {
+    setUploadingPersonalityPortrait(true)
+    try {
+      const media = await uploadMedia(file)
+      setPersonalityPortraitMediaId(media.id)
+      setPersonalityPortraitUrl(media.publicUrl)
+      void messageApi.success('人格肖像已上传，请保存个人资料')
+    } catch (error) {
+      void messageApi.error(error instanceof Error ? error.message : '人格肖像上传失败。')
+    } finally {
+      setUploadingPersonalityPortrait(false)
+      if (personalityPortraitInputRef.current) personalityPortraitInputRef.current.value = ''
+    }
+  }
+
   const submit = async () => {
     try {
       const values = await form.validateFields()
@@ -58,6 +86,7 @@ export default function ProfilePage() {
       const profile = await saveProfile({
         ...values,
         avatarMediaId,
+        personalityPortraitMediaId,
         publicName: nullable(values.publicName ?? undefined),
         expertise: nullable(values.expertise ?? undefined),
         occupation: nullable(values.occupation ?? undefined),
@@ -66,6 +95,10 @@ export default function ProfilePage() {
         bloodType: values.bloodType || null,
         location: nullable(values.location ?? undefined),
         personalityType: nullable(values.personalityType ?? undefined),
+        personalityName: nullable(values.personalityName ?? undefined),
+        personalityDescription: nullable(values.personalityDescription ?? undefined),
+        personalityTestDate: values.personalityTestDate || null,
+        personalityLearnMoreUrl: nullable(values.personalityLearnMoreUrl ?? undefined),
         motto: nullable(values.motto ?? undefined),
         bio: nullable(values.bio ?? undefined),
         interests: values.interests ?? [],
@@ -75,6 +108,8 @@ export default function ProfilePage() {
       form.setFieldsValue(profile)
       setAvatarMediaId(profile.avatarMediaId)
       setAvatarUrl(profile.avatarPublicUrl)
+      setPersonalityPortraitMediaId(profile.personalityPortraitMediaId)
+      setPersonalityPortraitUrl(profile.personalityPortraitPublicUrl)
       void messageApi.success('个人资料已保存')
     } catch (error) {
       if (error instanceof Error) void messageApi.error(error.message)
@@ -87,6 +122,7 @@ export default function ProfilePage() {
     <div className="page-stack settings-page">
       {contextHolder}
       <input ref={avatarInputRef} className="sr-only" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" onChange={(event) => { const file = event.target.files?.[0]; if (file) void uploadAvatar(file) }} />
+      <input ref={personalityPortraitInputRef} className="sr-only" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" onChange={(event) => { const file = event.target.files?.[0]; if (file) void uploadPersonalityPortrait(file) }} />
       <PageHeader
         eyebrow="SITE / PROFILE"
         title="个人资料"
@@ -123,10 +159,51 @@ export default function ProfilePage() {
               <Form.Item name="expertise" label="专业领域"><Input placeholder="例如：软件工程、视觉设计" /></Form.Item>
               <Form.Item name="occupation" label="职业"><Input placeholder="例如：独立开发者" /></Form.Item>
               <Form.Item name="location" label="所在地"><Input placeholder="例如：中国 · 深圳" /></Form.Item>
-              <Form.Item name="personalityType" label="人格类型"><Input placeholder="例如：INTJ" /></Form.Item>
               <Form.Item name="zodiacSign" label="星座"><Select allowClear options={zodiacOptions} placeholder="未设置" /></Form.Item>
               <Form.Item name="chineseZodiac" label="生肖"><Select allowClear options={chineseZodiacOptions} placeholder="未设置" /></Form.Item>
               <Form.Item name="bloodType" label="血型"><Select allowClear options={bloodOptions} placeholder="未设置" /></Form.Item>
+            </div>
+          </section>
+
+          <section className="surface-panel settings-section-panel">
+            <div className="settings-section-heading"><span>PERSONALITY</span><h2>人格卡片</h2></div>
+            <div className="personality-portrait-field">
+              <div className="personality-portrait-preview">
+                {personalityPortraitUrl
+                  ? <img src={personalityPortraitUrl} alt="人格肖像预览" />
+                  : <ImagePlus size={30} aria-hidden="true" />}
+              </div>
+              <div>
+                <strong>人格肖像</strong>
+                <span>建议上传透明背景或留白充足的正方形图片，首页会完整展示人物主体。</span>
+                <div className="profile-avatar-actions">
+                  <Button icon={<ImagePlus size={16} />} loading={uploadingPersonalityPortrait} onClick={() => personalityPortraitInputRef.current?.click()}>{personalityPortraitUrl ? '更换肖像' : '上传肖像'}</Button>
+                  {personalityPortraitUrl && <Button type="text" danger icon={<Trash2 size={16} />} onClick={() => { setPersonalityPortraitMediaId(null); setPersonalityPortraitUrl(null) }}>移除</Button>}
+                </div>
+              </div>
+            </div>
+
+            <div className="form-grid">
+              <Form.Item name="personalityType" label="人格类型" rules={[{ max: 40 }]}><Input placeholder="例如：INFJ-A" /></Form.Item>
+              <Form.Item name="personalityName" label="人格名称" rules={[{ max: 80 }]}><Input placeholder="例如：倡导者" /></Form.Item>
+              <Form.Item name="personalityTestDate" label="测试日期"><Input type="date" max={new Date().toISOString().slice(0, 10)} /></Form.Item>
+              <Form.Item name="personalityLearnMoreUrl" label="了解更多链接" rules={[{ type: 'url', message: '请输入完整的 http(s) 链接' }, { max: 2048 }]}><Input placeholder="https://www.16personalities.com/ch/infj-人格" /></Form.Item>
+            </div>
+            <Form.Item name="personalityDescription" label="人格简介" rules={[{ max: 1200 }]}><Input.TextArea rows={4} showCount maxLength={1200} placeholder="用一小段文字概括这种人格的特点" /></Form.Item>
+
+            <div className="personality-traits-heading">
+              <div>
+                <strong>人格维度</strong>
+                <span>滑块位置代表你在两端特质之间的倾向；没有测试数据时可以留空。</span>
+              </div>
+              <Button type="text" size="small" icon={<Trash2 size={14} />} onClick={() => form.setFields(personalityTraits.map((trait) => ({ name: trait.name, value: undefined })))}>清空维度</Button>
+            </div>
+            <div className="personality-traits-grid">
+              {personalityTraits.map((trait) => (
+                <Form.Item key={trait.name} name={trait.name} label={trait.label}>
+                  <Slider min={0} max={100} marks={{ 0: trait.left, 100: trait.right }} tooltip={{ formatter: (value) => value == null ? null : `${value}%` }} />
+                </Form.Item>
+              ))}
             </div>
           </section>
 

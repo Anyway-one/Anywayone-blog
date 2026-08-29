@@ -650,6 +650,85 @@ a {
   margin-top: 12px;
 }
 
+.personality-portrait-field {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 24px;
+  padding: 16px;
+  border: 1px solid var(--color-line);
+  background: var(--color-paper);
+}
+
+.personality-portrait-preview {
+  width: 132px;
+  height: 132px;
+  flex: 0 0 132px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  color: var(--color-muted);
+  background: #fff;
+  border: 1px dashed var(--color-line);
+}
+
+.personality-portrait-preview img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+}
+
+.personality-portrait-field > div:last-child {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.personality-portrait-field span,
+.personality-traits-heading span {
+  margin-top: 4px;
+  color: var(--color-muted);
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.personality-traits-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  margin: 6px 0 20px;
+}
+
+.personality-traits-heading > div {
+  display: flex;
+  flex-direction: column;
+}
+
+.personality-traits-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px 40px;
+  padding: 0 12px;
+}
+
+.personality-traits-grid .ant-form-item {
+  min-width: 0;
+  margin-bottom: 28px;
+}
+
+.personality-traits-grid .ant-slider {
+  margin-right: 18px;
+  margin-left: 18px;
+}
+
+.personality-traits-grid .ant-slider-mark-text {
+  width: max-content;
+  color: var(--color-muted);
+  font-size: 10px;
+}
+
 .platform-settings-list {
   width: min(100%, 1120px);
   overflow: hidden;
@@ -1639,6 +1718,21 @@ a {
 
   .profile-avatar-field {
     align-items: flex-start;
+  }
+
+  .personality-portrait-field {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .personality-portrait-preview {
+    width: 100%;
+    height: 180px;
+    flex-basis: auto;
+  }
+
+  .personality-traits-grid {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .platform-setting-row,

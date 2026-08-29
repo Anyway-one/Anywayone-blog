@@ -29,6 +29,18 @@ class SiteProfile(UuidPrimaryKeyMixin, TimestampMixin, Base):
     favorite_cities: Mapped[list[str]] = mapped_column(JSONB, default=list, nullable=False)
     tags: Mapped[list[str]] = mapped_column(JSONB, default=list, nullable=False)
     personality_type: Mapped[str | None] = mapped_column(String(40))
+    personality_name: Mapped[str | None] = mapped_column(String(80))
+    personality_description: Mapped[str | None] = mapped_column(Text)
+    personality_portrait_media_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("media.id", ondelete="SET NULL"), index=True
+    )
+    personality_test_date: Mapped[date | None] = mapped_column(Date)
+    personality_energy_score: Mapped[int | None] = mapped_column(Integer)
+    personality_mind_score: Mapped[int | None] = mapped_column(Integer)
+    personality_nature_score: Mapped[int | None] = mapped_column(Integer)
+    personality_tactics_score: Mapped[int | None] = mapped_column(Integer)
+    personality_identity_score: Mapped[int | None] = mapped_column(Integer)
+    personality_learn_more_url: Mapped[str | None] = mapped_column(String(2048))
     motto: Mapped[str | None] = mapped_column(String(240))
     bio: Mapped[str | None] = mapped_column(Text)
 

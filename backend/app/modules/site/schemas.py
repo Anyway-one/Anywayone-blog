@@ -29,6 +29,16 @@ class SiteProfileUpdate(ApiModel):
     favorite_cities: list[ProfileListItem] = Field(default_factory=list, max_length=20)
     tags: list[ProfileListItem] = Field(default_factory=list, max_length=20)
     personality_type: str | None = Field(default=None, max_length=40)
+    personality_name: str | None = Field(default=None, max_length=80)
+    personality_description: str | None = Field(default=None, max_length=1200)
+    personality_portrait_media_id: uuid.UUID | None = None
+    personality_test_date: date | None = None
+    personality_energy_score: int | None = Field(default=None, ge=0, le=100)
+    personality_mind_score: int | None = Field(default=None, ge=0, le=100)
+    personality_nature_score: int | None = Field(default=None, ge=0, le=100)
+    personality_tactics_score: int | None = Field(default=None, ge=0, le=100)
+    personality_identity_score: int | None = Field(default=None, ge=0, le=100)
+    personality_learn_more_url: HttpUrl | None = None
     motto: str | None = Field(default=None, max_length=240)
     bio: str | None = Field(default=None, max_length=4000)
 
@@ -40,7 +50,8 @@ class SiteProfileUpdate(ApiModel):
         "chinese_zodiac",
         "blood_type",
         "location",
-        "personality_type",
+        "personality_name",
+        "personality_description",
         "motto",
         "bio",
     )
@@ -49,6 +60,20 @@ class SiteProfileUpdate(ApiModel):
         if value is None:
             return None
         return value.strip() or None
+
+    @field_validator("personality_type")
+    @classmethod
+    def normalize_personality_type(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        return value.strip().upper() or None
+
+    @field_validator("personality_test_date")
+    @classmethod
+    def validate_personality_test_date(cls, value: date | None) -> date | None:
+        if value is not None and value > date.today():
+            raise ValueError("人格测试日期不能晚于今天")
+        return value
 
     @field_validator("interests", "favorite_cities", "tags")
     @classmethod
@@ -59,6 +84,7 @@ class SiteProfileUpdate(ApiModel):
 class SiteProfileRead(SiteProfileUpdate):
     id: uuid.UUID | None = None
     avatar_public_url: str | None = None
+    personality_portrait_public_url: str | None = None
 
 
 class SiteSettingsUpdate(ApiModel):

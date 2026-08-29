@@ -130,7 +130,12 @@ async def delete_media(db: AsyncSession, media_id: uuid.UUID) -> None:
         )
     )
     profile_references = await db.scalar(
-        select(func.count()).select_from(SiteProfile).where(SiteProfile.avatar_media_id == media.id)
+        select(func.count())
+        .select_from(SiteProfile)
+        .where(
+            (SiteProfile.avatar_media_id == media.id)
+            | (SiteProfile.personality_portrait_media_id == media.id)
+        )
     )
     user_references = await db.scalar(
         select(func.count()).select_from(User).where(User.avatar_media_id == media.id)

@@ -30,6 +30,17 @@ export interface PublicProfile {
   favoriteCities: string[];
   tags: string[];
   personalityType: string | null;
+  personalityName: string | null;
+  personalityDescription: string | null;
+  personalityPortraitMediaId: string | null;
+  personalityPortraitPublicUrl: string | null;
+  personalityTestDate: string | null;
+  personalityEnergyScore: number | null;
+  personalityMindScore: number | null;
+  personalityNatureScore: number | null;
+  personalityTacticsScore: number | null;
+  personalityIdentityScore: number | null;
+  personalityLearnMoreUrl: string | null;
   motto: string | null;
   bio: string | null;
 }

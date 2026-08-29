@@ -157,27 +157,45 @@ async def get_profile(db: AsyncSession) -> SiteProfile | None:
 def profile_read(
     profile: SiteProfile | None,
     avatar_public_url: str | None = None,
+    personality_portrait_public_url: str | None = None,
 ) -> SiteProfileRead:
     if profile is None:
         return SiteProfileRead()
     return SiteProfileRead.model_validate(
-        {**profile.__dict__, "avatar_public_url": avatar_public_url}
+        {
+            **profile.__dict__,
+            "avatar_public_url": avatar_public_url,
+            "personality_portrait_public_url": personality_portrait_public_url,
+        }
     )
 
 
 async def get_profile_read(db: AsyncSession) -> SiteProfileRead:
+    avatar_media = aliased(Media)
+    personality_portrait = aliased(Media)
     row = (
         await db.execute(
-            select(SiteProfile, Media).outerjoin(
-                Media,
-                (Media.id == SiteProfile.avatar_media_id) & Media.deleted_at.is_(None),
+            select(SiteProfile, avatar_media, personality_portrait)
+            .outerjoin(
+                avatar_media,
+                (avatar_media.id == SiteProfile.avatar_media_id)
+                & avatar_media.deleted_at.is_(None),
+            )
+            .outerjoin(
+                personality_portrait,
+                (personality_portrait.id == SiteProfile.personality_portrait_media_id)
+                & personality_portrait.deleted_at.is_(None),
             )
         )
     ).first()
     if row is None:
         return profile_read(None)
-    profile, avatar = row
-    return profile_read(profile, avatar.public_url if avatar else None)
+    profile, avatar, portrait = row
+    return profile_read(
+        profile,
+        avatar.public_url if avatar else None,
+        portrait.public_url if portrait else None,
+    )
 
 
 async def update_profile(
@@ -187,12 +205,14 @@ async def update_profile(
     actor: User,
     request_id: str,
 ) -> SiteProfile:
-    await _validate_media_ids(db, [payload.avatar_media_id])
+    await _validate_media_ids(db, [payload.avatar_media_id, payload.personality_portrait_media_id])
     profile = await get_profile(db)
     if profile is None:
         profile = SiteProfile(singleton_key="primary")
         db.add(profile)
     changes = payload.model_dump()
+    if payload.personality_learn_more_url is not None:
+        changes["personality_learn_more_url"] = str(payload.personality_learn_more_url)
     for field, value in changes.items():
         setattr(profile, field, value)
     await db.flush()

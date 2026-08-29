@@ -6,6 +6,7 @@ import {
   CalendarDays,
   ChevronLeft,
   ChevronRight,
+  ExternalLink,
   X,
 } from "lucide-react";
 import { KeyboardEvent, useEffect, useRef, useState } from "react";
@@ -17,6 +18,22 @@ import { VisitorAnalytics } from "./visitor-analytics";
 import { SiteStatusCard } from "./site-status-card";
 
 type HomeTab = "profile" | "log";
+
+const personalityTraitDefinitions = [
+  { key: "personalityEnergyScore", left: "外向", right: "内向", color: "#4298b4" },
+  { key: "personalityMindScore", left: "直觉", right: "观察", color: "#d8952c" },
+  { key: "personalityNatureScore", left: "思维", right: "感觉", color: "#33a474" },
+  { key: "personalityTacticsScore", left: "评判", right: "勘探", color: "#88619a" },
+  { key: "personalityIdentityScore", left: "自信", right: "湍流", color: "#d65458" },
+] as const;
+
+function getPersonalityDetailsUrl(type: string | null | undefined, configuredUrl: string | null | undefined) {
+  if (configuredUrl) return configuredUrl;
+  const baseType = type?.trim().slice(0, 4).toLowerCase();
+  return baseType && /^[a-z]{4}$/.test(baseType)
+    ? `https://www.16personalities.com/ch/${baseType}-人格`
+    : "https://www.16personalities.com/ch/人格类型";
+}
 
 export function HomeExperience({
   site,
@@ -47,10 +64,27 @@ export function HomeExperience({
   ].filter((field) => field.value);
   const profileModules = [
     { overline: "TAGS / 个人标签", value: profile?.tags.join(" · ") },
-    { overline: "PERSONALITY / 人格类型", value: profile?.personalityType },
     { overline: "INTERESTS / 兴趣爱好", value: profile?.interests.join(" · ") },
     { overline: "CITIES / 喜欢的城市", value: profile?.favoriteCities.join(" · ") },
   ].filter((item) => item.value);
+  const personalityTraits = personalityTraitDefinitions.flatMap((trait) => {
+    const score = profile?.[trait.key];
+    if (score == null) return [];
+    const position = Math.min(100, Math.max(0, score));
+    const dominant = position > 50
+      ? { label: trait.right, value: position }
+      : { label: trait.left, value: 100 - position };
+    const labelPosition = Math.min(80, Math.max(20, position));
+    return [{ ...trait, position, labelPosition, dominant }];
+  });
+  const hasPersonality = Boolean(
+    profile?.personalityType
+    || profile?.personalityName
+    || profile?.personalityDescription
+    || profile?.personalityPortraitPublicUrl
+    || profile?.personalityTestDate
+    || personalityTraits.length,
+  );
   const history = site?.history ?? [];
 
   const closeDetails = () => {
@@ -239,6 +273,66 @@ export function HomeExperience({
                       </div>
                     ))}
                   </div>}
+
+                  {hasPersonality && <section className={styles.personalityCard} aria-labelledby="personality-card-title">
+                    <div className={`${styles.personalityBody} ${profile?.personalityPortraitPublicUrl ? "" : styles.personalityBodyWithoutPortrait}`}>
+                      {profile?.personalityPortraitPublicUrl && <div className={styles.personalityPortrait}>
+                        <Image
+                          src={profile.personalityPortraitPublicUrl}
+                          alt={`${profile.personalityName || profile.personalityType || "人格类型"}肖像`}
+                          fill
+                          sizes="(max-width: 767px) calc(100vw - 40px), 214px"
+                        />
+                      </div>}
+                      <div className={styles.personalityContent}>
+                        <p className={styles.sectionKicker}>PERSONALITY / 人格</p>
+                        <div className={styles.personalityHeading}>
+                          <h3 id="personality-card-title">
+                            {profile?.personalityName || "人格类型"}
+                            {profile?.personalityType && <span>({profile.personalityType})</span>}
+                          </h3>
+                          {profile?.personalityTestDate && <time dateTime={profile.personalityTestDate}>
+                            测试于 {profile.personalityTestDate.replaceAll("-", ".")}
+                          </time>}
+                        </div>
+                        {profile?.personalityDescription && <p className={styles.personalityDescription}>
+                          {profile.personalityDescription}
+                        </p>}
+
+                        {personalityTraits.length > 0 && <div className={styles.personalityTraits} aria-label="人格维度">
+                          {personalityTraits.map((trait) => <div className={styles.personalityTrait} key={trait.key}>
+                            <span>{trait.left}</span>
+                            <div className={styles.personalityTraitMeter}>
+                              <strong style={{ left: `${trait.labelPosition}%` }}>{trait.dominant.value}% {trait.dominant.label}</strong>
+                              <div className={styles.personalityTraitTrack} style={{ backgroundColor: trait.color }}>
+                                <i style={{ left: `${trait.position}%`, borderColor: trait.color }} />
+                              </div>
+                            </div>
+                            <span>{trait.right}</span>
+                          </div>)}
+                        </div>}
+                      </div>
+                    </div>
+                    <footer className={styles.personalityFooter}>
+                      <a
+                        href={getPersonalityDetailsUrl(profile?.personalityType, profile?.personalityLearnMoreUrl)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        了解更多
+                        <ExternalLink aria-hidden="true" />
+                      </a>
+                      <a
+                        className={styles.personalityOfficialLink}
+                        href="https://www.16personalities.com/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label="访问 16Personalities 官网"
+                      >
+                        <Image src="/personality/icon-16personalities.svg" alt="16Personalities" width={150} height={31} unoptimized />
+                      </a>
+                    </footer>
+                  </section>}
                 </div>
               ) : (
                 <div className={styles.logContent} id="log-panel" role="tabpanel">
