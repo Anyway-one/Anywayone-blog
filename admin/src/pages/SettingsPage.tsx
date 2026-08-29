@@ -24,7 +24,7 @@ const defaults: SiteSettingsInput = {
   heroTitle: '不设限，做唯一的自己。',
   copyrightOwner: null,
   copyrightStartYear: null,
-  copyrightStatement: '保留所有权利。',
+  copyrightStatement: 'All rights reserved.',
   footerNotice: null,
   icpNumber: null,
   policeRecord: null,
@@ -57,6 +57,7 @@ export default function SettingsPage() {
     ogImage: useRef<HTMLInputElement>(null),
   }
   const [messageApi, contextHolder] = message.useMessage()
+  const logoMode = Form.useWatch('logoMode', form) ?? defaults.logoMode
 
   useEffect(() => {
     void getSiteSettings()
@@ -111,7 +112,7 @@ export default function SettingsPage() {
         heroEyebrow: normalize(values.heroEyebrow),
         heroTitle: normalize(values.heroTitle),
         copyrightOwner: normalize(values.copyrightOwner),
-        copyrightStatement: normalize(values.copyrightStatement),
+        copyrightStatement: 'All rights reserved.',
         footerNotice: normalize(values.footerNotice),
         icpNumber: normalize(values.icpNumber),
         policeRecord: normalize(values.policeRecord),
@@ -187,34 +188,47 @@ export default function SettingsPage() {
               <Form.Item name="siteName" label="网站名称" rules={[{ max: 100 }]}><Input showCount maxLength={100} placeholder="Anywayone" /></Form.Item>
               <Form.Item name="logoMode" label="Logo 展示方式"><Radio.Group options={[{ label: '文字', value: 'TEXT' }, { label: '图片', value: 'IMAGE' }]} /></Form.Item>
             </div>
-            <Form.Item name="logoText" label="文字 Logo" rules={[{ max: 100 }]}><Input showCount maxLength={100} placeholder="未使用图片 Logo 时显示" /></Form.Item>
-            <div className="site-media-grid">
-              {mediaPicker('logoWeb', 'Web Logo', '用于桌面端展示端和后台侧边栏品牌区。')}
-              {mediaPicker('logoMobile', '移动端 Logo', '用于移动端导航和后台紧凑品牌区。')}
-            </div>
-            <Form.Item name="logoAlt" label="Logo 替代文本" rules={[{ max: 160 }]}><Input showCount maxLength={160} placeholder="Anywayone" /></Form.Item>
+            {logoMode === 'TEXT' ? (
+              <Form.Item name="logoText" label="文字 Logo" rules={[{ max: 100 }]}><Input showCount maxLength={100} placeholder="例如：Anywayone" /></Form.Item>
+            ) : (
+              <>
+                <div className="site-media-grid">
+                  {mediaPicker('logoWeb', 'Web Logo', '用于桌面端展示端和后台侧边栏品牌区。')}
+                  {mediaPicker('logoMobile', '移动端 Logo', '用于移动端导航和后台紧凑品牌区。')}
+                </div>
+                <Form.Item
+                  name="logoAlt"
+                  label="图片 Logo 替代文本"
+                  extra="用于无障碍阅读和图片无法显示时的文字说明。"
+                  rules={[{ max: 160 }]}
+                >
+                  <Input showCount maxLength={160} placeholder="默认使用网站名称" />
+                </Form.Item>
+              </>
+            )}
           </section>
 
           <section className="surface-panel settings-section-panel">
             <div className="settings-section-heading"><span>HERO</span><h2>首页首屏</h2></div>
             <Form.Item name="heroEyebrow" label="英文辅助标语" rules={[{ max: 80 }]}><Input showCount maxLength={80} placeholder="ANYWAY, BE YOUR ONE." /></Form.Item>
-            <Form.Item name="heroTitle" label="中文主标语" rules={[{ max: 120 }]}><Input.TextArea rows={2} showCount maxLength={120} placeholder="不设限，做唯一的自己。" /></Form.Item>
+            <Form.Item name="heroTitle" label="中文主标语（支持换行）" rules={[{ max: 120 }]}><Input.TextArea rows={2} showCount maxLength={120} placeholder="不设限，做唯一的自己。" /></Form.Item>
           </section>
 
           <section className="surface-panel settings-section-panel">
             <div className="settings-section-heading"><span>FOOTER / OPERATION</span><h2>页脚与运营</h2></div>
             <div className="form-grid">
-              <Form.Item name="copyrightOwner" label="版权主体" rules={[{ max: 160 }]}><Input maxLength={160} placeholder="默认使用作者公开名称" /></Form.Item>
+              <Form.Item name="copyrightOwner" label="版权主体" rules={[{ max: 160 }]}><Input maxLength={160} placeholder="默认使用个人资料公开名称" /></Form.Item>
               <Form.Item name="copyrightStartYear" label="版权起始年份" rules={[{ type: 'number', min: 1900, max: 2200 }]}><Input type="number" placeholder="例如：2024" /></Form.Item>
-              <Form.Item name="launchDate" label="网站上线日期"><Input type="date" max={localToday()} /></Form.Item>
-              <Form.Item name="showRuntimeDays" label="显示运行天数" valuePropName="checked"><Switch /></Form.Item>
             </div>
-            <Form.Item name="copyrightStatement" label="权利声明" rules={[{ max: 240 }]}><Input maxLength={240} placeholder="保留所有权利。" /></Form.Item>
-            <Form.Item name="footerNotice" label="页脚补充说明" rules={[{ max: 320 }]}><Input maxLength={320} placeholder="可选，例如联系方式或站点说明" /></Form.Item>
             <div className="form-grid">
               <Form.Item name="icpNumber" label="ICP备案号" rules={[{ max: 160 }]}><Input maxLength={160} placeholder="可选" /></Form.Item>
               <Form.Item name="policeRecord" label="公安备案号" rules={[{ max: 160 }]}><Input maxLength={160} placeholder="可选" /></Form.Item>
             </div>
+            <div className="form-grid">
+              <Form.Item name="launchDate" label="网站上线日期"><Input type="date" max={localToday()} /></Form.Item>
+              <Form.Item name="showRuntimeDays" label="显示运行天数" valuePropName="checked"><Switch /></Form.Item>
+            </div>
+            <Form.Item name="footerNotice" label="页脚补充说明" rules={[{ max: 320 }]}><Input maxLength={320} placeholder="可选，例如联系方式或站点说明" /></Form.Item>
           </section>
 
           <section className="surface-panel settings-section-panel">

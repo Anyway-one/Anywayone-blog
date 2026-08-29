@@ -231,9 +231,13 @@ async def get_site_settings_read(db: AsyncSession) -> SiteSettingsRead:
     if row is None:
         return SiteSettingsRead()
     settings, web_media, mobile_media, og_media = row
+    copyright_statement = settings.copyright_statement
+    if copyright_statement == "保留所有权利。":
+        copyright_statement = "All rights reserved."
     return SiteSettingsRead.model_validate(
         {
             **settings.__dict__,
+            "copyright_statement": copyright_statement,
             "logo_web_public_url": web_media.public_url if web_media else None,
             "logo_mobile_public_url": mobile_media.public_url if mobile_media else None,
             "og_image_public_url": og_media.public_url if og_media else None,

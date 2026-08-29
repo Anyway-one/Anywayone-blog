@@ -56,16 +56,16 @@ export function SiteFooter({
 }: SiteFooterProps) {
   const currentYear = shanghaiDateParts(new Date())[0];
   const runningDays = launchDate ? runningDaysSince(launchDate) : null;
-  const owner = copyrightOwner || settings?.copyrightOwner || settings?.siteName || "Anywayone";
+  const owner = settings?.copyrightOwner || copyrightOwner || settings?.siteName || "Anywayone";
   const startYear = settings?.copyrightStartYear;
   const yearLabel = startYear && startYear < currentYear ? `${startYear}-${currentYear}` : `${currentYear}`;
-  const statement = settings?.copyrightStatement || "保留所有权利。";
+  const statement = "All rights reserved.";
   const showRuntimeDays = settings?.showRuntimeDays ?? true;
 
   return (
     <footer className={`${styles.footer} ${dark ? styles.dark : ""}`}>
       <div className={styles.meta}>
-        <span>© {yearLabel} {owner}. {statement}</span>
+        <span>Copyright © {yearLabel} {owner}. {statement}</span>
         {settings?.footerNotice && <span>{settings.footerNotice}</span>}
         {settings?.icpNumber && <span>{settings.icpNumber}</span>}
         {settings?.policeRecord && <span>{settings.policeRecord}</span>}
