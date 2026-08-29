@@ -258,8 +258,8 @@ export function HomeExperience({
                   <article className={styles.profileCard}>
                     <div className={styles.cardHeading}><span>03 / CAREER</span><BriefcaseBusiness aria-hidden="true" /></div>
                     <div className={styles.careerCopy}>
-                      <span>专业</span><strong>{profile?.expertise || "—"}</strong>
-                      <span>岗位</span><strong>{profile?.occupation || "—"}</strong>
+                      <div className={styles.careerRow}><span>专业</span><strong>{profile?.expertise || "—"}</strong></div>
+                      <div className={styles.careerRow}><span>岗位</span><strong>{profile?.occupation || "—"}</strong></div>
                     </div>
                   </article>
 

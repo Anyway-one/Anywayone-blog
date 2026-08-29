@@ -1044,9 +1044,7 @@
   margin-top: 20px;
 }
 
-.statList > div,
-.careerCopy > span,
-.careerCopy > strong {
+.statList > div {
   padding: 10px 0;
   border-bottom: 1px solid var(--color-line);
 }
@@ -1072,13 +1070,27 @@
 }
 
 .careerCopy {
-  grid-template-columns: 44px minmax(0, 1fr);
-  align-items: baseline;
+  margin-top: 20px;
 }
 
-.careerCopy > span,
-.careerCopy > strong {
+.careerRow {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  align-items: baseline;
   padding: 12px 0;
+  border-bottom: 1px solid var(--color-line);
+}
+
+.careerRow span {
+  color: var(--color-secondary-text);
+  font-size: 12px;
+}
+
+.careerRow strong {
+  overflow-wrap: anywhere;
+  font-size: 18px;
+  font-weight: 500;
+  text-align: right;
 }
 
 .locationMain {
@@ -1102,14 +1114,16 @@
 }
 
 .equipmentGrid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 14px 10px;
   margin-top: 18px;
 }
 
 .equipmentItem {
   min-width: 0;
+  flex: 0 1 calc(25% - 8px);
   display: flex;
   align-items: center;
   flex-direction: column;
@@ -1204,6 +1218,12 @@
 .personalityCard .personalityTrait {
   grid-template-columns: 30px minmax(0, 1fr) 30px;
   gap: 6px;
+  align-items: start;
+}
+
+.personalityCard .personalityTrait > span {
+  padding-top: 17px;
+  line-height: 12px;
 }
 
 .personalityCard .personalityTraitMeter {
@@ -1324,7 +1344,11 @@
   }
 
   .equipmentGrid {
-    grid-template-columns: minmax(0, 1fr);
+    gap: 14px 10px;
+  }
+
+  .equipmentItem {
+    flex-basis: calc(50% - 5px);
   }
 
   .personalityCardBody {

@@ -19,6 +19,8 @@ const equipmentOptions = [
   ['macbook', 'MacBook'],
   ['lcd', '显示器'],
 ].map(([value, label]) => ({ value, label }))
+const webUrl = (import.meta.env.VITE_WEB_URL || 'http://localhost:3000').replace(/\/$/, '')
+const defaultAvatarUrl = `${webUrl}/brand/anywayone-avatar.png`
 const personalityTraits = [
   { scoreName: 'personalityEnergyScore', formName: 'personalityEnergyTrait', label: '能量', left: '外向 E', right: '内向 I' },
   { scoreName: 'personalityMindScore', formName: 'personalityMindTrait', label: '意识', left: '直觉 N', right: '观察 S' },
@@ -239,7 +241,7 @@ export default function ProfilePage() {
             <div className="settings-section-heading"><span>PROFILE</span><h2>基本资料</h2></div>
             <div className="profile-avatar-field">
               <div className="profile-avatar-preview">
-                <img src={avatarUrl ?? '/brand/anywayone-mark.svg'} alt="个人头像预览" />
+                <img src={avatarUrl ?? defaultAvatarUrl} alt="个人头像预览" />
               </div>
               <div>
                 <strong>个人头像</strong>
