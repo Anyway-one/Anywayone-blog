@@ -108,7 +108,7 @@
   position: absolute;
   z-index: 1;
   right: -2%;
-  bottom: -28px;
+  bottom: 0;
   width: min(47%, 560px);
   height: min(76vh, 700px);
 }
@@ -1173,7 +1173,8 @@
   flex-wrap: wrap;
   gap: 8px;
   align-content: flex-start;
-  margin-top: 22px;
+  margin-top: auto;
+  padding-top: 22px;
 }
 
 .tagList span {

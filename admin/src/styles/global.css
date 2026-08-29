@@ -1279,8 +1279,10 @@ a {
 }
 
 .taxonomy-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   min-height: 280px;
-  border-top: 1px solid var(--color-line);
 }
 
 .taxonomy-list__header,
@@ -1290,8 +1292,23 @@ a {
   align-items: center;
   grid-template-columns: minmax(220px, 1fr) minmax(160px, 0.7fr) 80px 132px;
   gap: 20px;
-  border-bottom: 1px solid var(--color-line);
-  padding: 14px 4px;
+}
+
+.taxonomy-list__header {
+  padding: 0 18px 2px;
+}
+
+.taxonomy-row {
+  border: 1px solid var(--color-line);
+  border-radius: 8px;
+  padding: 14px 18px;
+  background: #ffffff;
+  transition: border-color 160ms ease, background-color 160ms ease;
+}
+
+.taxonomy-row:hover {
+  border-color: #cecdc6;
+  background: #faf9f6;
 }
 
 .taxonomy-list__header {
@@ -1337,6 +1354,12 @@ a {
   justify-content: center;
   color: #8a8b87;
   font-size: 13px;
+}
+
+.taxonomy-list__empty {
+  border: 1px solid var(--color-line);
+  border-radius: 8px;
+  background: #ffffff;
 }
 
 .taxonomy-form {
@@ -1531,12 +1554,19 @@ a {
   font-weight: 700;
 }
 
+.album-description.ant-input {
+  margin-top: 12px;
+}
+
 .photo-uploader.ant-upload-wrapper {
   display: block;
-  margin-top: 20px;
+  position: relative;
+  z-index: 1;
+  margin-top: 24px;
 }
 
 .photo-uploader .ant-upload-drag {
+  position: relative;
   border-color: #cfcfc8;
   border-radius: 8px;
   background: #faf9f6;
@@ -2010,7 +2040,7 @@ a {
   .taxonomy-row {
     grid-template-columns: minmax(0, 1fr) auto;
     gap: 8px 12px;
-    padding: 14px 0;
+    padding: 14px 16px;
   }
 
   .taxonomy-row code,
