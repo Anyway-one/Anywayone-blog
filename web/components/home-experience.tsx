@@ -27,6 +27,11 @@ import { SiteStatusCard } from "./site-status-card";
 
 type HomeTab = "profile" | "log";
 
+const BLINK_DELAY_MIN_MS = 2400;
+const BLINK_DELAY_RANGE_MS = 4600;
+const BLINK_DURATION_MIN_MS = 110;
+const BLINK_DURATION_RANGE_MS = 60;
+
 const personalityTraitDefinitions = [
   { key: "personalityEnergyScore", left: "外向", right: "内向", color: "#4298b4" },
   { key: "personalityMindScore", left: "直觉", right: "观察", color: "#d8952c" },
@@ -41,6 +46,72 @@ function getPersonalityDetailsUrl(type: string | null | undefined, configuredUrl
   return baseType && /^[a-z]{4}$/.test(baseType)
     ? `https://www.16personalities.com/ch/${baseType}-人格`
     : "https://www.16personalities.com/ch/人格类型";
+}
+
+function BlinkingCharacter() {
+  const [isBlinking, setIsBlinking] = useState(false);
+
+  useEffect(() => {
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let timer: number | undefined;
+
+    const clearTimer = () => {
+      if (timer !== undefined) window.clearTimeout(timer);
+      timer = undefined;
+    };
+
+    const scheduleBlink = () => {
+      clearTimer();
+      if (reducedMotion.matches || document.hidden) return;
+
+      const delay = BLINK_DELAY_MIN_MS + Math.random() * BLINK_DELAY_RANGE_MS;
+      timer = window.setTimeout(() => {
+        setIsBlinking(true);
+        const duration = BLINK_DURATION_MIN_MS + Math.random() * BLINK_DURATION_RANGE_MS;
+        timer = window.setTimeout(() => {
+          setIsBlinking(false);
+          scheduleBlink();
+        }, duration);
+      }, delay);
+    };
+
+    const syncAnimation = () => {
+      clearTimer();
+      setIsBlinking(false);
+      scheduleBlink();
+    };
+
+    scheduleBlink();
+    reducedMotion.addEventListener("change", syncAnimation);
+    document.addEventListener("visibilitychange", syncAnimation);
+
+    return () => {
+      clearTimer();
+      reducedMotion.removeEventListener("change", syncAnimation);
+      document.removeEventListener("visibilitychange", syncAnimation);
+    };
+  }, []);
+
+  return (
+    <div className={styles.character}>
+      <Image
+        src="/brand/anywayone-character.png"
+        alt="Anywayone 动漫 IP 全身形象"
+        fill
+        priority
+        sizes="(max-width: 767px) 82vw, (max-width: 1199px) 40vw, 46vw"
+      />
+      <Image
+        className={`${styles.blinkOverlay} ${isBlinking ? styles.blinkOverlayVisible : ""}`}
+        src="/brand/anywayone-character-close.png"
+        alt=""
+        aria-hidden="true"
+        fill
+        priority
+        sizes="(max-width: 767px) 82vw, (max-width: 1199px) 40vw, 46vw"
+      />
+    </div>
+  );
 }
 
 export function HomeExperience({
@@ -176,15 +247,7 @@ export function HomeExperience({
             <p className={styles.mangaNote} aria-hidden="true">
               MY WAY / 01
             </p>
-            <div className={styles.character}>
-              <Image
-                src="/brand/anywayone-character.png"
-                alt="Anywayone 动漫 IP 全身形象"
-                fill
-                priority
-                sizes="(max-width: 767px) 82vw, (max-width: 1199px) 40vw, 46vw"
-              />
-            </div>
+            <BlinkingCharacter />
           </div>
         </section>
 

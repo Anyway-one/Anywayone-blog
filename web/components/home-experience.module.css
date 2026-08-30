@@ -118,6 +118,16 @@
   object-position: bottom center;
 }
 
+.character .blinkOverlay {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 35ms ease-out;
+}
+
+.character .blinkOverlayVisible {
+  opacity: 1;
+}
+
 .mangaNote {
   position: absolute;
   z-index: 2;
