@@ -975,6 +975,7 @@
 
 .locationCard {
   grid-column: span 3;
+  min-height: 320px;
 }
 
 .equipmentCard {
@@ -1103,24 +1104,42 @@
   text-align: right;
 }
 
-.locationMain {
-  display: flex;
+.locationCardBody {
+  min-height: 0;
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(120px, 0.72fr) minmax(190px, 1.28fr);
   align-items: center;
-  gap: 12px;
-  margin-top: 30px;
+  gap: 18px;
+  margin-top: 16px;
 }
 
-.locationMain svg {
-  width: 28px;
-  height: 28px;
-  flex: 0 0 auto;
+.locationCopy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.locationCopy > span {
   color: var(--color-brand);
-  stroke-width: 1.35;
+  font-size: 10px;
+  letter-spacing: 0.04em;
 }
 
-.locationMain strong {
-  font-size: 19px;
+.locationCopy strong {
+  margin-top: 9px;
+  overflow-wrap: anywhere;
+  font-size: 20px;
   font-weight: 500;
+  line-height: 1.35;
+}
+
+.locationCopy p {
+  margin: 18px 0 0;
+  color: var(--color-secondary-text);
+  font-size: 12px;
+  line-height: 1.7;
 }
 
 .equipmentGrid {
@@ -1322,6 +1341,15 @@
     grid-column: span 1;
   }
 
+  .locationCardBody {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+  }
+
+  .locationCopy {
+    width: 100%;
+  }
+
   .personalityCardBody {
     grid-template-columns: minmax(110px, 0.34fr) minmax(0, 0.66fr);
     gap: 14px;
@@ -1348,6 +1376,14 @@
   .profileCard {
     min-height: 190px;
     padding: 18px;
+  }
+
+  .locationCard {
+    min-height: 420px;
+  }
+
+  .locationCardBody {
+    gap: 12px;
   }
 
   .avatarCardBody {

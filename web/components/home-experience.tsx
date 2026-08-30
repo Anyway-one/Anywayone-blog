@@ -7,7 +7,6 @@ import {
   CalendarDays,
   ChevronLeft,
   ChevronRight,
-  Compass,
   ExternalLink,
   Heart,
   MapPin,
@@ -24,6 +23,7 @@ import type { PublicSystemStatus } from "@/lib/public-status";
 import styles from "./home-experience.module.css";
 import { VisitorAnalytics } from "./visitor-analytics";
 import { SiteStatusCard } from "./site-status-card";
+import { LocationMap } from "./location-map";
 
 type HomeTab = "profile" | "log";
 
@@ -328,8 +328,14 @@ export function HomeExperience({
 
                   <article className={`${styles.profileCard} ${styles.locationCard}`}>
                     <div className={styles.cardHeading}><span>04 / LOCATION</span><MapPin aria-hidden="true" /></div>
-                    <div className={styles.locationMain}><Compass aria-hidden="true" /><strong>{profile?.location || "位置待配置"}</strong></div>
-                    {favoriteCities.length > 0 && <p className={styles.cardDescription}>喜欢的城市 · {favoriteCities.join(" / ")}</p>}
+                    <div className={styles.locationCardBody}>
+                      <div className={styles.locationCopy}>
+                        <span>CURRENT BASE</span>
+                        <strong>{profile?.location || "位置待配置"}</strong>
+                        {favoriteCities.length > 0 && <p>喜欢的城市 · {favoriteCities.join(" / ")}</p>}
+                      </div>
+                      <LocationMap location={profile?.location} />
+                    </div>
                   </article>
 
                   <article className={`${styles.profileCard} ${styles.equipmentCard}`}>

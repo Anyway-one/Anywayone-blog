@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
-import { Button, Form, Input, InputNumber, Segmented, Select, Slider, Spin, message } from 'antd'
+import { AutoComplete, Button, Form, Input, InputNumber, Segmented, Select, Slider, Spin, message } from 'antd'
 import { ImagePlus, Minus, Plus, Save, Trash2 } from 'lucide-react'
 import { uploadMedia } from '../api/media'
 import { getProfile, saveProfile, type SiteProfileInput } from '../api/site'
 import PageHeader from '../components/PageHeader'
+import { chinaLocationOptions } from '../app/site-options'
 
 const zodiacOptions = '白羊座 金牛座 双子座 巨蟹座 狮子座 处女座 天秤座 天蝎座 射手座 摩羯座 水瓶座 双鱼座'
   .split(' ').map((value) => ({ value, label: value }))
@@ -264,7 +265,7 @@ export default function ProfilePage() {
             <div className="form-grid">
               <Form.Item name="expertise" label="专业领域"><Input placeholder="例如：软件工程、视觉设计" /></Form.Item>
               <Form.Item name="occupation" label="职业"><Input placeholder="例如：独立开发者" /></Form.Item>
-              <Form.Item name="location" label="所在地"><Input placeholder="例如：中国 · 深圳" /></Form.Item>
+              <Form.Item name="location" label="所在地"><AutoComplete allowClear options={chinaLocationOptions} placeholder="例如：中国 · 广东 · 深圳" /></Form.Item>
               <Form.Item name="zodiacSign" label="星座"><Select allowClear options={zodiacOptions} placeholder="未设置" /></Form.Item>
               <Form.Item name="chineseZodiac" label="生肖"><Select allowClear options={chineseZodiacOptions} placeholder="未设置" /></Form.Item>
               <Form.Item name="bloodType" label="血型"><Select allowClear options={bloodOptions} placeholder="未设置" /></Form.Item>
