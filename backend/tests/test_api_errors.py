@@ -17,6 +17,25 @@ async def test_admin_endpoint_requires_authentication() -> None:
     assert response.json()["meta"]["requestId"].startswith("req_")
 
 
+async def test_cors_preflight_allows_admin_history_update() -> None:
+    async with AsyncClient(
+        transport=ASGITransport(app=app),
+        base_url="http://test",
+    ) as client:
+        response = await client.options(
+            "/api/v1/admin/settings/history/634f52ea-2348-4dbb-b822-8fac6c7e99e3",
+            headers={
+                "Origin": "http://localhost:5173",
+                "Access-Control-Request-Method": "PUT",
+                "Access-Control-Request-Headers": "authorization,content-type",
+            },
+        )
+
+    assert response.status_code == 200
+    assert response.headers["Access-Control-Allow-Origin"] == "http://localhost:5173"
+    assert "PUT" in response.headers["Access-Control-Allow-Methods"]
+
+
 async def test_validation_errors_use_api_envelope() -> None:
     async with AsyncClient(
         transport=ASGITransport(app=app),
