@@ -121,7 +121,9 @@ function toMarker(longitude: number, latitude: number) {
 }
 
 export function resolveChinaLocation(location: string | null | undefined): ResolvedChinaLocation | null {
-  const normalized = location?.replace(/[省市自治区特别行政区壮族回族维吾尔族\s·,/，、-]/g, "") ?? "";
+  const normalized = location
+    ?.replace(/[\s·,/，、-]/g, "")
+    .replace(/壮族自治区|回族自治区|维吾尔自治区|特别行政区|自治区|省|市/g, "") ?? "";
   if (!normalized) return null;
 
   const city = cities.find((item) => normalized.includes(item.name));
