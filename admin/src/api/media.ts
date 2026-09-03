@@ -17,6 +17,7 @@ interface PaginatedResponse<T> {
 export interface MediaItem {
   id: string
   publicUrl: string
+  category: MediaCategory
   originalName: string
   mimeType: string
   sizeBytes: number
@@ -24,10 +25,18 @@ export interface MediaItem {
   height: number
   altText: string | null
   createdAt: string
+  usageCount: number
+  usageLabels: string[]
 }
 
-export async function listMedia(page = 1, pageSize = 100) {
-  return apiRequest<PaginatedResponse<MediaItem>>(`/admin/media?page=${page}&pageSize=${pageSize}`)
+export type MediaCategory = 'general' | 'post-cover' | 'photography' | 'site' | 'profile' | 'contact'
+
+export async function listMedia(page = 1, pageSize = 100, options?: { category?: MediaCategory; query?: string; unused?: boolean }) {
+  const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) })
+  if (options?.category) params.set('category', options.category)
+  if (options?.query) params.set('q', options.query)
+  if (options?.unused) params.set('unused', 'true')
+  return apiRequest<PaginatedResponse<MediaItem>>(`/admin/media?${params}`)
 }
 
 export async function getMediaCount() {
@@ -35,9 +44,10 @@ export async function getMediaCount() {
   return response.meta.total
 }
 
-export async function uploadMedia(file: File) {
+export async function uploadMedia(file: File, category: MediaCategory = 'general') {
   const body = new FormData()
   body.append('file', file)
+  body.append('category', category)
   const response = await apiRequest<DataResponse<MediaItem>>('/admin/media', {
     method: 'POST',
     body,
@@ -47,4 +57,12 @@ export async function uploadMedia(file: File) {
 
 export async function deleteMedia(id: string) {
   await apiRequest(`/admin/media/${id}`, { method: 'DELETE' })
+}
+
+export async function bulkDeleteMedia(ids: string[]) {
+  const response = await apiRequest<DataResponse<{ deletedCount: number; blockedCount: number; blockedNames: string[] }>>('/admin/media/bulk-delete', {
+    method: 'POST',
+    body: JSON.stringify({ ids }),
+  })
+  return response.data
 }

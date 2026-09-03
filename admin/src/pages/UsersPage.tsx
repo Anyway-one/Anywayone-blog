@@ -69,7 +69,7 @@ export default function UsersPage() {
   const uploadAvatar = async (file: File) => {
     setUploadingAvatar(true)
     try {
-      const media = await uploadMedia(file)
+      const media = await uploadMedia(file, 'profile')
       setAvatar({ id: media.id, url: media.publicUrl })
       void messageApi.success('头像已上传，请保存用户信息')
     } catch (uploadError: unknown) {

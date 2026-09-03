@@ -28,7 +28,7 @@ export default function PhotographyEditorPage() {
       setCollection(value)
       setDraft({ title: value.title, slug: value.slug, description: value.description ?? '', locationText: value.locationText ?? '', capturedFrom: value.capturedFrom ?? '', capturedTo: value.capturedTo ?? '' })
       setFiles(value.items.map((item) => ({ uid: item.id, name: item.originalName, status: 'done', url: item.publicUrl })))
-      setMediaByUid(Object.fromEntries(value.items.map((item) => [item.id, { id: item.mediaId, publicUrl: item.publicUrl, originalName: item.originalName, mimeType: 'image/*', sizeBytes: 0, width: item.width, height: item.height, altText: item.altText, createdAt: '' }])))
+      setMediaByUid(Object.fromEntries(value.items.map((item) => [item.id, { id: item.mediaId, publicUrl: item.publicUrl, category: 'photography', originalName: item.originalName, mimeType: 'image/*', sizeBytes: 0, width: item.width, height: item.height, altText: item.altText, createdAt: '', usageCount: 1, usageLabels: [`摄影集：${value.title}`] }])))
     }).catch((error: unknown) => void messageApi.error(error instanceof Error ? error.message : '摄影集加载失败。'))
   }, [albumId, messageApi])
 
@@ -42,7 +42,7 @@ export default function PhotographyEditorPage() {
         const thumbUrl = URL.createObjectURL(file.originFileObj)
         previewUrls.current.add(thumbUrl)
         setFiles((current) => current.map((item) => item.uid === file.uid ? { ...item, thumbUrl, status: 'uploading' } : item))
-        void compressPhotographyImage(file.originFileObj).then((preparedFile) => uploadMedia(preparedFile)).then((media) => {
+        void compressPhotographyImage(file.originFileObj).then((preparedFile) => uploadMedia(preparedFile, 'photography')).then((media) => {
           setMediaByUid((current) => ({ ...current, [file.uid]: media }))
           setFiles((current) => current.map((item) => item.uid === file.uid ? { ...item, status: 'done' } : item))
         }).catch((error: unknown) => { setFiles((current) => current.filter((item) => item.uid !== file.uid)); void messageApi.error(error instanceof Error ? error.message : '图片上传失败。') }).finally(() => uploadingUids.current.delete(file.uid))

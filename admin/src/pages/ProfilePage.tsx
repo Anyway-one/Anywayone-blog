@@ -139,7 +139,7 @@ export default function ProfilePage() {
   const uploadAvatar = async (file: File) => {
     setUploadingAvatar(true)
     try {
-      const media = await uploadMedia(file)
+      const media = await uploadMedia(file, 'profile')
       setAvatarMediaId(media.id)
       setAvatarUrl(media.publicUrl)
       void messageApi.success('头像已上传，请保存个人资料')
@@ -154,7 +154,7 @@ export default function ProfilePage() {
   const uploadPersonalityPortrait = async (file: File) => {
     setUploadingPersonalityPortrait(true)
     try {
-      const media = await uploadMedia(file)
+      const media = await uploadMedia(file, 'profile')
       setPersonalityPortraitMediaId(media.id)
       setPersonalityPortraitUrl(media.publicUrl)
       void messageApi.success('人格肖像已上传，请保存个人资料')

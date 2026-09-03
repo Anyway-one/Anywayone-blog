@@ -15,7 +15,8 @@ from app.core.errors import AppError
 from app.core.storage import StorageError, delete_object, put_object
 from app.modules.auth.models import User
 from app.modules.media.models import Media
-from app.modules.photography.models import PhotoItem
+from app.modules.media.schemas import MediaCategory
+from app.modules.photography.models import PhotoCollection, PhotoItem
 from app.modules.posts.models import Post
 from app.modules.site.models import ContactMethod, SiteHistoryEvent, SiteProfile, SiteSettings
 
@@ -34,25 +35,119 @@ async def list_media(
     *,
     page: int,
     page_size: int,
+    category: MediaCategory | None = None,
+    query: str | None = None,
+    unused: bool = False,
 ) -> tuple[list[Media], int, int]:
     condition = Media.deleted_at.is_(None)
+    if category is not None:
+        condition = condition & (Media.category == category)
+    if query and query.strip():
+        condition = condition & Media.original_name.ilike(f"%{query.strip()}%")
     total = await db.scalar(select(func.count()).select_from(Media).where(condition)) or 0
-    items = list(
-        (
-            await db.scalars(
-                select(Media)
-                .where(condition)
-                .order_by(Media.created_at.desc())
-                .offset((page - 1) * page_size)
-                .limit(page_size)
-            )
-        ).all()
-    )
+    statement = select(Media).where(condition).order_by(Media.created_at.desc())
+    if unused:
+        all_items = list((await db.scalars(statement)).all())
+        usage = await get_media_usage(db, {item.id for item in all_items})
+        all_items = [item for item in all_items if item.id not in usage]
+        total = len(all_items)
+        items = all_items[(page - 1) * page_size : page * page_size]
+    else:
+        items = list(
+            (await db.scalars(statement.offset((page - 1) * page_size).limit(page_size))).all()
+        )
     pages = (total + page_size - 1) // page_size if total else 0
     return items, total, pages
 
 
-async def upload_image(db: AsyncSession, *, owner: User, upload: UploadFile) -> Media:
+async def get_media_usage(
+    db: AsyncSession, media_ids: set[uuid.UUID]
+) -> dict[uuid.UUID, list[str]]:
+    if not media_ids:
+        return {}
+    usage: dict[uuid.UUID, list[str]] = {}
+
+    def add(media_id: uuid.UUID, label: str) -> None:
+        usage.setdefault(media_id, []).append(label)
+
+    for media_id, title in await db.execute(
+        select(Post.cover_media_id, Post.title).where(
+            Post.cover_media_id.in_(media_ids), Post.deleted_at.is_(None)
+        )
+    ):
+        add(media_id, f"文章封面：{title}")
+    for media_id, collection_title in await db.execute(
+        select(PhotoItem.media_id, PhotoCollection.title)
+        .join(PhotoCollection, PhotoCollection.id == PhotoItem.collection_id)
+        .where(PhotoItem.media_id.in_(media_ids), PhotoCollection.deleted_at.is_(None))
+    ):
+        add(media_id, f"摄影集：{collection_title or '未命名'}")
+    for media_id in (
+        await db.scalars(
+            select(SiteProfile.avatar_media_id).where(SiteProfile.avatar_media_id.in_(media_ids))
+        )
+    ).all():
+        if media_id is not None:
+            add(media_id, "个人资料头像")
+    for media_id in (
+        await db.scalars(
+            select(SiteProfile.personality_portrait_media_id).where(
+                SiteProfile.personality_portrait_media_id.in_(media_ids)
+            )
+        )
+    ).all():
+        if media_id is not None:
+            add(media_id, "人格肖像")
+    for media_id in (
+        await db.scalars(
+            select(SiteSettings.logo_web_media_id).where(
+                SiteSettings.logo_web_media_id.in_(media_ids)
+            )
+        )
+    ).all():
+        if media_id is not None:
+            add(media_id, "网站 Logo")
+    for media_id in (
+        await db.scalars(
+            select(SiteSettings.logo_mobile_media_id).where(
+                SiteSettings.logo_mobile_media_id.in_(media_ids)
+            )
+        )
+    ).all():
+        if media_id is not None:
+            add(media_id, "移动端 Logo")
+    for media_id in (
+        await db.scalars(
+            select(SiteSettings.og_image_media_id).where(
+                SiteSettings.og_image_media_id.in_(media_ids)
+            )
+        )
+    ).all():
+        if media_id is not None:
+            add(media_id, "默认分享图")
+    for media_id in (
+        await db.scalars(
+            select(ContactMethod.qr_media_id).where(ContactMethod.qr_media_id.in_(media_ids))
+        )
+    ).all():
+        if media_id is not None:
+            add(media_id, "联系方式二维码")
+    for media_id, name in await db.execute(
+        select(SiteHistoryEvent.image_media_id, SiteHistoryEvent.name).where(
+            SiteHistoryEvent.image_media_id.in_(media_ids)
+        )
+    ):
+        add(media_id, f"站点纪事：{name}")
+    for media_id, name in await db.execute(
+        select(User.avatar_media_id, User.display_name).where(User.avatar_media_id.in_(media_ids))
+    ):
+        add(media_id, f"用户头像：{name}")
+    return usage
+
+
+async def upload_image(
+    db: AsyncSession, *, owner: User, upload: UploadFile, category: MediaCategory = "general"
+) -> Media:
     settings = get_settings()
     data = await upload.read(settings.media_max_upload_bytes + 1)
     if len(data) > settings.media_max_upload_bytes:
@@ -101,6 +196,7 @@ async def upload_image(db: AsyncSession, *, owner: User, upload: UploadFile) -> 
     original_name = Path(upload.filename or "image").name[:255]
     media = Media(
         owner_id=owner.id,
+        category=category,
         object_key=object_key,
         public_url=f"{settings.media_public_url.rstrip('/')}/{object_key}",
         original_name=original_name,
@@ -121,6 +217,34 @@ async def upload_image(db: AsyncSession, *, owner: User, upload: UploadFile) -> 
         raise
     await db.refresh(media)
     return media
+
+
+async def bulk_delete_media(db: AsyncSession, media_ids: list[uuid.UUID]) -> tuple[int, list[str]]:
+    unique_ids = set(media_ids)
+    if not unique_ids:
+        return 0, []
+    media_items = list(
+        (
+            await db.scalars(
+                select(Media)
+                .where(Media.id.in_(unique_ids), Media.deleted_at.is_(None))
+                .with_for_update()
+            )
+        ).all()
+    )
+    usage = await get_media_usage(db, {item.id for item in media_items})
+    blocked_names = [item.original_name for item in media_items if item.id in usage]
+    deletable = [item for item in media_items if item.id not in usage]
+    now = datetime.now(UTC)
+    for item in deletable:
+        item.deleted_at = now
+    await db.commit()
+    for item in deletable:
+        try:
+            await delete_object(get_settings(), item.object_key)
+        except StorageError:
+            logger.warning("Unable to remove media file", extra={"object_key": item.object_key})
+    return len(deletable), blocked_names
 
 
 async def delete_media(db: AsyncSession, media_id: uuid.UUID) -> None:

@@ -471,7 +471,7 @@ export default function PostEditorPage() {
   const handleCoverUpload = async (file: File) => {
     setCoverUploading(true)
     try {
-      const uploaded = await uploadMedia(file)
+      const uploaded = await uploadMedia(file, 'post-cover')
       setMedia((current) => [uploaded, ...current.filter((item) => item.id !== uploaded.id)])
       setDraft((current) => ({ ...current, coverMediaId: uploaded.id }))
       setSaveError(null)

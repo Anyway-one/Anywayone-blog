@@ -18,6 +18,7 @@ class Media(UuidPrimaryKeyMixin, TimestampMixin, Base):
         index=True,
     )
     object_key: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
+    category: Mapped[str] = mapped_column(String(32), default="general", nullable=False, index=True)
     public_url: Mapped[str] = mapped_column(String(2048), nullable=False)
     original_name: Mapped[str] = mapped_column(String(255), nullable=False)
     mime_type: Mapped[str] = mapped_column(String(100), nullable=False)

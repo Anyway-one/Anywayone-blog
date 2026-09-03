@@ -105,7 +105,7 @@ export default function SiteHistoryPage() {
   const upload = async (file: File) => {
     setUploading(true)
     try {
-      const item = await uploadMedia(file)
+      const item = await uploadMedia(file, 'site')
       setMedia((current) => [item, ...current.filter((entry) => entry.id !== item.id)])
       form.setFieldValue('imageMediaId', item.id)
       void messageApi.success('图片已上传并选中')

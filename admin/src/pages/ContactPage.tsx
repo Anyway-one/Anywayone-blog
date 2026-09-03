@@ -62,7 +62,7 @@ export default function ContactPage() {
     if (!qrTarget) return
     setUploading(true)
     try {
-      const media = await uploadMedia(file)
+      const media = await uploadMedia(file, 'contact')
       update(qrTarget, { qrMediaId: media.id, qrPublicUrl: media.publicUrl })
       void messageApi.success('二维码已上传，请保存联系方式')
     } catch (error) {

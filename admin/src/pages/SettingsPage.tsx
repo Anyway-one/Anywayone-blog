@@ -76,7 +76,7 @@ export default function SettingsPage() {
   const upload = async (field: MediaField, file: File) => {
     setUploading(field)
     try {
-      const item = await uploadMedia(file)
+      const item = await uploadMedia(file, 'site')
       setMedia((current) => ({ ...current, [field]: { id: item.id, url: item.publicUrl } }))
       void messageApi.success('图片已上传，请保存设置')
     } catch (error) {
