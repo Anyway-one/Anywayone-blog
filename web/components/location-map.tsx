@@ -33,6 +33,8 @@ interface MapModel {
   detailMapName: string | null;
   nationalSelectedName: string;
   detailSelectedName: string | null;
+  detailLayoutCenter: [string, string];
+  detailLayoutSize: string;
 }
 
 const MAP_COLORS = {
@@ -50,32 +52,106 @@ function findFeature(geoJson: GeoJSON, predicate: (properties: GeoProperties) =>
   return geoJson.features.find((feature) => predicate(feature.properties));
 }
 
-function mapOption(mapName: string, selectedName: string | null, detailed: boolean) {
+type Bounds = [number, number, number, number];
+
+function extendBounds(bounds: Bounds, coordinates: unknown): Bounds {
+  if (!Array.isArray(coordinates)) return bounds;
+  if (typeof coordinates[0] === "number" && typeof coordinates[1] === "number") {
+    bounds[0] = Math.min(bounds[0], coordinates[0]);
+    bounds[1] = Math.min(bounds[1], coordinates[1]);
+    bounds[2] = Math.max(bounds[2], coordinates[0]);
+    bounds[3] = Math.max(bounds[3], coordinates[1]);
+    return bounds;
+  }
+  coordinates.forEach((coordinate) => extendBounds(bounds, coordinate));
+  return bounds;
+}
+
+function geoBounds(geoJson: GeoJSON): Bounds {
+  return geoJson.features.reduce(
+    (bounds, feature) => extendBounds(bounds, feature.geometry.coordinates),
+    [Infinity, Infinity, -Infinity, -Infinity] as Bounds,
+  );
+}
+
+function detailLayout(chinaGeoJson: GeoJSON, regionGeoJson: GeoJSON): {
+  center: [string, string];
+  size: string;
+} {
+  const china = geoBounds(chinaGeoJson);
+  const region = geoBounds(regionGeoJson);
+  const chinaWidth = Math.max(china[2] - china[0], 1);
+  const chinaHeight = Math.max(china[3] - china[1], 1);
+  const regionCenterX = (region[0] + region[2]) / 2;
+  const regionCenterY = (region[1] + region[3]) / 2;
+  const centerX = ((regionCenterX - china[0]) / chinaWidth) * 100;
+  const centerY = (1 - (regionCenterY - china[1]) / chinaHeight) * 100;
+  const regionRatio = Math.max((region[2] - region[0]) / chinaWidth, (region[3] - region[1]) / chinaHeight);
+  const size = Math.min(48, Math.max(27, regionRatio * 100 * 1.35));
+  return {
+    center: [`${Math.round(centerX)}%`, `${Math.round(centerY)}%`],
+    size: `${Math.round(size)}%`,
+  };
+}
+
+function mapOption(model: MapModel, detailed: boolean) {
+  const nationalSeries = {
+    type: "map",
+    map: model.nationalMapName,
+    roam: false,
+    silent: true,
+    selectedMode: false,
+    layoutCenter: ["50%", "50%"],
+    layoutSize: "101%",
+    label: { show: false },
+    itemStyle: {
+      areaColor: MAP_COLORS.base,
+      borderColor: MAP_COLORS.line,
+      borderWidth: 0.8,
+    },
+    emphasis: { disabled: true },
+    data: model.nationalSelectedName ? [{
+      name: model.nationalSelectedName,
+      itemStyle: {
+        areaColor: MAP_COLORS.selected,
+        borderColor: MAP_COLORS.selectedLine,
+        borderWidth: 1.2,
+      },
+      label: {
+        show: !detailed,
+        color: MAP_COLORS.selectedText,
+        fontSize: 10,
+        fontWeight: 600,
+      },
+    }] : [],
+  };
+
+  if (!detailed || !model.detailMapName) {
+    return { animation: true, animationDurationUpdate: 560, animationEasingUpdate: "cubicOut" as const, tooltip: { show: false }, series: [nationalSeries] };
+  }
+
   return {
     animation: true,
-    animationDurationUpdate: 360,
+    animationDurationUpdate: 640,
+    animationEasingUpdate: "cubicOut" as const,
     tooltip: { show: false },
-    series: [{
+    series: [nationalSeries, {
       type: "map",
-      map: mapName,
+      map: model.detailMapName,
       roam: false,
       silent: true,
       selectedMode: false,
-      layoutCenter: ["50%", "50%"],
-      layoutSize: detailed ? "108%" : "101%",
-      label: {
-        show: detailed,
-        color: MAP_COLORS.text,
-        fontSize: 9,
-      },
+      layoutCenter: model.detailLayoutCenter,
+      layoutSize: model.detailLayoutSize,
+      label: { show: false },
       itemStyle: {
-        areaColor: MAP_COLORS.base,
-        borderColor: MAP_COLORS.line,
+        areaColor: "rgba(255, 255, 255, 0.06)",
+        borderColor: "rgba(248, 247, 243, 0.9)",
         borderWidth: 0.8,
       },
       emphasis: { disabled: true },
-      data: selectedName ? [{
-        name: selectedName,
+      data: model.detailSelectedName ? [{
+        name: model.detailSelectedName,
         itemStyle: {
           areaColor: MAP_COLORS.selected,
           borderColor: MAP_COLORS.selectedLine,
@@ -84,7 +160,7 @@ function mapOption(mapName: string, selectedName: string | null, detailed: boole
         label: {
           show: true,
           color: MAP_COLORS.selectedText,
-          fontSize: detailed ? 10 : 9,
+          fontSize: 10,
           fontWeight: 600,
         },
       }] : [],
@@ -143,7 +219,10 @@ export function LocationMap({
         ? { ...chinaGeoJson, features: [...chinaGeoJson.features, cityFeature] }
         : chinaGeoJson;
       const nationalMapName = `profile-location-china-${regionAdcode}-${city ?? "region"}`;
-      const detailMapName = regionGeoJson ? `profile-location-region-${regionAdcode}` : null;
+      const detailMapName = regionGeoJson && !municipalityAdcodes.has(regionAdcode)
+        ? `profile-location-region-${regionAdcode}`
+        : null;
+      const layout = regionGeoJson ? detailLayout(chinaGeoJson, regionGeoJson) : null;
 
       echarts.registerMap(nationalMapName, nationalGeoJson);
       if (regionGeoJson && detailMapName) echarts.registerMap(detailMapName, regionGeoJson);
@@ -157,6 +236,8 @@ export function LocationMap({
         detailMapName,
         nationalSelectedName,
         detailSelectedName: cityFeature?.properties.name ?? null,
+        detailLayoutCenter: layout?.center ?? ["50%", "50%"],
+        detailLayoutSize: layout?.size ?? "40%",
       });
       setStatus("ready");
     }).catch(() => {
@@ -176,11 +257,7 @@ export function LocationMap({
     const chart = chartRef.current;
     if (!chart || !model) return;
     const showDetail = detailed && Boolean(model.detailMapName);
-    chart.setOption(mapOption(
-      showDetail ? model.detailMapName! : model.nationalMapName,
-      showDetail ? model.detailSelectedName : model.nationalSelectedName,
-      showDetail,
-    ), true);
+    chart.setOption(mapOption(model, showDetail), true);
   }, [detailed, model]);
 
   const showDetail = detailed && Boolean(model?.detailMapName);
