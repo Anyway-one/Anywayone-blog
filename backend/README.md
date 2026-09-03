@@ -57,6 +57,21 @@ openssl rand -hex 32
 
 `.env` 包含敏感信息，已被 Git 忽略，禁止提交。远程或生产数据库应启用 PostgreSQL SSL；`DATABASE_SSL_MODE=disable` 只适合可信内网或已建立安全隧道的环境。
 
+### 使用 Cloudflare R2 存储图片
+
+默认 `MEDIA_STORAGE_BACKEND=local` 会把图片保存到 `MEDIA_STORAGE_PATH`。生产环境可以切换到 Cloudflare R2：
+
+```dotenv
+MEDIA_STORAGE_BACKEND=r2
+MEDIA_PUBLIC_URL=https://cdn.example.com
+R2_ACCOUNT_ID=你的 Cloudflare Account ID
+R2_ACCESS_KEY_ID=R2 API Token 的 Access Key ID
+R2_SECRET_ACCESS_KEY=R2 API Token 的 Secret Access Key
+R2_BUCKET_NAME=你的 R2 Bucket 名称
+```
+
+`MEDIA_PUBLIC_URL` 必须是已经绑定到该 Bucket 的公开自定义域名（或其他可公开访问的 R2 域名），不要填写 S3 API 地址。R2 API Token 至少需要该 Bucket 的对象读写权限。切换后新上传的图片会直接写入 R2，数据库中的历史图片不会自动搬迁；迁移旧图片前请先备份并按对象键上传到同一个 Bucket。
+
 ### 3. 安装依赖并创建表
 
 ```bash

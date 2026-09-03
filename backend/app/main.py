@@ -36,11 +36,12 @@ api.add_middleware(RequestLoggingMiddleware)
 api.add_middleware(RequestIdMiddleware)
 register_exception_handlers(api)
 api.include_router(api_router)
-api.mount(
-    "/media",
-    StaticFiles(directory=settings.media_storage_path, check_dir=False),
-    name="media",
-)
+if settings.media_storage_backend == "local":
+    api.mount(
+        "/media",
+        StaticFiles(directory=settings.media_storage_path, check_dir=False),
+        name="media",
+    )
 
 # Keep CORS outside FastAPI's error middleware so unexpected 500 responses are
 # still readable by the Admin application on its separate origin.

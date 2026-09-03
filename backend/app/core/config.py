@@ -40,9 +40,14 @@ class Settings(BaseSettings):
         "http://localhost:5173",
     ]
     cookie_secure: bool = False
+    media_storage_backend: Literal["local", "r2"] = "local"
     media_storage_path: Path = Path("data/media")
     media_public_url: str = "http://localhost:8000/media"
     media_max_upload_bytes: int = Field(default=10 * 1024 * 1024, ge=1024, le=50 * 1024 * 1024)
+    r2_account_id: str | None = None
+    r2_access_key_id: str | None = None
+    r2_secret_access_key: SecretStr | None = None
+    r2_bucket_name: str | None = None
 
     @field_validator("cors_origins", mode="before")
     @classmethod
@@ -73,6 +78,26 @@ class Settings(BaseSettings):
         )
 
     def validate_production_settings(self) -> None:
+        if self.media_storage_backend == "r2":
+            missing = [
+                name
+                for name, value in (
+                    ("R2_ACCOUNT_ID", self.r2_account_id),
+                    ("R2_ACCESS_KEY_ID", self.r2_access_key_id),
+                    (
+                        "R2_SECRET_ACCESS_KEY",
+                        self.r2_secret_access_key.get_secret_value()
+                        if self.r2_secret_access_key
+                        else None,
+                    ),
+                    ("R2_BUCKET_NAME", self.r2_bucket_name),
+                )
+                if value is None or not value.strip()
+            ]
+            if missing:
+                raise ValueError("R2 storage requires: " + ", ".join(missing))
+            if not self.media_public_url.startswith(("http://", "https://")):
+                raise ValueError("MEDIA_PUBLIC_URL must be an absolute URL when using R2")
         if self.app_env != "production":
             return
         secret_key = self.secret_key.get_secret_value()

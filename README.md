@@ -46,6 +46,7 @@ pnpm build:admin
 
 - `NEXT_PUBLIC_SITE_URL`：展示端公开地址。
 - `NEXT_PUBLIC_API_BASE_URL`：FastAPI 地址；未配置时展示端使用空数据状态。
+- `NEXT_PUBLIC_MEDIA_BASE_URL`：媒体公开地址。使用 R2 自定义域名时，填写与后端 `MEDIA_PUBLIC_URL` 相同的地址。
 
 Admin 可将 `admin/.env.example` 复制为 `admin/.env.local`：
 
@@ -59,6 +60,8 @@ cd backend
 uv run alembic upgrade head
 uv run python -m app.cli create-admin
 ```
+
+图片默认保存在后端本地目录。生产环境可在后端环境文件中设置 `MEDIA_STORAGE_BACKEND=r2`，并填写 Cloudflare R2 的 `R2_ACCOUNT_ID`、`R2_ACCESS_KEY_ID`、`R2_SECRET_ACCESS_KEY`、`R2_BUCKET_NAME` 以及绑定到 Bucket 的公开 `MEDIA_PUBLIC_URL`。完整示例和迁移注意事项见 [Backend 安装说明](./backend/README.md)。
 
 PostgreSQL 数据库本身需要预先创建，表、索引和约束统一由 Alembic 创建和升级。完整的首次安装、迁移状态检查及生产升级说明见 [Backend 安装与数据库迁移文档](./backend/README.md)。项目不单独维护可能与迁移记录不一致的手写 `schema.sql`。
 

@@ -51,9 +51,6 @@ services:
     init: true
     env_file:
       - ./backend.env
-    environment:
-      MEDIA_STORAGE_PATH: /data/media
-      MEDIA_PUBLIC_URL: https://api.anywayone.com/media
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:

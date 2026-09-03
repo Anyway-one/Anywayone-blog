@@ -1,4 +1,3 @@
-import asyncio
 import logging
 import uuid
 import warnings
@@ -13,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import get_settings
 from app.core.errors import AppError
+from app.core.storage import StorageError, delete_object, put_object
 from app.modules.auth.models import User
 from app.modules.media.models import Media
 from app.modules.photography.models import PhotoItem
@@ -89,9 +89,14 @@ async def upload_image(db: AsyncSession, *, owner: User, upload: UploadFile) -> 
     extension, mime_type = IMAGE_FORMATS[image_format]
     date_prefix = datetime.now(UTC).strftime("%Y/%m")
     object_key = f"{date_prefix}/{uuid.uuid4().hex}.{extension}"
-    destination = settings.media_storage_path / object_key
-    await asyncio.to_thread(destination.parent.mkdir, 0o755, True, True)
-    await asyncio.to_thread(destination.write_bytes, data)
+    try:
+        await put_object(settings, object_key, data, mime_type)
+    except StorageError as exc:
+        raise AppError(
+            status_code=503,
+            code="MEDIA_STORAGE_UNAVAILABLE",
+            message="图片存储服务暂时不可用，请稍后重试。",
+        ) from exc
 
     original_name = Path(upload.filename or "image").name[:255]
     media = Media(
@@ -109,7 +114,10 @@ async def upload_image(db: AsyncSession, *, owner: User, upload: UploadFile) -> 
         await db.commit()
     except Exception:
         await db.rollback()
-        await asyncio.to_thread(destination.unlink, missing_ok=True)
+        try:
+            await delete_object(settings, object_key)
+        except StorageError:
+            logger.warning("Unable to clean up uploaded media", extra={"object_key": object_key})
         raise
     await db.refresh(media)
     return media
@@ -176,8 +184,7 @@ async def delete_media(db: AsyncSession, media_id: uuid.UUID) -> None:
         )
     media.deleted_at = datetime.now(UTC)
     await db.commit()
-    media_path = get_settings().media_storage_path / media.object_key
     try:
-        await asyncio.to_thread(media_path.unlink, missing_ok=True)
-    except OSError:
+        await delete_object(get_settings(), media.object_key)
+    except StorageError:
         logger.warning("Unable to remove media file", extra={"object_key": media.object_key})
