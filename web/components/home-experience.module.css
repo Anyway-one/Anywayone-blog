@@ -957,7 +957,7 @@
 
 .profileCard {
   min-width: 0;
-  min-height: 218px;
+  min-height: 194px;
   display: flex;
   flex-direction: column;
   padding: 22px 22px 20px;
@@ -984,6 +984,7 @@
 
 .tagsCard {
   grid-column: span 2;
+  min-height: 164px;
 }
 
 .personalityCard {
@@ -1203,16 +1204,16 @@
   gap: 8px;
   align-content: flex-start;
   margin-top: auto;
-  padding-top: 22px;
+  padding-top: 16px;
 }
 
 .tagList span {
-  padding: 7px 11px;
+  padding: 5px 9px;
   color: var(--color-ink);
   background: var(--color-surface);
   border: 1px solid var(--color-line);
   border-radius: 999px;
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .personalityCompactHeading {
@@ -1266,7 +1267,7 @@
 }
 
 .personalityCardBody {
-  min-height: 235px;
+  min-height: 196px;
   display: grid;
   grid-template-columns: minmax(140px, 0.38fr) minmax(0, 0.62fr);
   gap: 20px;
@@ -1280,17 +1281,74 @@
 
 .personalityCompactPortrait {
   position: relative;
-  min-height: 235px;
+  min-height: 196px;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) minmax(0, 0fr);
   overflow: hidden;
   background: #e4e6df;
   border: 1px solid var(--color-line);
   border-radius: 3px;
+  transition: grid-template-rows 360ms ease;
 }
 
-.personalityCompactPortrait img {
+.personalityCompactPortraitFrame {
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.personalityCompactPortraitFrame img {
   padding: 10px 8px 0;
   object-fit: contain;
   object-position: center bottom;
+  transition: transform 360ms ease;
+}
+
+.personalityPortraitDescription {
+  min-height: 0;
+  margin: 0;
+  padding: 0 12px;
+  overflow: hidden;
+  color: var(--color-secondary-text);
+  font-size: 11px;
+  line-height: 1.55;
+  opacity: 0;
+  transition: opacity 240ms ease, padding 360ms ease;
+}
+
+.personalityDescriptionFallback {
+  max-height: 0;
+  margin: 0;
+  overflow: hidden;
+  color: var(--color-secondary-text);
+  font-size: 12px;
+  line-height: 1.65;
+  opacity: 0;
+  transition: max-height 360ms ease, margin 360ms ease, opacity 240ms ease;
+}
+
+.personalityCard:hover .personalityPortraitWithDescription,
+.personalityCard:focus-within .personalityPortraitWithDescription {
+  grid-template-rows: minmax(0, 0.62fr) minmax(0, 0.38fr);
+}
+
+.personalityCard:hover .personalityPortraitWithDescription .personalityCompactPortraitFrame img,
+.personalityCard:focus-within .personalityPortraitWithDescription .personalityCompactPortraitFrame img {
+  transform: scale(0.84);
+}
+
+.personalityCard:hover .personalityPortraitDescription,
+.personalityCard:focus-within .personalityPortraitDescription {
+  padding-top: 9px;
+  padding-bottom: 10px;
+  opacity: 1;
+}
+
+.personalityCard:hover .personalityDescriptionFallback,
+.personalityCard:focus-within .personalityDescriptionFallback {
+  max-height: 120px;
+  margin-top: 8px;
+  opacity: 1;
 }
 
 .personalityCardContent {
@@ -1403,6 +1461,15 @@
   }
 
   .personalityCompactPortrait {
-    min-height: 190px;
+    min-height: 176px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .personalityCompactPortrait,
+  .personalityCompactPortraitFrame img,
+  .personalityPortraitDescription,
+  .personalityDescriptionFallback {
+    transition: none;
   }
 }
