@@ -1,37 +1,23 @@
 .map {
   position: relative;
   width: 100%;
-  max-width: 310px;
-  aspect-ratio: 774.04419 / 569.65088;
+  max-width: 330px;
+  aspect-ratio: 774 / 570;
   margin: 0;
 }
 
-.mapObject {
+.chart {
   width: 100%;
   height: 100%;
-  display: block;
-  pointer-events: none;
 }
 
-.marker {
+.loading {
   position: absolute;
-  width: 15px;
-  height: 15px;
+  inset: 0;
   display: grid;
   place-items: center;
-  transform: translate(-50%, -50%);
-  background: var(--color-paper);
-  border: 1px solid var(--color-ink);
-  border-radius: 50%;
-  box-shadow: 0 0 0 3px rgb(230 160 31 / 24%);
-}
-
-.marker i {
-  width: 5px;
-  height: 5px;
-  display: block;
-  background: var(--color-ink);
-  border-radius: 50%;
+  color: var(--color-secondary-text);
+  font-size: 11px;
 }
 
 .map figcaption {
@@ -40,25 +26,7 @@
   bottom: 0;
   padding: 4px 7px;
   color: var(--color-secondary-text);
-  background: rgb(240 239 234 / 88%);
+  background: rgb(240 239 234 / 90%);
   border: 1px solid var(--color-line);
   font-size: 10px;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .marker {
-    animation: location-pulse 2.4s ease-out infinite;
-  }
-}
-
-@keyframes location-pulse {
-  0%,
-  45% {
-    box-shadow: 0 0 0 3px rgb(230 160 31 / 24%);
-  }
-
-  80%,
-  100% {
-    box-shadow: 0 0 0 10px rgb(230 160 31 / 0%);
-  }
 }

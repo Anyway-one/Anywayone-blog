@@ -123,6 +123,7 @@ export function HomeExperience({
 }) {
   const [expanded, setExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState<HomeTab>("profile");
+  const [locationDetailed, setLocationDetailed] = useState(false);
   const [historyScrollState, setHistoryScrollState] = useState({ canBack: false, canForward: false });
   const moreButtonRef = useRef<HTMLButtonElement>(null);
   const profileTabRef = useRef<HTMLButtonElement>(null);
@@ -326,7 +327,11 @@ export function HomeExperience({
                     </div>
                   </article>
 
-                  <article className={`${styles.profileCard} ${styles.locationCard}`}>
+                  <article
+                    className={`${styles.profileCard} ${styles.locationCard}`}
+                    onMouseEnter={() => setLocationDetailed(true)}
+                    onMouseLeave={() => setLocationDetailed(false)}
+                  >
                     <div className={styles.cardHeading}><span>04 / LOCATION</span><MapPin aria-hidden="true" /></div>
                     <div className={styles.locationCardBody}>
                       <div className={styles.locationCopy}>
@@ -334,7 +339,11 @@ export function HomeExperience({
                         <strong>{profile?.location || "位置待配置"}</strong>
                         {favoriteCities.length > 0 && <p>喜欢的城市 · {favoriteCities.join(" / ")}</p>}
                       </div>
-                      <LocationMap location={profile?.location} />
+                      <LocationMap
+                        location={profile?.location}
+                        active={expanded && activeTab === "profile"}
+                        detailed={locationDetailed}
+                      />
                     </div>
                   </article>
 
