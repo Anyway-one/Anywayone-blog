@@ -8,6 +8,63 @@ Anywayone Blog 是一个面向个人长期维护的内容系统，同一仓库�
 
 当前三个应用均已进入开发阶段。产品、架构和 UI 决策见 [doc/README.md](./doc/README.md)。
 
+## 快速入口
+
+| 入口 | 地址 |
+| --- | --- |
+| 在线演示 | [https://www.anywayone.com](https://www.anywayone.com) |
+| 系统演示 | [传送门](https://plus-doc.dromara.org/#/common/demo_system) |
+| 产品与技术文档 | [doc/README.md](./doc/README.md) |
+| 后端安装与迁移说明 | [backend/README.md](./backend/README.md) |
+
+## 系统演示
+
+在线体验：[https://www.anywayone.com](https://www.anywayone.com)
+
+系统演示文档：[传送门](https://plus-doc.dromara.org/#/common/demo_system)
+
+### 01. 首页与品牌首屏
+
+<p align="center">
+  <img src="./web/public/demonstration/Anywayone-09-04-2026_09_21_PM.png" alt="Anywayone 首页与品牌首屏" width="900" />
+</p>
+
+### 02. 个人档案
+
+<p align="center">
+  <img src="./web/public/demonstration/Anywayone-09-04-2026_09_22_PM.png" alt="Anywayone 个人档案" width="900" />
+</p>
+
+### 03. 站点日志与运行状态
+
+<p align="center">
+  <img src="./web/public/demonstration/Anywayone-09-04-2026_09_23_PM.png" alt="Anywayone 站点日志与运行状态" width="900" />
+</p>
+
+### 04. 文章列表
+
+<p align="center">
+  <img src="./web/public/demonstration/Anywayone-09-04-2026_09_24_PM.png" alt="Anywayone 文章列表" width="900" />
+</p>
+
+### 05. 摄影作品集
+
+<p align="center">
+  <img src="./web/public/demonstration/Anywayone-09-04-2026_09_25_PM.png" alt="Anywayone 摄影作品集" width="900" />
+</p>
+
+### 06. 联系方式与社交平台
+
+<p align="center">
+  <img src="./web/public/demonstration/Anywayone-09-04-2026_09_26_PM.png" alt="Anywayone 联系方式与社交平台" width="900" />
+</p>
+
+### 07. 内容管理后台
+
+<p align="center">
+  <img src="./web/public/demonstration/Anywayone-09-04-2026_09_27_PM.png" alt="Anywayone 内容管理后台概览" width="900" />
+</p>
+
 ## 环境要求
 
 - Node.js 24 LTS（见 `.nvmrc`）
@@ -17,11 +74,29 @@ Anywayone Blog 是一个面向个人长期维护的内容系统，同一仓库�
 
 ## 开始开发
 
+先安装前端依赖：
+
 ```bash
 pnpm install
+```
+
+在独立终端启动展示端：
+
+```bash
 pnpm dev:web
+```
+
+在独立终端启动管理端：
+
+```bash
 pnpm dev:admin
-cd backend && uv sync
+```
+
+在独立终端启动后端：
+
+```bash
+cd backend
+uv sync
 uv run uvicorn app.main:app --reload --port 8000
 ```
 
