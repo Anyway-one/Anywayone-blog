@@ -3,8 +3,8 @@
 Anywayone Blog 是一个面向个人长期维护的内容系统，同一仓库规划包含三个应用：
 
 - `web/`：面向读者的展示端，Next.js App Router + TypeScript。
-- `admin/`：内容管理端，React + Vite + Ant Design，已随 V1.0.0 发布。
-- `backend/`：内容与媒体 API，Python 3.11+ + FastAPI，已随 V1.0.0 发布。
+- `admin/`：内容管理端，React + Vite + Ant Design。
+- `backend/`：内容与媒体 API，Python 3.11+ + FastAPI。
 
 当前版本：**V1.0.0**（已发布）。产品、架构和 UI 决策见 [doc/README.md](./doc/README.md)。
 
