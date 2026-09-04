@@ -20,6 +20,7 @@ import { KeyboardEvent, useEffect, useRef, useState } from "react";
 import { SiteFooter } from "./site-footer";
 import type { PublicSiteData } from "@/lib/public-site";
 import type { PublicSystemStatus } from "@/lib/public-status";
+import { resolveChinaLocation } from "@/lib/china-locations";
 import styles from "./home-experience.module.css";
 import { VisitorAnalytics } from "./visitor-analytics";
 import { SiteStatusCard } from "./site-status-card";
@@ -132,6 +133,7 @@ export function HomeExperience({
   const profile = site?.profile;
   const settings = site?.settings;
   const publicName = profile?.publicName || "Anywayone";
+  const currentCity = resolveChinaLocation(profile?.location)?.city || profile?.location || "位置待配置";
   const heroEyebrow = settings?.heroEyebrow || "ANYWAY, BE YOUR ONE.";
   const heroTitle = settings?.heroTitle || "不设限，做唯一的自己。";
   const equipment = profile?.equipment ?? [];
@@ -336,7 +338,7 @@ export function HomeExperience({
                     <div className={styles.locationCardBody}>
                       <div className={styles.locationCopy}>
                         <span>CURRENT BASE</span>
-                        <strong>{profile?.location || "位置待配置"}</strong>
+                        <strong>{currentCity}</strong>
                         {favoriteCities.length > 0 && <p>喜欢的城市 · {favoriteCities.join(" / ")}</p>}
                       </div>
                       <LocationMap
