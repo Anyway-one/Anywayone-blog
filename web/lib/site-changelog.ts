@@ -7,6 +7,16 @@ export interface SiteChangelogEntry {
 
 export const siteChangelog: SiteChangelogEntry[] = [
   {
+    date: "2026-09-04",
+    title: "v1.0.0 首个完整版本",
+    summary: "Anywayone 完成首个可用的个人博客版本，覆盖展示端、管理端、API 与内容运营基础能力。",
+    changes: [
+      "新增个人所在地中国省市联动地图，支持城市高亮、悬停定位与平滑放大。",
+      "新增媒体分类、批量整理与摄影集管理，并接入 Cloudflare R2 对象存储。",
+      "优化 MBTI 人格卡片和首页角色眨眼互动，修复所在地解析与站点日志跨域更新。",
+    ],
+  },
+  {
     date: "2026-08-29",
     title: "个人主页与品牌体验升级",
     summary: "完善个人资料展示与站点品牌配置，让首页内容更丰富、整体形象更统一。",
