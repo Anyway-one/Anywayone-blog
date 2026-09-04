@@ -13,15 +13,12 @@ Anywayone Blog 是一个面向个人长期维护的内容系统，同一仓库�
 | 入口 | 地址 |
 | --- | --- |
 | 在线演示 | [https://www.anywayone.com](https://www.anywayone.com) |
-| 系统演示 | [传送门](https://plus-doc.dromara.org/#/common/demo_system) |
 | 产品与技术文档 | [doc/README.md](./doc/README.md) |
 | 后端安装与迁移说明 | [backend/README.md](./backend/README.md) |
 
 ## 系统演示
 
 在线体验：[https://www.anywayone.com](https://www.anywayone.com)
-
-系统演示文档：[传送门](https://plus-doc.dromara.org/#/common/demo_system)
 
 ### 01. 首页与品牌首屏
 
