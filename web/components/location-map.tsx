@@ -33,7 +33,7 @@ interface MapModel {
   detailMapName: string | null;
   nationalSelectedName: string;
   detailSelectedName: string | null;
-  detailLayoutCenter: [string, string];
+  focusCenter: [number, number];
   detailLayoutSize: string;
 }
 
@@ -74,24 +74,19 @@ function geoBounds(geoJson: GeoJSON): Bounds {
   );
 }
 
-function detailLayout(chinaGeoJson: GeoJSON, regionGeoJson: GeoJSON): {
-  center: [string, string];
-  size: string;
-} {
+function featureCenter(feature: GeoFeature): [number, number] {
+  const bounds = extendBounds([Infinity, Infinity, -Infinity, -Infinity], feature.geometry.coordinates);
+  return [(bounds[0] + bounds[2]) / 2, (bounds[1] + bounds[3]) / 2];
+}
+
+function detailLayoutSize(chinaGeoJson: GeoJSON, regionGeoJson: GeoJSON): string {
   const china = geoBounds(chinaGeoJson);
   const region = geoBounds(regionGeoJson);
   const chinaWidth = Math.max(china[2] - china[0], 1);
   const chinaHeight = Math.max(china[3] - china[1], 1);
-  const regionCenterX = (region[0] + region[2]) / 2;
-  const regionCenterY = (region[1] + region[3]) / 2;
-  const centerX = ((regionCenterX - china[0]) / chinaWidth) * 100;
-  const centerY = (1 - (regionCenterY - china[1]) / chinaHeight) * 100;
   const regionRatio = Math.max((region[2] - region[0]) / chinaWidth, (region[3] - region[1]) / chinaHeight);
   const size = Math.min(48, Math.max(27, regionRatio * 100 * 1.35));
-  return {
-    center: [`${Math.round(centerX)}%`, `${Math.round(centerY)}%`],
-    size: `${Math.round(size)}%`,
-  };
+  return `${Math.round(size)}%`;
 }
 
 function mapOption(model: MapModel, detailed: boolean) {
@@ -103,6 +98,8 @@ function mapOption(model: MapModel, detailed: boolean) {
     selectedMode: false,
     layoutCenter: ["50%", "50%"],
     layoutSize: "101%",
+    center: detailed ? model.focusCenter : undefined,
+    zoom: detailed ? 2.15 : 1,
     label: { show: false },
     itemStyle: {
       areaColor: MAP_COLORS.base,
@@ -141,7 +138,7 @@ function mapOption(model: MapModel, detailed: boolean) {
       roam: false,
       silent: true,
       selectedMode: false,
-      layoutCenter: model.detailLayoutCenter,
+      layoutCenter: ["50%", "50%"],
       layoutSize: model.detailLayoutSize,
       label: { show: false },
       itemStyle: {
@@ -215,6 +212,7 @@ export function LocationMap({
         : null;
       const fallbackFeature = regionFeature || chinaGeoJson.features[0];
       const nationalSelectedName = (cityFeature || fallbackFeature).properties.name ?? regionName;
+      const focusCenter = featureCenter(cityFeature || regionFeature || fallbackFeature);
       const nationalGeoJson: GeoJSON = cityFeature
         ? { ...chinaGeoJson, features: [...chinaGeoJson.features, cityFeature] }
         : chinaGeoJson;
@@ -222,7 +220,7 @@ export function LocationMap({
       const detailMapName = regionGeoJson && !municipalityAdcodes.has(regionAdcode)
         ? `profile-location-region-${regionAdcode}`
         : null;
-      const layout = regionGeoJson ? detailLayout(chinaGeoJson, regionGeoJson) : null;
+      const layoutSize = regionGeoJson ? detailLayoutSize(chinaGeoJson, regionGeoJson) : null;
 
       echarts.registerMap(nationalMapName, nationalGeoJson);
       if (regionGeoJson && detailMapName) echarts.registerMap(detailMapName, regionGeoJson);
@@ -236,8 +234,8 @@ export function LocationMap({
         detailMapName,
         nationalSelectedName,
         detailSelectedName: cityFeature?.properties.name ?? null,
-        detailLayoutCenter: layout?.center ?? ["50%", "50%"],
-        detailLayoutSize: layout?.size ?? "40%",
+        focusCenter,
+        detailLayoutSize: layoutSize ?? "40%",
       });
       setStatus("ready");
     }).catch(() => {
