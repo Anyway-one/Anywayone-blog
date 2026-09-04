@@ -3,10 +3,10 @@
 Anywayone Blog 是一个面向个人长期维护的内容系统，同一仓库规划包含三个应用：
 
 - `web/`：面向读者的展示端，Next.js App Router + TypeScript。
-- `admin/`：内容管理端，React + Vite + Ant Design，当前开发中。
-- `backend/`：内容与媒体 API，Python 3.11+ + FastAPI，当前开发中。
+- `admin/`：内容管理端，React + Vite + Ant Design，已随 V1.0.0 发布。
+- `backend/`：内容与媒体 API，Python 3.11+ + FastAPI，已随 V1.0.0 发布。
 
-当前三个应用均已进入开发阶段。产品、架构和 UI 决策见 [doc/README.md](./doc/README.md)。
+当前版本：**V1.0.0**（已发布）。产品、架构和 UI 决策见 [doc/README.md](./doc/README.md)。
 
 ## 快速入口
 
@@ -147,8 +147,8 @@ PostgreSQL 数据库本身需要预先创建，表、索引和约束统一由 Al
 ```text
 Anywayone-blog/
 ├── web/          # 面向读者的展示端
-├── admin/        # 当前开发中的内容管理端
-├── backend/      # 当前开发中的 FastAPI 后端
+├── admin/        # 内容管理端
+├── backend/      # FastAPI 后端
 ├── deploy/       # Docker Compose、Caddy 与生产部署脚本
 ├── doc/          # 产品、架构和 UI 文档
 └── Taskfile.yml  # 可选的跨端命令入口
@@ -156,7 +156,7 @@ Anywayone-blog/
 
 文档目录继续使用 `doc/`。`.doc` 是 Word 文件扩展名，不适合作为目录名；当前文档链接已经以 `doc/` 为基线，也无需为命名风格做无收益迁移。
 
-## 当前 Web 范围
+## Web 展示端能力
 
 - Anywayone 品牌导航和响应式移动菜单。
 - 首页 IP 首屏、“了解更多”翻屏、个人档案、站点日志与横向站点纪事。
@@ -167,7 +167,7 @@ Anywayone-blog/
 
 文章数据来自 FastAPI 公开接口；接口未配置或不可用时显示明确空状态或失败状态。摄影、个人资料和联系方式不会使用虚构数据。
 
-## 当前 Admin 范围
+## Admin 管理端能力
 
 - Anywayone 品牌工作台和响应式管理布局。
 - 圆角悬浮侧栏、二级菜单与移动端抽屉导航。
@@ -179,7 +179,7 @@ Anywayone-blog/
 
 Admin 登录、文章、分类、标签和媒体管理已使用真实后端接口；统计、摄影与设置接口仍不展示虚构数据，相应保存动作目前不会持久化数据。
 
-## 当前 Backend 范围
+## Backend API 能力
 
 - FastAPI 应用、异步 PostgreSQL 连接和存活/就绪检查。
 - Alembic 初始迁移、管理员安全初始化和结构化请求日志。
