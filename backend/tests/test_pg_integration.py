@@ -2,7 +2,7 @@ import asyncio
 import os
 import sys
 import uuid
-from collections.abc import Iterator
+from collections.abc import AsyncIterator, Iterator
 from pathlib import Path
 
 import psycopg
@@ -15,7 +15,7 @@ from alembic import command
 from app.core.config import get_settings
 from app.core.security import hash_password
 from app.db.enums import UserStatus
-from app.db.session import AsyncSessionFactory
+from app.db.session import AsyncSessionFactory, close_database
 from app.main import app
 from app.modules.audit.models import AuditLog
 from app.modules.auth.models import User
@@ -29,10 +29,17 @@ pytestmark = pytest.mark.skipif(
 BACKEND_DIR = Path(__file__).resolve().parents[1]
 
 
+@pytest.fixture(autouse=True)
+async def release_database_pool() -> AsyncIterator[None]:
+    yield
+    await close_database()
+
+
 @pytest.fixture(scope="module", autouse=True)
 def migrated_database() -> Iterator[None]:
     settings = get_settings()
     alembic_config = Config(str(BACKEND_DIR / "alembic.ini"))
+    alembic_config.set_main_option("script_location", str(BACKEND_DIR / "alembic"))
     command.upgrade(alembic_config, "head")
 
     settings_id = uuid.uuid4()
@@ -126,32 +133,35 @@ async def test_postgresql_analytics_aggregation_and_visit_deduplication() -> Non
         await session.execute(delete(VisitorEvent))
         await session.commit()
 
-    payload = {
-        "sessionId": session_id,
-        "path": "/posts/pg-integration",
-        "deviceType": "desktop",
-    }
-    async with AsyncClient(
-        transport=ASGITransport(app=app),
-        base_url="http://test",
-    ) as client:
-        first = await client.post("/api/v1/analytics/visit", json=payload)
-        duplicate = await client.post("/api/v1/analytics/visit", json=payload)
-        stats = await client.get("/api/v1/analytics/public?days=7")
+    try:
+        payload = {
+            "sessionId": session_id,
+            "path": "/posts/pg-integration",
+            "deviceType": "desktop",
+        }
+        async with AsyncClient(
+            transport=ASGITransport(app=app),
+            base_url="http://test",
+        ) as client:
+            first = await client.post("/api/v1/analytics/visit", json=payload)
+            duplicate = await client.post("/api/v1/analytics/visit", json=payload)
+            stats = await client.get("/api/v1/analytics/public?days=7")
 
-    assert first.status_code == 204
-    assert duplicate.status_code == 204
-    assert stats.status_code == 200
-    assert stats.json()["data"]["pageViews"] == 1
-    assert stats.json()["data"]["visitors"] == 1
+        assert first.status_code == 204
+        assert duplicate.status_code == 204
+        assert stats.status_code == 200
+        assert stats.json()["data"]["pageViews"] == 1
+        assert stats.json()["data"]["visitors"] == 1
 
-    async with AsyncSessionFactory() as session:
-        count = await session.scalar(
-            select(func.count(VisitorEvent.id)).where(VisitorEvent.session_id == session_id)
-        )
-        assert count == 1
-        await session.execute(delete(VisitorEvent).where(VisitorEvent.session_id == session_id))
-        await session.commit()
+        async with AsyncSessionFactory() as session:
+            count = await session.scalar(
+                select(func.count(VisitorEvent.id)).where(VisitorEvent.session_id == session_id)
+            )
+            assert count == 1
+    finally:
+        async with AsyncSessionFactory() as session:
+            await session.execute(delete(VisitorEvent).where(VisitorEvent.session_id == session_id))
+            await session.commit()
 
 
 async def test_postgresql_login_lock_and_cli_unlock() -> None:
@@ -168,46 +178,49 @@ async def test_postgresql_login_lock_and_cli_unlock() -> None:
         )
         await session.commit()
 
-    async with AsyncClient(
-        transport=ASGITransport(app=app),
-        base_url="http://test",
-    ) as client:
-        responses = [
-            await client.post(
-                "/api/v1/auth/login",
-                json={"email": email, "password": "wrong-password-123"},
-            )
-            for _ in range(5)
-        ]
+    try:
+        async with AsyncClient(
+            transport=ASGITransport(app=app),
+            base_url="http://test",
+        ) as client:
+            responses = [
+                await client.post(
+                    "/api/v1/auth/login",
+                    json={"email": email, "password": "wrong-password-123"},
+                )
+                for _ in range(5)
+            ]
 
-    assert all(response.status_code == 401 for response in responses)
-    async with AsyncSessionFactory() as session:
-        locked_user = await session.get(User, user_id)
-        assert locked_user is not None
-        assert locked_user.status is UserStatus.LOCKED
-        assert locked_user.failed_login_attempts == 5
-        assert locked_user.locked_until is not None
+        assert all(response.status_code == 401 for response in responses)
+        async with AsyncSessionFactory() as session:
+            locked_user = await session.get(User, user_id)
+            assert locked_user is not None
+            assert locked_user.status is UserStatus.LOCKED
+            assert locked_user.failed_login_attempts == 5
+            assert locked_user.locked_until is not None
 
-    process = await asyncio.create_subprocess_exec(
-        sys.executable,
-        "-m",
-        "app.cli",
-        "unlock-admin",
-        email,
-        cwd=BACKEND_DIR,
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE,
-    )
-    stdout, stderr = await process.communicate()
-    assert process.returncode == 0, stderr.decode()
-    assert "Administrator unlocked." in stdout.decode()
+        process = await asyncio.create_subprocess_exec(
+            sys.executable,
+            "-m",
+            "app.cli",
+            "unlock-admin",
+            email,
+            cwd=BACKEND_DIR,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        stdout, stderr = await process.communicate()
+        assert process.returncode == 0, stderr.decode()
+        assert "Administrator unlocked." in stdout.decode()
 
-    async with AsyncSessionFactory() as session:
-        unlocked_user = await session.get(User, user_id)
-        assert unlocked_user is not None
-        assert unlocked_user.status is UserStatus.ACTIVE
-        assert unlocked_user.failed_login_attempts == 0
-        assert unlocked_user.locked_until is None
-        await session.execute(delete(AuditLog).where(AuditLog.resource_id == user_id))
-        await session.execute(delete(User).where(User.id == user_id))
-        await session.commit()
+        async with AsyncSessionFactory() as session:
+            unlocked_user = await session.get(User, user_id)
+            assert unlocked_user is not None
+            assert unlocked_user.status is UserStatus.ACTIVE
+            assert unlocked_user.failed_login_attempts == 0
+            assert unlocked_user.locked_until is None
+    finally:
+        async with AsyncSessionFactory() as session:
+            await session.execute(delete(AuditLog).where(AuditLog.resource_id == user_id))
+            await session.execute(delete(User).where(User.id == user_id))
+            await session.commit()

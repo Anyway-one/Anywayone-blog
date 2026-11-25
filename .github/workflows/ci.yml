@@ -37,6 +37,12 @@ jobs:
       - name: Check Admin
         run: pnpm check:admin
 
+      - name: Test Web
+        run: pnpm --filter @anywayone/web test
+
+      - name: Test Admin
+        run: pnpm --filter @anywayone/admin test
+
       - name: Build Web
         env:
           NEXT_PUBLIC_SITE_URL: https://www.anywayone.com
