@@ -169,3 +169,15 @@ uv run ruff format --check .
 uv run pyright
 uv run pytest
 ```
+
+## 登录保护与账号解锁
+
+登录接口按客户端 IP 和邮箱分别执行进程内滑动窗口限流；账号连续失败达到阈值后会临时锁定。反向代理请求头默认不受信任，只有 API 确认只能经可信代理访问时，才可设置 `TRUSTED_PROXY_HEADERS=true`，让限流和地区统计读取代理传入的客户端信息。
+
+管理员也可以在后台用户管理中把状态改回“启用中”。无法登录后台时，在 `backend/` 目录执行：
+
+```bash
+uv run python -m app.cli unlock-admin admin@example.com
+```
+
+该命令只解锁 `LOCKED` 状态的账号，不会启用已停用账号。

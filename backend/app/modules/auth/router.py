@@ -1,11 +1,16 @@
+import hashlib
 import uuid
 
+import structlog
 from fastapi import APIRouter, Cookie, Request, Response
 
 from app.api.schemas import DataResponse, MessageData, Meta
 from app.core.config import get_settings
 from app.core.errors import AppError
+from app.core.rate_limit import SlidingWindowRateLimiter
+from app.core.request_client import get_client_ip
 from app.core.request_id import get_request_id
+from app.core.security import normalize_email
 from app.modules.auth import service
 from app.modules.auth.dependencies import CurrentUser, DbSession
 from app.modules.auth.models import User
@@ -21,6 +26,7 @@ from app.modules.auth.schemas import (
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 admin_router = APIRouter(prefix="/admin/users", tags=["admin-users"])
+_login_rate_limiter = SlidingWindowRateLimiter()
 
 
 def set_refresh_cookie(response: Response, token: str) -> None:
@@ -43,12 +49,38 @@ async def login(
     response: Response,
     db: DbSession,
 ) -> DataResponse[LoginData]:
+    settings = get_settings()
+    client_ip = get_client_ip(request)
+    email_key = hashlib.sha256(normalize_email(str(payload.email)).encode()).hexdigest()
+    ip_allowed = _login_rate_limiter.allow(
+        f"ip:{client_ip or 'unknown'}",
+        limit=settings.auth_login_ip_rate_limit,
+        window_seconds=settings.auth_login_rate_window_seconds,
+    )
+    email_allowed = _login_rate_limiter.allow(
+        f"email:{email_key}",
+        limit=settings.auth_login_email_rate_limit,
+        window_seconds=settings.auth_login_rate_window_seconds,
+    )
+    if not ip_allowed or not email_allowed:
+        structlog.get_logger("auth").warning(
+            "auth.login.rate_limited",
+            request_id=get_request_id(request),
+            ip_limit_exceeded=not ip_allowed,
+            email_limit_exceeded=not email_allowed,
+        )
+        raise AppError(
+            status_code=429,
+            code="RATE_LIMITED",
+            message="登录尝试过于频繁，请稍后重试。",
+        )
     user, access_token, refresh_token, expires_in = await service.authenticate(
         db,
         email=str(payload.email),
         password=payload.password,
         user_agent=request.headers.get("user-agent"),
-        ip_address=request.client.host if request.client else None,
+        ip_address=client_ip,
+        request_id=get_request_id(request),
     )
     set_refresh_cookie(response, refresh_token)
     return DataResponse(
@@ -78,7 +110,7 @@ async def refresh(
         db,
         refresh_token=anywayone_refresh,
         user_agent=request.headers.get("user-agent"),
-        ip_address=request.client.host if request.client else None,
+        ip_address=get_client_ip(request),
     )
     set_refresh_cookie(response, refresh_token)
     return DataResponse(

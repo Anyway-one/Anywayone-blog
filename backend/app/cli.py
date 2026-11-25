@@ -10,6 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.core.security import hash_password, normalize_email
+from app.db.enums import UserStatus
 from app.db.session import AsyncSessionFactory, close_database
 from app.modules.auth.models import User
 
@@ -68,15 +69,43 @@ async def create_admin(credentials: AdminCredentials) -> None:
     print("Administrator created.")
 
 
+async def unlock_admin(email: str) -> None:
+    try:
+        async with AsyncSessionFactory() as session:
+            user = await session.scalar(
+                select(User).where(User.email == normalize_email(email)).with_for_update()
+            )
+            if user is None:
+                print("Administrator not found.")
+                return
+            if user.status is not UserStatus.LOCKED:
+                print("Administrator is not locked.")
+                return
+            user.status = UserStatus.ACTIVE
+            user.failed_login_attempts = 0
+            user.locked_until = None
+            await session.commit()
+    except SQLAlchemyError:
+        print("Could not unlock administrator. Check database connectivity and migrations.")
+        sys.exit(1)
+    finally:
+        await close_database()
+    print("Administrator unlocked.")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(prog="anywayone-backend")
     subcommands = parser.add_subparsers(dest="command", required=True)
     subcommands.add_parser("create-admin", help="Create the first administrator")
+    unlock_parser = subcommands.add_parser("unlock-admin", help="Unlock an administrator")
+    unlock_parser.add_argument("email", help="Administrator email address")
     arguments = parser.parse_args()
     if arguments.command == "create-admin":
         credentials = prompt_admin_credentials()
         if credentials is not None:
             asyncio.run(create_admin(credentials))
+    elif arguments.command == "unlock-admin":
+        asyncio.run(unlock_admin(arguments.email))
 
 
 if __name__ == "__main__":

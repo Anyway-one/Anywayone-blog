@@ -21,7 +21,7 @@ const defaults: SiteSettingsInput = {
   logoMobileMediaId: null,
   logoAlt: 'Anywayone',
   heroEyebrow: 'ANYWAY, BE YOUR ONE.',
-  heroTitle: '不设限，做唯一的自己。',
+  heroTitle: '不设限定，做唯一的自己。',
   copyrightOwner: null,
   copyrightStartYear: null,
   copyrightStatement: 'All rights reserved.',
@@ -211,7 +211,7 @@ export default function SettingsPage() {
           <section className="surface-panel settings-section-panel">
             <div className="settings-section-heading"><span>HERO</span><h2>首页首屏</h2></div>
             <Form.Item name="heroEyebrow" label="英文辅助标语" rules={[{ max: 80 }]}><Input showCount maxLength={80} placeholder="ANYWAY, BE YOUR ONE." /></Form.Item>
-            <Form.Item name="heroTitle" label="中文主标语（支持换行）" rules={[{ max: 120 }]}><Input.TextArea rows={2} showCount maxLength={120} placeholder="不设限，做唯一的自己。" /></Form.Item>
+            <Form.Item name="heroTitle" label="中文主标语（支持换行）" rules={[{ max: 120 }]}><Input.TextArea rows={2} showCount maxLength={120} placeholder="不设限定，做唯一的自己。" /></Form.Item>
           </section>
 
           <section className="surface-panel settings-section-panel">

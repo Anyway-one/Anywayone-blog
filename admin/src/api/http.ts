@@ -1,3 +1,5 @@
+import { refreshThenRetry } from './refresh-retry'
+
 const configuredApiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api/v1'
 
 export const apiBaseUrl = configuredApiBaseUrl.replace(/\/$/, '')
@@ -121,14 +123,14 @@ async function sendRequest<T>(path: string, options: RequestOptions): Promise<T>
   if (response.ok) return body as T
 
   if (response.status === 401 && authenticated && retryOnUnauthorized && refreshSession) {
-    try {
-      await refreshSession()
-      return await sendRequest<T>(path, { ...options, retryOnUnauthorized: false })
-    } catch (error) {
-      setAccessToken(null)
-      notifyUnauthorized()
-      throw error
-    }
+    return refreshThenRetry(
+      refreshSession,
+      () => sendRequest<T>(path, { ...options, retryOnUnauthorized: false }),
+      () => {
+        setAccessToken(null)
+        notifyUnauthorized()
+      },
+    )
   }
 
   throw toApiError(response, body)

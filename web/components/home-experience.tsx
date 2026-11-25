@@ -135,7 +135,7 @@ export function HomeExperience({
   const publicName = profile?.publicName || "Anywayone";
   const currentCity = resolveChinaLocation(profile?.location)?.city || profile?.location || "位置待配置";
   const heroEyebrow = settings?.heroEyebrow || "ANYWAY, BE YOUR ONE.";
-  const heroTitle = settings?.heroTitle || "不设限，做唯一的自己。";
+  const heroTitle = settings?.heroTitle || "不设限定，做唯一的自己。";
   const equipment = profile?.equipment ?? [];
   const tags = profile?.tags ?? [];
   const favoriteCities = profile?.favoriteCities ?? [];

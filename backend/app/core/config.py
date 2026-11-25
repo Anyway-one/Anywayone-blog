@@ -40,6 +40,16 @@ class Settings(BaseSettings):
         "http://localhost:5173",
     ]
     cookie_secure: bool = False
+    trusted_proxy_headers: bool = False
+    analytics_cache_ttl_seconds: int = Field(default=60, ge=1, le=3600)
+    analytics_visit_rate_limit: int = Field(default=60, ge=1, le=10_000)
+    analytics_visit_rate_window_seconds: int = Field(default=60, ge=1, le=3600)
+    analytics_visit_dedup_seconds: int = Field(default=10, ge=0, le=3600)
+    auth_login_ip_rate_limit: int = Field(default=30, ge=1, le=10_000)
+    auth_login_email_rate_limit: int = Field(default=10, ge=1, le=10_000)
+    auth_login_rate_window_seconds: int = Field(default=300, ge=1, le=86_400)
+    auth_login_failure_limit: int = Field(default=5, ge=1, le=100)
+    auth_login_lock_seconds: int = Field(default=900, ge=60, le=86_400)
     media_storage_backend: Literal["local", "r2"] = "local"
     media_storage_path: Path = Path("data/media")
     media_public_url: str = "http://localhost:8000/media"

@@ -1,37 +1,24 @@
 import type { MetadataRoute } from "next";
+import { buildSitemap } from "./sitemap-builder";
+import { listPublicPhotography } from "@/lib/public-photography";
 import { listAllPublicPosts, listPublicTaxonomies } from "@/lib/public-posts";
 
 const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/$/, "");
+export const dynamic = "force-dynamic";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const staticPages: MetadataRoute.Sitemap = ["", "/posts", "/photography", "/about", "/status", "/changelog", "/privacy", "/terms"].map((path) => ({
-    url: `${siteUrl}${path}`,
-    changeFrequency: path === "" ? "weekly" : "monthly",
-    priority: path === "" ? 1 : 0.8,
-  }));
-  const [postsResult, categoriesResult, tagsResult] = await Promise.all([
+  const [postsResult, categoriesResult, tagsResult, photographyResult] = await Promise.all([
     listAllPublicPosts(),
     listPublicTaxonomies("category"),
     listPublicTaxonomies("tag"),
+    listPublicPhotography(),
   ]);
 
-  return [
-    ...staticPages,
-    ...(postsResult.status === "ready" ? postsResult.data : []).map((post) => ({
-      url: `${siteUrl}/posts/${post.slug}`,
-      lastModified: new Date(post.publishedAt),
-      changeFrequency: "monthly" as const,
-      priority: 0.7,
-    })),
-    ...(categoriesResult.status === "ready" ? categoriesResult.data : []).map((category) => ({
-      url: `${siteUrl}/categories/${category.slug}`,
-      changeFrequency: "monthly" as const,
-      priority: 0.6,
-    })),
-    ...(tagsResult.status === "ready" ? tagsResult.data : []).map((tag) => ({
-      url: `${siteUrl}/tags/${tag.slug}`,
-      changeFrequency: "monthly" as const,
-      priority: 0.5,
-    })),
-  ];
+  return buildSitemap({
+    siteUrl,
+    posts: postsResult.status === "ready" ? postsResult.data : [],
+    categories: categoriesResult.status === "ready" ? categoriesResult.data : [],
+    tags: tagsResult.status === "ready" ? tagsResult.data : [],
+    photography: photographyResult ?? [],
+  });
 }

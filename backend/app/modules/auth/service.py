@@ -17,6 +17,7 @@ from app.core.security import (
     verify_password,
 )
 from app.db.enums import UserStatus
+from app.modules.audit.models import AuditLog
 from app.modules.auth.models import Session, User
 from app.modules.auth.schemas import UserAdminRead, UserRead
 from app.modules.media.models import Media
@@ -137,6 +138,9 @@ async def update_user(
                 .values(revoked_at=datetime.now(UTC))
             )
         user.status = status
+        if status is UserStatus.ACTIVE:
+            user.failed_login_attempts = 0
+            user.locked_until = None
     await db.commit()
     await db.refresh(user)
     return user
@@ -172,23 +176,59 @@ async def authenticate(
     password: str,
     user_agent: str | None,
     ip_address: str | None,
+    request_id: str,
 ) -> tuple[User, str, str, int]:
-    user = await db.scalar(select(User).where(User.email == normalize_email(email)))
+    settings = get_settings()
+    now = datetime.now(UTC)
+    normalized_email = normalize_email(email)
+    user = await db.scalar(select(User).where(User.email == normalized_email).with_for_update())
     if user is None:
         verify_dummy_password(password)
-    if (
-        user is None
-        or user.status is not UserStatus.ACTIVE
-        or not verify_password(password, user.password_hash)
-    ):
-        raise AppError(
-            status_code=401,
-            code="INVALID_CREDENTIALS",
-            message="邮箱或密码不正确。",
+        db.add(
+            _login_audit_log(
+                user=None,
+                request_id=request_id,
+                ip_address=ip_address,
+                action="auth.login.failed",
+                reason="invalid_credentials",
+            )
         )
+        await db.commit()
+        raise _invalid_credentials_error()
+
+    if (
+        user.status is UserStatus.LOCKED
+        and user.locked_until is not None
+        and user.locked_until <= now
+    ):
+        user.status = UserStatus.ACTIVE
+        user.failed_login_attempts = 0
+        user.locked_until = None
+
+    password_valid = verify_password(password, user.password_hash)
+    if user.status is not UserStatus.ACTIVE or not password_valid:
+        reason = "account_unavailable"
+        if user.status is UserStatus.ACTIVE:
+            reason = register_failed_login(
+                user,
+                now=now,
+                failure_limit=settings.auth_login_failure_limit,
+                lock_seconds=settings.auth_login_lock_seconds,
+            )
+        db.add(
+            _login_audit_log(
+                user=user,
+                request_id=request_id,
+                ip_address=ip_address,
+                action="auth.login.failed",
+                reason=reason,
+            )
+        )
+        await db.commit()
+        raise _invalid_credentials_error()
 
     refresh_token = create_refresh_token()
-    expires_at = datetime.now(UTC) + timedelta(days=get_settings().refresh_token_expire_days)
+    expires_at = now + timedelta(days=settings.refresh_token_expire_days)
     session = Session(
         user_id=user.id,
         token_hash=hash_refresh_token(refresh_token),
@@ -197,11 +237,64 @@ async def authenticate(
         ip_hash=hash_ip(ip_address),
         expires_at=expires_at,
     )
-    user.last_login_at = datetime.now(UTC)
+    user.last_login_at = now
+    user.failed_login_attempts = 0
+    user.locked_until = None
     db.add(session)
+    db.add(
+        _login_audit_log(
+            user=user,
+            request_id=request_id,
+            ip_address=ip_address,
+            action="auth.login.succeeded",
+            reason="authenticated",
+        )
+    )
     await db.commit()
     access_token, expires_in = create_access_token(user.id)
     return user, access_token, refresh_token, expires_in
+
+
+def _login_audit_log(
+    *,
+    user: User | None,
+    request_id: str,
+    ip_address: str | None,
+    action: str,
+    reason: str,
+) -> AuditLog:
+    return AuditLog(
+        actor_id=user.id if user else None,
+        action=action,
+        resource_type="user",
+        resource_id=user.id if user else None,
+        request_id=request_id,
+        summary={"reason": reason},
+        ip_hash=hash_ip(ip_address),
+    )
+
+
+def register_failed_login(
+    user: User,
+    *,
+    now: datetime,
+    failure_limit: int,
+    lock_seconds: int,
+) -> str:
+    user.failed_login_attempts += 1
+    if user.failed_login_attempts < failure_limit:
+        return "invalid_credentials"
+    user.status = UserStatus.LOCKED
+    user.locked_until = now + timedelta(seconds=lock_seconds)
+    return "temporary_lock"
+
+
+def _invalid_credentials_error() -> AppError:
+    return AppError(
+        status_code=401,
+        code="INVALID_CREDENTIALS",
+        message="邮箱或密码不正确。",
+    )
 
 
 async def rotate_refresh_token(

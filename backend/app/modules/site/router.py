@@ -3,6 +3,10 @@ import uuid
 from fastapi import APIRouter, Request, Response, status
 
 from app.api.schemas import DataResponse, Meta
+from app.core.config import get_settings
+from app.core.errors import AppError
+from app.core.rate_limit import SlidingWindowRateLimiter
+from app.core.request_client import get_client_ip
 from app.core.request_id import get_request_id
 from app.modules.auth.dependencies import CurrentUser, DbSession
 from app.modules.site import service
@@ -26,10 +30,23 @@ from app.modules.site.schemas import (
 admin_router = APIRouter(prefix="/admin/settings", tags=["admin-site-settings"])
 public_router = APIRouter(prefix="/public/site", tags=["public-site-settings"])
 analytics_router = APIRouter(prefix="/analytics", tags=["analytics"])
+_visit_rate_limiter = SlidingWindowRateLimiter()
 
 
 @analytics_router.post("/visit", status_code=status.HTTP_204_NO_CONTENT)
 async def record_visit(payload: VisitorEventInput, request: Request, db: DbSession) -> Response:
+    settings = get_settings()
+    client_ip = get_client_ip(request) or "unknown"
+    if not _visit_rate_limiter.allow(
+        client_ip,
+        limit=settings.analytics_visit_rate_limit,
+        window_seconds=settings.analytics_visit_rate_window_seconds,
+    ):
+        raise AppError(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            code="RATE_LIMITED",
+            message="访问记录过于频繁，请稍后重试。",
+        )
     await service.record_visitor_event(db, payload, request)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 

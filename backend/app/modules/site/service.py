@@ -1,14 +1,20 @@
+import asyncio
 import re
 import uuid
-from datetime import UTC, datetime, timedelta
-from typing import Literal, overload
+from datetime import UTC, datetime, time, timedelta
+from time import monotonic
+from typing import Literal, cast, overload
 from urllib.parse import urlsplit, urlunsplit
 
-from sqlalchemy import delete, select
+from fastapi import Request
+from sqlalchemy import ColumnElement, delete, distinct, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
+from sqlalchemy.sql import Select
 
+from app.core.config import get_settings
 from app.core.errors import AppError
+from app.core.request_client import get_trusted_location
 from app.db.enums import ContactType
 from app.modules.audit.models import AuditLog
 from app.modules.auth.models import User
@@ -39,17 +45,61 @@ from app.modules.site.schemas import (
     VisitorTrendPoint,
 )
 
+AnalyticsResult = VisitorStatsRead | VisitorAdminStatsRead
+
+
+class _AnalyticsCache:
+    def __init__(self) -> None:
+        self._items: dict[tuple[int, bool], tuple[float, AnalyticsResult]] = {}
+        self._lock = asyncio.Lock()
+
+    async def get(self, key: tuple[int, bool]) -> AnalyticsResult | None:
+        async with self._lock:
+            item = self._items.get(key)
+            if item is None:
+                return None
+            expires_at, value = item
+            if expires_at <= monotonic():
+                self._items.pop(key, None)
+                return None
+            return value
+
+    async def set(self, key: tuple[int, bool], value: AnalyticsResult) -> None:
+        async with self._lock:
+            self._items[key] = (
+                monotonic() + get_settings().analytics_cache_ttl_seconds,
+                value,
+            )
+
+    async def clear(self) -> None:
+        async with self._lock:
+            self._items.clear()
+
+
+_analytics_cache = _AnalyticsCache()
+
 
 async def record_visitor_event(
-    db: AsyncSession, payload: VisitorEventInput, request: object
-) -> None:
-    headers = getattr(request, "headers", {})
-    # Prefer the edge-provided country while allowing a client-provided value in local setups.
-    country = headers.get("cf-ipcountry") or headers.get("x-vercel-ip-country") or payload.country
-    region = headers.get("x-vercel-ip-country-region") or payload.region
-    city = headers.get("x-vercel-ip-city") or payload.city
+    db: AsyncSession, payload: VisitorEventInput, request: Request
+) -> bool:
+    now = datetime.now(UTC)
+    dedup_seconds = get_settings().analytics_visit_dedup_seconds
+    if dedup_seconds:
+        duplicate_id = await db.scalar(
+            select(VisitorEvent.id)
+            .where(
+                VisitorEvent.session_id == payload.session_id,
+                VisitorEvent.path == payload.path,
+                VisitorEvent.occurred_at >= now - timedelta(seconds=dedup_seconds),
+            )
+            .limit(1)
+        )
+        if duplicate_id is not None:
+            return False
+
+    country, region, city = get_trusted_location(request)
     event = VisitorEvent(
-        occurred_at=datetime.now(UTC),
+        occurred_at=now,
         **{
             **payload.model_dump(),
             "referrer": _sanitize_referrer(payload.referrer),
@@ -60,6 +110,8 @@ async def record_visitor_event(
     )
     db.add(event)
     await db.commit()
+    await _analytics_cache.clear()
+    return True
 
 
 def _sanitize_referrer(value: str | None) -> str | None:
@@ -98,55 +150,117 @@ async def get_visitor_stats(
     db: AsyncSession, *, range_days: int = 30, detailed: bool = False
 ) -> VisitorStatsRead | VisitorAdminStatsRead:
     range_days = max(7, min(range_days, 90))
-    since = datetime.now(UTC) - timedelta(days=range_days - 1)
-    base = select(VisitorEvent).where(VisitorEvent.occurred_at >= since)
-    events = list((await db.scalars(base)).all())
-    page_views = len(events)
-    visitors = len({event.session_id for event in events})
+    cache_key = (range_days, detailed)
+    cached = await _analytics_cache.get(cache_key)
+    if cached is not None:
+        return cached
+
     today = datetime.now(UTC).date()
-    today_events = [event for event in events if event.occurred_at.date() == today]
-    trend: list[VisitorTrendPoint] = []
-    for offset in range(range_days - 1, -1, -1):
-        day = today - timedelta(days=offset)
-        day_events = [event for event in events if event.occurred_at.date() == day]
-        trend.append(
-            VisitorTrendPoint(
-                date=day,
-                page_views=len(day_events),
-                visitors=len({event.session_id for event in day_events}),
-            )
+    since = datetime.combine(today - timedelta(days=range_days - 1), time.min, tzinfo=UTC)
+    today_start = datetime.combine(today, time.min, tzinfo=UTC)
+    summary = (
+        await db.execute(build_visitor_summary_statement(since=since, today_start=today_start))
+    ).one()
+    page_views, visitors, today_page_views, today_visitors = (int(value or 0) for value in summary)
+
+    trend_rows = (await db.execute(build_visitor_trend_statement(since=since))).all()
+    trend_by_day = {
+        row[0].date() if isinstance(row[0], datetime) else row[0]: (int(row[1]), int(row[2]))
+        for row in trend_rows
+    }
+    trend = [
+        VisitorTrendPoint(
+            date=day,
+            page_views=trend_by_day.get(day, (0, 0))[0],
+            visitors=trend_by_day.get(day, (0, 0))[1],
         )
+        for day in (today - timedelta(days=offset) for offset in range(range_days - 1, -1, -1))
+    ]
     common = VisitorStatsRead(
         range_days=range_days,
         page_views=page_views,
         visitors=visitors,
-        today_page_views=len(today_events),
-        today_visitors=len({event.session_id for event in today_events}),
+        today_page_views=today_page_views,
+        today_visitors=today_visitors,
         trend=trend,
     )
     if not detailed:
+        await _analytics_cache.set(cache_key, common)
         return common
 
-    def counts(key: str) -> list[tuple[str | None, int]]:
-        values: dict[str | None, int] = {}
-        for event in events:
-            value = getattr(event, key)
-            values[value] = values.get(value, 0) + 1
-        return sorted(values.items(), key=lambda item: item[1], reverse=True)[:8]
-
-    location_values: dict[str | None, int] = {}
-    for event in events:
-        parts = [part for part in (event.country, event.region, event.city) if part]
-        location = " / ".join(parts) or None
-        location_values[location] = location_values.get(location, 0) + 1
-    locations = sorted(location_values.items(), key=lambda item: item[1], reverse=True)[:8]
-    return VisitorAdminStatsRead(
+    location: ColumnElement[str | None] = func.nullif(
+        func.concat_ws(" / ", VisitorEvent.country, VisitorEvent.region, VisitorEvent.city), ""
+    )
+    locations, countries, referrers, devices, pages = (
+        await _get_breakdown_rows(db, location, since),
+        await _get_breakdown_rows(db, cast(ColumnElement[str | None], VisitorEvent.country), since),
+        await _get_breakdown_rows(
+            db, cast(ColumnElement[str | None], VisitorEvent.referrer), since
+        ),
+        await _get_breakdown_rows(
+            db, cast(ColumnElement[str | None], VisitorEvent.device_type), since
+        ),
+        await _get_breakdown_rows(db, cast(ColumnElement[str | None], VisitorEvent.path), since),
+    )
+    result = VisitorAdminStatsRead(
         **common.model_dump(),
         locations=_breakdown(locations, page_views),
-        countries=_breakdown(counts("country"), page_views),
-        referrers=_breakdown(counts("referrer"), page_views),
-        devices=_breakdown(counts("device_type"), page_views),
-        pages=_breakdown(counts("path"), page_views),
+        countries=_breakdown(countries, page_views),
+        referrers=_breakdown(referrers, page_views),
+        devices=_breakdown(devices, page_views),
+        pages=_breakdown(pages, page_views),
+    )
+    await _analytics_cache.set(cache_key, result)
+    return result
+
+
+async def _get_breakdown_rows(
+    db: AsyncSession,
+    column: ColumnElement[str | None],
+    since: datetime,
+) -> list[tuple[str | None, int]]:
+    rows = (await db.execute(build_visitor_breakdown_statement(column=column, since=since))).all()
+    return [(cast(str | None, row[0]), int(row[1])) for row in rows]
+
+
+def build_visitor_summary_statement(
+    *, since: datetime, today_start: datetime
+) -> Select[tuple[int, int, int, int]]:
+    return select(
+        func.count(VisitorEvent.id),
+        func.count(distinct(VisitorEvent.session_id)),
+        func.count(VisitorEvent.id).filter(VisitorEvent.occurred_at >= today_start),
+        func.count(distinct(VisitorEvent.session_id)).filter(
+            VisitorEvent.occurred_at >= today_start
+        ),
+    ).where(VisitorEvent.occurred_at >= since)
+
+
+def build_visitor_trend_statement(*, since: datetime) -> Select[tuple[datetime, int, int]]:
+    day_bucket: ColumnElement[datetime] = func.date_trunc(
+        "day", func.timezone("UTC", VisitorEvent.occurred_at)
+    )
+    return (
+        select(
+            day_bucket.label("day"),
+            func.count(VisitorEvent.id),
+            func.count(distinct(VisitorEvent.session_id)),
+        )
+        .where(VisitorEvent.occurred_at >= since)
+        .group_by(day_bucket)
+        .order_by(day_bucket)
+    )
+
+
+def build_visitor_breakdown_statement(
+    *, column: ColumnElement[str | None], since: datetime
+) -> Select[tuple[str | None, int]]:
+    return (
+        select(column.label("name"), func.count(VisitorEvent.id).label("count"))
+        .where(VisitorEvent.occurred_at >= since)
+        .group_by(column)
+        .order_by(func.count(VisitorEvent.id).desc())
+        .limit(8)
     )
 
 
