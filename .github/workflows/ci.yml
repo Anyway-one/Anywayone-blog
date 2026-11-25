@@ -54,6 +54,20 @@ jobs:
     name: Backend checks
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: anywayone_test
+          POSTGRES_USER: anywayone_test
+          POSTGRES_PASSWORD: test-only-password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U anywayone_test -d anywayone_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     defaults:
       run:
         working-directory: backend
@@ -92,7 +106,15 @@ jobs:
       - name: Run strict type checks
         run: uv run pyright
 
+      - name: Validate PostgreSQL migrations
+        run: |
+          uv run alembic upgrade head
+          uv run alembic downgrade -1
+          uv run alembic upgrade head
+
       - name: Run tests
+        env:
+          RUN_PG_INTEGRATION_TESTS: "1"
         run: uv run pytest
 
       - name: Compile Alembic migration SQL

@@ -18,3 +18,20 @@ test("sitemap 收录文章、分类、标签和已发布摄影集", () => {
   assert.ok(urls.includes("https://www.anywayone.com/tags/ai"));
   assert.ok(urls.includes("https://www.anywayone.com/photography/shanghai"));
 });
+
+test("sitemap 遇到非法发布日期时省略 lastModified", () => {
+  const sitemap = buildSitemap({
+    siteUrl: "https://www.anywayone.com",
+    posts: [{ slug: "invalid-post-date", publishedAt: "not-a-date" }],
+    categories: [],
+    tags: [],
+    photography: [{ slug: "invalid-photo-date", publishedAt: "" }],
+  });
+
+  const post = sitemap.find((entry) => entry.url.endsWith("/posts/invalid-post-date"));
+  const photography = sitemap.find((entry) => entry.url.endsWith("/photography/invalid-photo-date"));
+  assert.ok(post);
+  assert.ok(photography);
+  assert.equal("lastModified" in post, false);
+  assert.equal("lastModified" in photography, false);
+});

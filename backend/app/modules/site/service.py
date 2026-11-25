@@ -71,10 +71,6 @@ class _AnalyticsCache:
                 value,
             )
 
-    async def clear(self) -> None:
-        async with self._lock:
-            self._items.clear()
-
 
 _analytics_cache = _AnalyticsCache()
 
@@ -110,7 +106,6 @@ async def record_visitor_event(
     )
     db.add(event)
     await db.commit()
-    await _analytics_cache.clear()
     return True
 
 

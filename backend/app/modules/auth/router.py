@@ -29,6 +29,32 @@ admin_router = APIRouter(prefix="/admin/users", tags=["admin-users"])
 _login_rate_limiter = SlidingWindowRateLimiter()
 
 
+def check_login_rate_limit(
+    limiter: SlidingWindowRateLimiter,
+    *,
+    client_ip: str | None,
+    email_key: str,
+    ip_limit: int,
+    email_limit: int,
+    window_seconds: int,
+    now: float | None = None,
+) -> tuple[bool, bool]:
+    ip_allowed = limiter.allow(
+        f"ip:{client_ip or 'unknown'}",
+        limit=ip_limit,
+        window_seconds=window_seconds,
+        now=now,
+    )
+    if not ip_allowed:
+        return False, True
+    return True, limiter.allow(
+        f"email:{email_key}",
+        limit=email_limit,
+        window_seconds=window_seconds,
+        now=now,
+    )
+
+
 def set_refresh_cookie(response: Response, token: str) -> None:
     settings = get_settings()
     response.set_cookie(
@@ -52,14 +78,12 @@ async def login(
     settings = get_settings()
     client_ip = get_client_ip(request)
     email_key = hashlib.sha256(normalize_email(str(payload.email)).encode()).hexdigest()
-    ip_allowed = _login_rate_limiter.allow(
-        f"ip:{client_ip or 'unknown'}",
-        limit=settings.auth_login_ip_rate_limit,
-        window_seconds=settings.auth_login_rate_window_seconds,
-    )
-    email_allowed = _login_rate_limiter.allow(
-        f"email:{email_key}",
-        limit=settings.auth_login_email_rate_limit,
+    ip_allowed, email_allowed = check_login_rate_limit(
+        _login_rate_limiter,
+        client_ip=client_ip,
+        email_key=email_key,
+        ip_limit=settings.auth_login_ip_rate_limit,
+        email_limit=settings.auth_login_email_rate_limit,
         window_seconds=settings.auth_login_rate_window_seconds,
     )
     if not ip_allowed or not email_allowed:

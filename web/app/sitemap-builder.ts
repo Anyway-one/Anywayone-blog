@@ -22,6 +22,11 @@ interface SitemapSource {
   photography: SitemapPhotographyCollection[];
 }
 
+function validDate(value: string): Date | undefined {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? undefined : date;
+}
+
 export function buildSitemap(source: SitemapSource): MetadataRoute.Sitemap {
   const staticPages: MetadataRoute.Sitemap = [
     "",
@@ -40,18 +45,24 @@ export function buildSitemap(source: SitemapSource): MetadataRoute.Sitemap {
 
   return [
     ...staticPages,
-    ...source.posts.map((post) => ({
-      url: `${source.siteUrl}/posts/${post.slug}`,
-      lastModified: new Date(post.publishedAt),
-      changeFrequency: "monthly" as const,
-      priority: 0.7,
-    })),
-    ...source.photography.map((collection) => ({
-      url: `${source.siteUrl}/photography/${collection.slug}`,
-      lastModified: new Date(collection.publishedAt),
-      changeFrequency: "monthly" as const,
-      priority: 0.7,
-    })),
+    ...source.posts.map((post) => {
+      const lastModified = validDate(post.publishedAt);
+      return {
+        url: `${source.siteUrl}/posts/${post.slug}`,
+        ...(lastModified ? { lastModified } : {}),
+        changeFrequency: "monthly" as const,
+        priority: 0.7,
+      };
+    }),
+    ...source.photography.map((collection) => {
+      const lastModified = validDate(collection.publishedAt);
+      return {
+        url: `${source.siteUrl}/photography/${collection.slug}`,
+        ...(lastModified ? { lastModified } : {}),
+        changeFrequency: "monthly" as const,
+        priority: 0.7,
+      };
+    }),
     ...source.categories.map((category) => ({
       url: `${source.siteUrl}/categories/${category.slug}`,
       changeFrequency: "monthly" as const,
