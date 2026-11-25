@@ -10,9 +10,12 @@ from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.core.security import hash_password, normalize_email
+from app.db import models as db_models
 from app.db.enums import UserStatus
 from app.db.session import AsyncSessionFactory, close_database
 from app.modules.auth.models import User
+
+db_models.register_models()
 
 
 @dataclass(frozen=True)

@@ -210,8 +210,12 @@ async def test_postgresql_login_lock_and_cli_unlock() -> None:
             stderr=asyncio.subprocess.PIPE,
         )
         stdout, stderr = await process.communicate()
-        assert process.returncode == 0, stderr.decode()
-        assert "Administrator unlocked." in stdout.decode()
+        stdout_text = stdout.decode()
+        stderr_text = stderr.decode()
+        assert process.returncode == 0, (
+            f"unlock-admin failed\nstdout:\n{stdout_text}\nstderr:\n{stderr_text}"
+        )
+        assert "Administrator unlocked." in stdout_text
 
         async with AsyncSessionFactory() as session:
             unlocked_user = await session.get(User, user_id)
